@@ -588,6 +588,12 @@
         "price": 0,
         "category": "Menu Rajasthan",
         "subcategory": "Entrée"
+      },
+      {
+        "id": 84,
+        "name": "Produit 2",
+        "price": 0,
+        "category": "Menu Rajasthan"
       }
     ]
   },
