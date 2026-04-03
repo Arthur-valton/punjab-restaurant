@@ -593,6 +593,12 @@
         "name": "Menu Taj Mahal",
         "price": 29.9,
         "category": "Menu"
+      },
+      {
+        "id": 85,
+        "name": "Menu",
+        "price": 15.9,
+        "category": "Menu"
       }
     ]
   }
