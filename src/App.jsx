@@ -4,9 +4,7 @@ import Ticket from "./components/Ticket";
 import MenuSettings from "./components/MenuSettings";
 import "./App.css";
 
-const MENU_URL =
-  "https://raw.githubusercontent.com/Arthur-valton/punjab-restaurant/main/public/menu.json";
-
+const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
 const SAVE_API_URL = "https://punjab-restaurant.vercel.app/api/save-menu";
 
 function getCachedMenu() {
@@ -23,7 +21,7 @@ function App() {
 
   // Fetch latest menu from GitHub on every load
   useEffect(() => {
-    fetch(`${MENU_URL}?_=${Date.now()}`)
+    fetch(GET_MENU_URL)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
