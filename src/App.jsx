@@ -1,18 +1,15 @@
-import { useState, useMemo } from "react";
-import defaultMenu, { MENU_VERSION } from "./data/menu";
+import { useState, useMemo, useEffect } from "react";
+import defaultMenu from "./data/menu";
 import Ticket from "./components/Ticket";
 import MenuSettings from "./components/MenuSettings";
 import "./App.css";
 
-function loadMenu() {
+const MENU_URL =
+  "https://raw.githubusercontent.com/Arthur-valton/punjab-restaurant/main/public/menu.json";
+
+function getCachedMenu() {
   try {
-    const version = localStorage.getItem("punjab_menu_version");
-    if (version !== MENU_VERSION) {
-      localStorage.removeItem("punjab_menu");
-      localStorage.setItem("punjab_menu_version", MENU_VERSION);
-      return defaultMenu;
-    }
-    const saved = localStorage.getItem("punjab_menu");
+    const saved = localStorage.getItem("punjab_menu_github");
     return saved ? JSON.parse(saved) : defaultMenu;
   } catch {
     return defaultMenu;
@@ -20,10 +17,23 @@ function loadMenu() {
 }
 
 function App() {
-  const [menuData, setMenuData] = useState(loadMenu);
+  const [menuData, setMenuData] = useState(getCachedMenu);
+
+  // Fetch latest menu from GitHub on every load
+  useEffect(() => {
+    fetch(`${MENU_URL}?_=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setMenuData(data);
+          localStorage.setItem("punjab_menu_github", JSON.stringify(data));
+        }
+      })
+      .catch(() => {/* keep cached/default */});
+  }, []);
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
-  const [activeCategory, setActiveCategory] = useState(() => loadMenu()[0].category);
+  const [activeCategory, setActiveCategory] = useState(() => getCachedMenu()[0].category);
   const [cartOpen, setCartOpen] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
   const [ticketData, setTicketData] = useState(null);
@@ -32,9 +42,18 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
 
-  function updateMenu(newMenu) {
+  async function updateMenu(newMenu) {
     setMenuData(newMenu);
-    localStorage.setItem("punjab_menu", JSON.stringify(newMenu));
+    localStorage.setItem("punjab_menu_github", JSON.stringify(newMenu));
+    try {
+      await fetch("/api/save-menu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMenu),
+      });
+    } catch (err) {
+      console.error("Failed to save menu to GitHub:", err);
+    }
   }
 
   function openNumpad() {
