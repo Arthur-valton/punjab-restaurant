@@ -104,6 +104,35 @@ body {
   font-weight: 700;
 }
 
+.settings-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.save-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.save-status--saving {
+  background: rgba(255,255,255,0.15);
+  color: #ccc;
+}
+
+.save-status--ok {
+  background: #1a7a3a;
+  color: #7fff9a;
+}
+
+.save-status--error {
+  background: #7a1a1a;
+  color: #ffaaaa;
+}
+
 .settings-close {
   width: 34px;
   height: 34px;

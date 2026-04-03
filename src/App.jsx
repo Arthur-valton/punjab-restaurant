@@ -43,18 +43,25 @@ function App() {
   const [numpadValue, setNumpadValue] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
+  const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
     localStorage.setItem("punjab_menu_github", JSON.stringify(newMenu));
+    setSaveStatus("saving");
     try {
-      await fetch(SAVE_API_URL, {
+      const res = await fetch(SAVE_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newMenu),
       });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      setSaveStatus("ok");
+      setTimeout(() => setSaveStatus(null), 2500);
     } catch (err) {
       console.error("Failed to save menu to GitHub:", err);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 4000);
     }
   }
 
@@ -293,7 +300,7 @@ function App() {
 
       {/* Settings overlay */}
       {showSettings && (
-        <MenuSettings menuData={menuData} onUpdate={updateMenu} onClose={() => setShowSettings(false)} />
+        <MenuSettings menuData={menuData} onUpdate={updateMenu} onClose={() => setShowSettings(false)} saveStatus={saveStatus} />
       )}
 
       {/* Ticket overlay */}

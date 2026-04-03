@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function MenuSettings({ menuData, onUpdate, onClose }) {
+export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }) {
   const [activeCategory, setActiveCategory] = useState(menuData[0].category);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
@@ -88,7 +88,12 @@ export default function MenuSettings({ menuData, onUpdate, onClose }) {
       <div className="settings-panel">
         <div className="settings-header">
           <h2>Modifier le menu</h2>
-          <button className="settings-close" onClick={onClose}>✕</button>
+          <div className="settings-header-right">
+            {saveStatus === "saving" && <span className="save-status save-status--saving">Sauvegarde…</span>}
+            {saveStatus === "ok" && <span className="save-status save-status--ok">✓ Sauvegardé</span>}
+            {saveStatus === "error" && <span className="save-status save-status--error">✗ Erreur réseau</span>}
+            <button className="settings-close" onClick={onClose}>✕</button>
+          </div>
         </div>
 
         <div className="settings-tabs">
