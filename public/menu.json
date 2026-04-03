@@ -578,16 +578,5 @@
         "category": "Desserts"
       }
     ]
-  },
-  {
-    "category": "Menu Midi",
-    "items": [
-      {
-        "id": 83,
-        "name": "Poulet Shahi Korma Midi",
-        "price": 12.9,
-        "category": "Menu Midi"
-      }
-    ]
   }
 ]
