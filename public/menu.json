@@ -587,13 +587,6 @@
         "name": "Poulet Shahi Korma Midi",
         "price": 12.9,
         "category": "Menu Midi"
-      },
-      {
-        "id": 84,
-        "name": "Teet",
-        "price": 5,
-        "category": "Menu Midi",
-        "subcategory": "Test"
       }
     ]
   }
