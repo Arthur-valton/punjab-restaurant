@@ -1,6 +1,10 @@
 import { useState, useRef } from "react";
 
-const PRINT_URL = `${window.location.protocol}//${window.location.hostname}:3001`;
+function getPrintUrl() {
+  const saved = localStorage.getItem("punjab_print_url");
+  if (saved) return saved;
+  return `${window.location.protocol}//${window.location.hostname}:3001`;
+}
 
 export default function Ticket({ order, tableNumber, onNewOrder }) {
   const [printStatus, setPrintStatus] = useState(null); // null | "printing" | "ok" | "error"
@@ -25,7 +29,7 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
     setPrintStatus("printing");
     setPrintMsg("");
     try {
-      const res = await fetch(`${PRINT_URL}/print-all`, {
+      const res = await fetch(`${getPrintUrl()}/print-all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

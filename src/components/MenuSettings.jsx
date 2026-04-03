@@ -7,6 +7,19 @@ export default function MenuSettings({ menuData, onUpdate, onClose }) {
   const [newSubcat, setNewSubcat] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
+  const [printUrl, setPrintUrl] = useState(
+    () => localStorage.getItem("punjab_print_url") || ""
+  );
+
+  function savePrintUrl(val) {
+    const trimmed = val.trim();
+    if (trimmed) {
+      localStorage.setItem("punjab_print_url", trimmed);
+    } else {
+      localStorage.removeItem("punjab_print_url");
+    }
+    setPrintUrl(trimmed);
+  }
 
   const section = menuData.find((s) => s.category === activeCategory);
   const subcategories = [
@@ -116,6 +129,21 @@ export default function MenuSettings({ menuData, onUpdate, onClose }) {
             </button>
           </div>
         )}
+
+        <div className="settings-print-url-section">
+          <label className="settings-print-url-label">🖨 Serveur d'impression</label>
+          <input
+            className="settings-print-url-input"
+            type="text"
+            placeholder={`Auto (${window.location.hostname}:3001)`}
+            value={printUrl}
+            onChange={(e) => setPrintUrl(e.target.value)}
+            onBlur={(e) => savePrintUrl(e.target.value)}
+          />
+          <span className="settings-print-url-hint">
+            Ex : http://192.168.1.62:3001
+          </span>
+        </div>
 
         <div className="settings-items">
           <div className="settings-category-actions">
