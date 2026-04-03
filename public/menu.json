@@ -580,42 +580,6 @@
     ]
   },
   {
-    "category": "Menu",
-    "items": [
-      {
-        "id": 83,
-        "name": "Menu Rajasthan",
-        "price": 24.9,
-        "category": "Menu"
-      },
-      {
-        "id": 84,
-        "name": "Menu Taj Mahal",
-        "price": 29.9,
-        "category": "Menu"
-      },
-      {
-        "id": 85,
-        "name": "Menu",
-        "price": 15.9,
-        "category": "Menu"
-      },
-      {
-        "id": 86,
-        "name": "Menu",
-        "price": 17.9,
-        "category": "Menu"
-      },
-      {
-        "id": 87,
-        "name": "Poulet",
-        "price": 0,
-        "category": "Menu",
-        "subcategory": "Menu Rajasthan"
-      }
-    ]
-  },
-  {
     "category": "Menu Rajasthan",
     "items": []
   },
