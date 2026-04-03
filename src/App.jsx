@@ -7,6 +7,8 @@ import "./App.css";
 const MENU_URL =
   "https://raw.githubusercontent.com/Arthur-valton/punjab-restaurant/main/public/menu.json";
 
+const SAVE_API_URL = "https://punjab-restaurant.vercel.app/api/save-menu";
+
 function getCachedMenu() {
   try {
     const saved = localStorage.getItem("punjab_menu_github");
@@ -46,7 +48,7 @@ function App() {
     setMenuData(newMenu);
     localStorage.setItem("punjab_menu_github", JSON.stringify(newMenu));
     try {
-      await fetch("/api/save-menu", {
+      await fetch(SAVE_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newMenu),
