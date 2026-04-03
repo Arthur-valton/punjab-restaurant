@@ -1,0 +1,84 @@
+Categorie,Sous-categorie,Produit,Description,Prix
+PLATS PRINCIPAUX POULET,,Poulet Curry,"Morceaux de poulet mijotes dans une sauce a base d'oignons et de tomate, aromatisee aux gingembre & a l'ail",14.00
+PLATS PRINCIPAUX POULET,,Poulet Sagwala,"Morceaux de poulet aux epinards, dans une sauce cremeuse aux fines epices indiennes",15.00
+PLATS PRINCIPAUX POULET,,Poulet Jalfreji,"Poulet desosse, poivrons verts, tomates, gingembre et oeufs",15.50
+PLATS PRINCIPAUX POULET,,Poulet Vindaloo,Morceaux de poulet prepares avec des pommes de terre dans une sauce traditionnelle,14.50
+PLATS PRINCIPAUX POULET,,Poulet Mirchi,Curry de poulet pimente & epice,15.00
+PLATS PRINCIPAUX POULET,,Butter Chicken,"Morceaux de poulet grille mijote dans une sauce cremeuse avec du beurre, de la creme fraiche et fruits secs",15.50
+PLATS PRINCIPAUX POULET,,Poulet Tikka Massala,"Morceaux de poulet marines et grilles puis prepares dans une sauce a base d'oignons, tomates, poivrons et coriandre",15.50
+PLATS PRINCIPAUX POULET,,Poulet Shahi Korma,"Curry de poulet prepare avec des amandes, noix de cajou, creme fraiche & epices",15.50
+PLATS PRINCIPAUX POULET,,Poulet Madras,Morceaux de poulet prepares dans une sauce moyennement epicee,14.50
+PLATS PRINCIPAUX POULET,,Poulet Bengan,Curry de poulet & aubergine hachee grillees aux epices,15.50
+BIRYANI,,Biryani Punjab,"Riz basmati au safran mijote avec des morceaux de poulet, agneau, boeuf, crevettes aux epices",17.50
+BIRYANI,,Poulet,Riz basmati au safran mijote avec des poulet marines aux epices,14.00
+BIRYANI,,Agneau,Riz basmati au safran mijote avec des morceaux d'agneau aux epices,16.00
+BIRYANI,,Biryani Crevette,Riz basmati au safran mijote avec des crevettes marinees aux epices,16.00
+BIRYANI,,Legume,Riz basmati au safran mijote avec des legumes aux epices,12.00
+BIRYANI,,Biryani Poulet Tikka,Poulet marine aux epices mijote dans une sauce traditionnelle aux petits pois,16.00
+PLATS VEGETARIENS,,Legumes Shahi Korma,"Legumes avec amandes, noix de cajou, creme fraiche & epices",13.00
+PLATS VEGETARIENS,,Baingan Bharta,Creme d'aubergines aux herbes fraiches,13.00
+PLATS VEGETARIENS,,Aloo Palak,Curry d'epinards & pomme de terre,13.00
+PLATS VEGETARIENS,,Palak Panner,Curry d'epinards avec fromage & creme fraiche,13.00
+PLATS VEGETARIENS,,Mattar Panner,Curry de petits pois & fromage,13.00
+PLATS VEGETARIENS,,Dal Punjabi,Curry de lentilles jaunes aux herbes fraiches & epices indiennes,13.00
+PLATS VEGETARIENS,,Legumes Mix,Curry de legumes aux epices,13.00
+PLATS VEGETARIENS,,Bombay Aloo,Pommes de terre sautees sauce curry,13.00
+PLATS VEGETARIENS,,Champignons Massala,"Champignons sauce tomate, ail, gingembre, poivrons & coriandre",13.00
+RIZ,,Riz Basmati,Parfume au safran & au cumin,3.00
+RIZ,,Mattar Pulao,Avec des petits pois & les epices parfume,4.00
+RIZ,,Kashmir,Parfume au safran & au fruit secs,4.00
+DESSERT,,Halwa,Gateau de semoule aux amandes et a la noix de coco,5.00
+DESSERT,,Kulfi,Glace a la pistache fait maison,5.00
+DESSERT,,Kheer,Riz au lait aux amandes et a la cardamome,5.00
+DESSERT,,Gulab Jamun,Patisseries indiennes au miel et a la cardamome,5.00
+DESSERT,,Sorbet 2 Boules,"Citron, Fraise, Passion, Caramel, Mangue, Chocolat, Vanille, Cafe, Coco",5.00
+PLATS PRINCIPAUX AGNEAU,,Agneau Karahi,"Specialite du chef, curry d'agneau avec poivrons, tomates et oignons",17.00
+PLATS PRINCIPAUX AGNEAU,,Agneau Shahi Korma,"Curry d'agneau, sauce creme de noix de cajou et beurre",16.50
+PLATS PRINCIPAUX AGNEAU,,Agneau Champignons,Curry d'agneau aux champignons delicieusement parfume aux epices,16.50
+PLATS PRINCIPAUX AGNEAU,,Agneau Vindaloo,Morceaux d'agneau prepares avec des pommes de terres dans une sauce traditionnelle,16.00
+PLATS PRINCIPAUX AGNEAU,,Agneau Mirchi,Curry d'agneau pimente et epice,15.50
+PLATS PRINCIPAUX AGNEAU,,Agneau Madras,Morceaux d'agneau prepares dans une sauce moyennement epices parfume,16.00
+PLATS PRINCIPAUX AGNEAU,,Agneau Sagwala,"Morceaux d'agneau aux epinards, dans une sauce cremeuse aux fines epices indiennes",16.50
+PLATS PRINCIPAUX AGNEAU,,Agneau Bengan,Curry d'agneau et aubergines hachees grillees preparees avec des epices,16.50
+PLATS PRINCIPAUX AGNEAU,,Agneau Curry,"Curry d'agneau, oignons, gingimbre et diverses epices",15.00
+PLATS PRINCIPAUX BOEUF,,Boeuf Sabji,Curry de boeuf aux legumes,15.50
+PLATS PRINCIPAUX BOEUF,,Boeuf Shahi Korma,"Morceaux de boeuf prepares avec des amandes, noix de cajou, creme fraiche et epice",15.00
+PLATS PRINCIPAUX BOEUF,,Boeuf Massala,"Morceaux de boeuf prepares dans une sauce tomate, ail, gingimbre, poivrons et coriandre",15.00
+PLATS PRINCIPAUX BOEUF,,Boeuf Mirchi,Curry de boeuf pimente et epice,15.00
+MENU MIDI,,Poulet Shahi Korma Midi,Menu 1 - Plat,12.90
+ENTREES GRILLADES,,Poulet Tandoori,Cuisse de poulet marinees et grillees au four tandoor et epices variees,7.00
+ENTREES GRILLADES,,Seekh Kebab,"Gigot d'agneau hache, cuit en brochettes avec des oignons, menthe et epices variees",8.00
+ENTREES GRILLADES,,Poulet Tikka,Morceaux de poulet marines et grilles au four tandoor et epices variees,8.00
+ENTREES GRILLADES,,Poisson Tikka,Filet de poisson marine et grille au four tandoor et epices variees,9.00
+ENTREES GRILLADES,,Gambas Tandoori,Gambas longuement macerees dans un bouquet d'epices et d'aromates puis cuites au four tandoor,15.00
+ENTREES GRILLADES,,Punjab Mixte Assortiment 2 pers,"Poulet tikka, poisson tikka, seekh kebab et gambas",21.00
+SALADE/SOUPE,,Raita,"Yaourt au concombre, carottes, tomate, cumin & herbes fraiches",5.50
+SALADE/SOUPE,,Raita Crevettes,"Yaourt au concombre, crevettes, carottes, cumin & herbes fraiches",7.50
+SALADE/SOUPE,,Salade Crevette ou Poulet,"Salade verte, olives, tomate, concombre, huile d'olive",7.50
+SALADE/SOUPE,,Soupe Dall,Soupe a base de lentilles,8.50
+NAANS,,Nan Fromage,Galette au fromage farine blanche,3.50
+NAANS,,Masala Kulcha,Galette aux legumes farine blanche,4.00
+NAANS,,Nan Ail,Galette a l'ail,3.50
+NAANS,,Chili Nan,Fromage avec piment vert,3.50
+NAANS,,Nan Nature,Galette de farine blanche nature,3.00
+NAANS,,Nan Punjab,Poulet marine au fromage,4.00
+NAANS,,Chappati,Galette nature farine de ble,3.00
+NAANS,,Nan Fromage & Ail,,4.50
+ENTREES SPECIALITE BEIGNETS,,Oignons Bahji,Beignets de pois chiche aux oignons,5.00
+ENTREES SPECIALITE BEIGNETS,,Pakora Aubergine,"Beignets d'aubergine, epices variees",5.50
+ENTREES SPECIALITE BEIGNETS,,Aloo Pakora,Beignets d'aubergines et epices variees,5.00
+ENTREES SPECIALITE BEIGNETS,,Samoussa Legumes,Chaussons fourres legumes et petits pois (2 pieces),5.50
+ENTREES SPECIALITE BEIGNETS,,Mixte Pakora,"Assortiment oignons, aubergine, pomme de terre",6.50
+ENTREES SPECIALITE BEIGNETS,,Shahi Mix Pakora 2 pers,"Assortiment beignets, samossa, oignons, aubergine, pomme de terre",15.00
+PLATS PRINCIPAUX POISSON,,Crevettes Curry,Crevettes decortiquees preparees dans une sauce traditionnelle,16.00
+PLATS PRINCIPAUX POISSON,,Crevettes Massala,"Crevettes decortiquees preparees dans une sauce a base d'oignons, tomates, poivrons et coriandre",17.00
+PLATS PRINCIPAUX POISSON,,Crevettes Shahi Korma,"Curry de crevettes decortiquees preparees avec des amandes, noix de cajou, & creme fraiche",17.00
+PLATS PRINCIPAUX POISSON,,Crevettes Sagh,Epinards saute avec des crevettes decortiquees,17.00
+PLATS PRINCIPAUX POISSON,,Poisson Curry,"Morceaux de saumon marines grille puis preparer dans une sauce a base d'oignons et de tomates, parfume au gingimbre et ail",16.50
+PLATS PRINCIPAUX POISSON,,Poisson Shahi Korma,"Morceaux de saumon grille puis prepares avec des amandes, noix de cajou et creme fraiche",17.00
+PLATS PRINCIPAUX POISSON,,Poissons Madras,Morceaux de saumon grille puis prepares dans une sauce moyennement epice,16.50
+PLATS PRINCIPAUX POISSON,,Poisson Massala,"Morceaux de saumon grille puis prepares dans une sauce tomate, ail, gingimbre, poivrons et coriandre",17.00
+PLATS PRINCIPAUX POISSON,,Gambas Curry,Gambas marinees aux epices grillees tandoor puis servies dans une sauce curry,19.00
+PLATS PRINCIPAUX POISSON,,Gambas Baingan,"Gambas marinees aux epices grillees tandoor puis servis dans une curry d'aubergine hachee aux epices",21.50
+PLATS PRINCIPAUX POISSON,,Gambas Massala,"Gambas marinees aux epices mijotees dans une sauce a base d'oignons, poivrons, tomate et aromatisee au gingimbre et a l'ail",21.50
+PLATS PRINCIPAUX POISSON,,Coquilles Saint-Jacques,,19.00
