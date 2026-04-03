@@ -587,6 +587,12 @@
         "name": "Menu Rajasthan",
         "price": 24.9,
         "category": "Menu"
+      },
+      {
+        "id": 84,
+        "name": "Menu Taj Mahal",
+        "price": 29.9,
+        "category": "Menu"
       }
     ]
   }
