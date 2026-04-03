@@ -1096,12 +1096,12 @@ body {
 
 /* Desktop (≥ 1024px) */
 @media (min-width: 1024px) {
-  body { background: #e8e8e8; }
+  body { background: #fff; }
 
   .app {
-    max-width: 1200px;
+    max-width: 100%;
+    width: 100%;
     flex-direction: row;
-    box-shadow: 0 0 40px rgba(0,0,0,0.15);
   }
 
   .app-main {
