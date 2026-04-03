@@ -581,7 +581,15 @@
   },
   {
     "category": "Menu Rajasthan",
-    "items": []
+    "items": [
+      {
+        "id": 83,
+        "name": "Produit 1",
+        "price": 0,
+        "category": "Menu Rajasthan",
+        "subcategory": "Entrée"
+      }
+    ]
   },
   {
     "category": "Menu Taj Mahal",
