@@ -87,8 +87,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   }
 
   for (const group of groups) {
-    // Séparateur de catégorie (seulement si plusieurs catégories)
-    if (groups.length > 1) {
+    // Séparateur de catégorie — ticket cuisine uniquement
+    if (!showTotal && groups.length > 1) {
       buf += CMD.CENTER;
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
       buf += `${group.cat.toUpperCase()}\n`;
@@ -115,7 +115,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
       }
     }
 
-    if (groups.length > 1 && !showTotal) {
+    if (!showTotal && groups.length > 1) {
       buf += line("-");
     }
   }
