@@ -156,9 +156,6 @@
     }
 
     .category-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       background: #252525;
       padding: 8px 12px;
     }
@@ -175,27 +172,30 @@
       color: #2ecc71;
     }
 
-    .btn-cat-ready {
-      padding: 5px 14px;
-      background: #1a7a3a;
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 800;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-cat-ready:hover { background: #22a050; }
-    .btn-cat-ready.done { background: #2ecc71; cursor: default; }
-
     .category-items {
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
+
+    .btn-cat-ready {
+      width: 100%;
+      padding: 14px;
+      background: #1a7a3a;
+      color: #fff;
+      border: none;
+      border-radius: 0 0 8px 8px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s;
+    }
+
+    .btn-cat-ready:hover { background: #22a050; }
+    .btn-cat-ready:active { background: #156030; }
+    .btn-cat-ready.done { background: #2ecc71; cursor: default; }
 
     .item-row {
       display: flex;
@@ -297,7 +297,6 @@
       <div class="category-section" id="cat-${orderId}-${idx}">
         <div class="category-header">
           <span class="category-label">${g.cat}</span>
-          <button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ Prêt</button>
         </div>
         <div class="category-items">
           ${g.items.map(i => `
@@ -307,6 +306,7 @@
             </div>
           `).join("")}
         </div>
+        <button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>
       </div>
     `).join("");
   }
