@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 
 function getPrintUrl() {
   const saved = localStorage.getItem("punjab_print_url");
-  if (saved) return saved;
+  if (saved) return saved.replace(/\/+$/, ""); // enlève le / final si présent
   return `${window.location.protocol}//${window.location.hostname}:3001`;
 }
 
