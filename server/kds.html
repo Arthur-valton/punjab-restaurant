@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PUNJAB — Cuisine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: #1a1a1a;
+      border-bottom: 3px solid #e67e22;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #e67e22;
+    }
+
+    #status {
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    #status.connected { background: #1a7a3a; color: #7fff9a; }
+    #status.disconnected { background: #7a1a1a; color: #ffaaaa; }
+
+    #counter {
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+
+    #empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 60px);
+      color: #444;
+      font-size: 1.2rem;
+      gap: 12px;
+    }
+
+    #empty span { font-size: 4rem; }
+
+    #orders {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .order-card {
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: slide-in 0.3s ease;
+    }
+
+    .order-card.urgent { border-color: #e74c3c; }
+    .order-card.warning { border-color: #e67e22; }
+    .order-card.fresh { border-color: #2ecc71; }
+
+    @keyframes slide-in {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fade-out {
+      to { transform: scale(0.9); opacity: 0; }
+    }
+
+    .order-card.removing {
+      animation: fade-out 0.3s ease forwards;
+    }
+
+    .card-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #252525;
+    }
+
+    .table-num {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .table-label {
+      font-size: 0.7rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .order-meta {
+      text-align: right;
+    }
+
+    .order-num {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .timer {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .timer.fresh { color: #2ecc71; }
+    .timer.warning { color: #e67e22; }
+    .timer.urgent { color: #e74c3c; }
+
+    .card-items {
+      padding: 12px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 1.1rem;
+    }
+
+    .item-qty {
+      background: #e67e22;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 2px 8px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .item-name {
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .card-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .btn-ready {
+      width: 100%;
+      padding: 14px;
+      background: #1a7a3a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s;
+    }
+
+    .btn-ready:hover { background: #22a050; }
+    .btn-ready:active { background: #156030; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>PUNJAB</h1>
+    <div id="counter">0 commande(s)</div>
+  </div>
+  <div id="status" class="disconnected">Déconnecté</div>
+</header>
+
+<div id="empty">
+  <span>🍽️</span>
+  En attente de commandes…
+</div>
+
+<div id="orders"></div>
+
+<script>
+  const WS_URL = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/kds-ws";
+  const ordersEl = document.getElementById("orders");
+  const emptyEl = document.getElementById("empty");
+  const statusEl = document.getElementById("status");
+  const counterEl = document.getElementById("counter");
+
+  const orders = new Map(); // id -> { data, timerInterval }
+  let ws;
+
+  function connect() {
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      statusEl.textContent = "Connecté";
+      statusEl.className = "connected";
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = "Déconnecté";
+      statusEl.className = "disconnected";
+      setTimeout(connect, 3000); // reconnexion auto
+    };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "new_order") addOrder(msg.order);
+      if (msg.type === "order_ready") removeOrder(msg.orderId);
+    };
+  }
+
+  function updateCounter() {
+    const n = orders.size;
+    counterEl.textContent = `${n} commande${n > 1 ? "s" : ""} en cours`;
+    emptyEl.style.display = n === 0 ? "flex" : "none";
+  }
+
+  function formatElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return m > 0 ? `${m}min ${ss < 10 ? "0" : ""}${ss}s` : `${ss}s`;
+  }
+
+  function addOrder(order) {
+    const card = document.createElement("div");
+    card.className = "order-card fresh";
+    card.id = `order-${order.id}`;
+    card.innerHTML = `
+      <div class="card-header">
+        <div>
+          <div class="table-label">TABLE</div>
+          <div class="table-num">${order.tableNumber}</div>
+        </div>
+        <div class="order-meta">
+          <div class="order-num">#${order.orderNum}</div>
+          <div class="timer fresh" id="timer-${order.id}">0s</div>
+        </div>
+      </div>
+      <div class="card-items">
+        ${order.items.map(i => `
+          <div class="item-row">
+            <span class="item-qty">${i.qty}x</span>
+            <span class="item-name">${i.name}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div class="card-footer">
+        <button class="btn-ready" onclick="markReady('${order.id}')">✓ PRÊT</button>
+      </div>
+    `;
+
+    ordersEl.prepend(card);
+
+    // Chrono
+    const timerEl = document.getElementById(`timer-${order.id}`);
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - order.receivedAt;
+      timerEl.textContent = formatElapsed(elapsed);
+
+      const minutes = elapsed / 60000;
+      if (minutes >= 10) {
+        timerEl.className = "timer urgent";
+        card.className = "order-card urgent";
+      } else if (minutes >= 5) {
+        timerEl.className = "timer warning";
+        card.className = "order-card warning";
+      }
+    }, 1000);
+
+    orders.set(order.id, { card, interval });
+    updateCounter();
+  }
+
+  function markReady(orderId) {
+    ws.send(JSON.stringify({ type: "order_ready", orderId }));
+    removeOrder(orderId);
+  }
+
+  function removeOrder(orderId) {
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    clearInterval(entry.interval);
+    entry.card.classList.add("removing");
+    setTimeout(() => {
+      entry.card.remove();
+      orders.delete(orderId);
+      updateCounter();
+    }, 300);
+  }
+
+  connect();
+</script>
+</body>
+</html>

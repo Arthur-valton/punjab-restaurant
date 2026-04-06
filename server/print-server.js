@@ -1,18 +1,27 @@
 import express from "express";
 import cors from "cors";
 import net from "net";
+import http from "http";
+import { WebSocketServer } from "ws";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server, path: "/kds-ws" });
+
 const PORT = 3001;
 const PRINTER_IP = "192.168.1.29";
 const PRINTER_PORT = 9100;
 
 const WIDTH = 48;
-// Largeur en mode double (moitie des caracteres)
 const WIDTH_DOUBLE = 24;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // ----- ESC/POS helpers -----
 const ESC = "\x1B";
@@ -24,9 +33,9 @@ const CMD = {
   LEFT: ESC + "a\x00",
   BOLD_ON: ESC + "E\x01",
   BOLD_OFF: ESC + "E\x00",
-  DOUBLE_ON: GS + "!\x11",  // Double hauteur + largeur (x2)
-  DOUBLE_H: GS + "!\x01",   // Double hauteur seulement
-  QUAD: GS + "!\x33",       // Quadruple : x4 hauteur + x4 largeur
+  DOUBLE_ON: GS + "!\x11",
+  DOUBLE_H: GS + "!\x01",
+  QUAD: GS + "!\x33",
   DOUBLE_OFF: GS + "!\x00",
   FEED: ESC + "d\x03",
   CUT: GS + "V\x00",
@@ -42,13 +51,9 @@ function pad(left, right, width = WIDTH, fill = " ") {
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
 }
 
-// ----- Formatage d'un ticket -----
 function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) {
   let buf = "";
-
   buf += CMD.INIT;
-
-  // En-tete
   buf += CMD.CENTER;
   buf += CMD.DOUBLE_ON;
   buf += CMD.BOLD_ON;
@@ -59,8 +64,6 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += CMD.BOLD_ON;
   buf += `*** ${title} ***\n`;
   buf += CMD.BOLD_OFF;
-
-  // Infos commande
   buf += CMD.LEFT;
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
@@ -74,10 +77,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += `Date: ${date}\n`;
   buf += line("=");
 
-  // Articles
   for (const item of order) {
     if (showTotal) {
-      // Ticket service : article + total, puis prix unitaire en dessous
       const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
       buf += CMD.BOLD_ON;
       buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
@@ -85,19 +86,17 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
       buf += ESC + "J\x06";
     } else {
-      // Ticket cuisine/bar : sans prix, avec espace entre chaque
       buf += CMD.DOUBLE_H;
       buf += CMD.BOLD_ON;
       buf += `${item.qty}x ${item.name}\n`;
       buf += CMD.BOLD_OFF;
       buf += CMD.DOUBLE_OFF;
-      buf += ESC + "J\x0C"; // avance de 12 dots (~demi ligne)
+      buf += ESC + "J\x0C";
     }
   }
 
   buf += line("=");
 
-  // Total (ticket service uniquement)
   if (showTotal) {
     const total = order.reduce((s, i) => s + i.price * i.qty, 0);
     buf += CMD.BOLD_ON;
@@ -116,11 +115,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
 
   buf += CMD.FEED;
   buf += CMD.PARTIAL_CUT;
-
   return buf;
 }
 
-// ----- Envoi TCP vers imprimante -----
 function sendToPrinter(data) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket();
@@ -145,7 +142,29 @@ function sendToPrinter(data) {
   });
 }
 
-// ----- Route POST /print-all : imprime 3 tickets -----
+// ----- WebSocket KDS -----
+function broadcast(msg) {
+  const data = JSON.stringify(msg);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) client.send(data);
+  });
+}
+
+wss.on("connection", (ws) => {
+  console.log("KDS connecté");
+  ws.on("message", (raw) => {
+    try {
+      const msg = JSON.parse(raw);
+      // Un écran cuisine marque une commande comme prête → on broadcast à tous
+      if (msg.type === "order_ready") {
+        broadcast({ type: "order_ready", orderId: msg.orderId });
+      }
+    } catch {}
+  });
+  ws.on("close", () => console.log("KDS déconnecté"));
+});
+
+// ----- Route POST /print-all -----
 app.post("/print-all", async (req, res) => {
   try {
     const { order, tableNumber, orderNum, date } = req.body;
@@ -154,62 +173,51 @@ app.post("/print-all", async (req, res) => {
       return res.status(400).json({ error: "Donnees manquantes" });
     }
 
-    // Separer les articles par poste
     const boissons = order.filter((i) => i.category === "Boissons");
     const cuisine = order.filter((i) => i.category !== "Boissons");
-
     const common = { tableNumber, orderNum, date };
     const tickets = [];
 
-    // Ticket CUISINE (plats + boissons en dessous) — seulement s'il y en a
     const cuisineAll = [...cuisine, ...boissons];
     if (cuisineAll.length > 0) {
-      tickets.push(
-        formatTicket({ title: "CUISINE", order: cuisineAll, showTotal: false, ...common })
-      );
+      tickets.push(formatTicket({ title: "CUISINE", order: cuisineAll, showTotal: false, ...common }));
     }
+    tickets.push(formatTicket({ title: "SERVICE", order, showTotal: true, ...common }));
 
-    // 3) Ticket SERVICE (tout avec total)
-    tickets.push(
-      formatTicket({ title: "SERVICE", order, showTotal: true, ...common })
-    );
+    console.log(`Impression Table ${tableNumber} #${orderNum} : ${tickets.length} ticket(s)`);
+    await sendToPrinter(tickets.join(""));
 
-    // Envoyer tous les tickets d'un coup
-    const allData = tickets.join("");
-
-    console.log(
-      `Impression Table ${tableNumber} #${orderNum} : ${tickets.length} ticket(s) (${cuisine.length > 0 ? "cuisine+" : ""}service)`
-    );
-
-    await sendToPrinter(allData);
-
-    res.json({
-      success: true,
-      message: `${tickets.length} ticket(s) imprime(s)`,
-      tickets: tickets.length,
+    // Broadcast au KDS
+    broadcast({
+      type: "new_order",
+      order: {
+        id: `${orderNum}-${Date.now()}`,
+        orderNum,
+        tableNumber,
+        date,
+        items: cuisineAll,
+        receivedAt: Date.now(),
+      },
     });
+
+    res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length });
   } catch (err) {
     console.error("Erreur impression:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ----- Route legacy POST /print (un seul ticket) -----
 app.post("/print", async (req, res) => {
   try {
     const { type, order, tableNumber, orderNum, date } = req.body;
-
     if (!order || !tableNumber || !orderNum) {
       return res.status(400).json({ error: "Donnees manquantes" });
     }
-
     const title = type === "cuisine" ? "CUISINE" : "SERVICE";
     const showTotal = type !== "cuisine";
     const ticket = formatTicket({ title, order, tableNumber, orderNum, date, showTotal });
-
     console.log(`Impression ${type} - Table ${tableNumber} - #${orderNum}`);
     await sendToPrinter(ticket);
-
     res.json({ success: true, message: "Ticket imprime" });
   } catch (err) {
     console.error("Erreur impression:", err.message);
@@ -217,39 +225,22 @@ app.post("/print", async (req, res) => {
   }
 });
 
-// ----- Test de connexion imprimante -----
 app.get("/ping-printer", async (req, res) => {
   try {
     await new Promise((resolve, reject) => {
       const client = new net.Socket();
-      const timeout = setTimeout(() => {
-        client.destroy();
-        reject(new Error("Timeout"));
-      }, 3000);
-
-      client.connect(PRINTER_PORT, PRINTER_IP, () => {
-        clearTimeout(timeout);
-        client.end();
-        resolve();
-      });
-
-      client.on("error", (err) => {
-        clearTimeout(timeout);
-        reject(err);
-      });
+      const timeout = setTimeout(() => { client.destroy(); reject(new Error("Timeout")); }, 3000);
+      client.connect(PRINTER_PORT, PRINTER_IP, () => { clearTimeout(timeout); client.end(); resolve(); });
+      client.on("error", (err) => { clearTimeout(timeout); reject(err); });
     });
-
     res.json({ success: true, printer: `${PRINTER_IP}:${PRINTER_PORT}` });
   } catch {
-    res.status(500).json({
-      success: false,
-      error: "Imprimante injoignable",
-      printer: `${PRINTER_IP}:${PRINTER_PORT}`,
-    });
+    res.status(500).json({ success: false, error: "Imprimante injoignable", printer: `${PRINTER_IP}:${PRINTER_PORT}` });
   }
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Serveur d'impression sur http://0.0.0.0:${PORT}`);
+  console.log(`KDS disponible sur http://0.0.0.0:${PORT}/kds.html`);
   console.log(`Imprimante cible: ${PRINTER_IP}:${PRINTER_PORT}`);
 });
