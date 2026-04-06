@@ -4,7 +4,7 @@ import net from "net";
 
 const app = express();
 const PORT = 3001;
-const PRINTER_IP = "192.168.110.21";
+const PRINTER_IP = "192.168.1.29";
 const PRINTER_PORT = 9100;
 
 const WIDTH = 48;
