@@ -611,6 +611,14 @@
   },
   {
     "category": "Boissons",
-    "items": []
+    "items": [
+      {
+        "id": 85,
+        "name": "Ted",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Lait"
+      }
+    ]
   }
 ]
