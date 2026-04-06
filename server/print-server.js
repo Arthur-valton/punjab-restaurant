@@ -77,21 +77,43 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += `Date: ${date}\n`;
   buf += line("=");
 
+  // Grouper par catégorie
+  const groups = [];
+  const seenCats = {};
   for (const item of order) {
-    if (showTotal) {
-      const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
+    const cat = item.category || "Autres";
+    if (!seenCats[cat]) { seenCats[cat] = true; groups.push({ cat, items: [] }); }
+    groups.find(g => g.cat === cat).items.push(item);
+  }
+
+  for (const group of groups) {
+    // Séparateur de catégorie (seulement si plusieurs catégories)
+    if (groups.length > 1) {
       buf += CMD.BOLD_ON;
-      buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
+      buf += `-- ${group.cat.toUpperCase()} --\n`;
       buf += CMD.BOLD_OFF;
-      buf += `   ${item.price.toFixed(2)} EUR/u\n`;
-      buf += ESC + "J\x06";
-    } else {
-      buf += CMD.DOUBLE_H;
-      buf += CMD.BOLD_ON;
-      buf += `${item.qty}x ${item.name}\n`;
-      buf += CMD.BOLD_OFF;
-      buf += CMD.DOUBLE_OFF;
-      buf += ESC + "J\x0C";
+    }
+
+    for (const item of group.items) {
+      if (showTotal) {
+        const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
+        buf += CMD.BOLD_ON;
+        buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
+        buf += CMD.BOLD_OFF;
+        buf += `   ${item.price.toFixed(2)} EUR/u\n`;
+        buf += ESC + "J\x06";
+      } else {
+        buf += CMD.DOUBLE_H;
+        buf += CMD.BOLD_ON;
+        buf += `${item.qty}x ${item.name}\n`;
+        buf += CMD.BOLD_OFF;
+        buf += CMD.DOUBLE_OFF;
+        buf += ESC + "J\x0C";
+      }
+    }
+
+    if (groups.length > 1 && !showTotal) {
+      buf += line("-");
     }
   }
 
