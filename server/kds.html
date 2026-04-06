@@ -142,19 +142,60 @@
       gap: 4px;
     }
 
+    .category-section {
+      margin-top: 10px;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .category-section:first-child { margin-top: 0; }
+
+    .category-section.done {
+      opacity: 0.35;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #252525;
+      padding: 8px 12px;
+    }
+
     .category-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: #e67e22;
-      margin-top: 10px;
-      margin-bottom: 4px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #333;
     }
 
-    .category-label:first-child { margin-top: 0; }
+    .category-section.done .category-label {
+      color: #2ecc71;
+    }
+
+    .btn-cat-ready {
+      padding: 5px 14px;
+      background: #1a7a3a;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-cat-ready:hover { background: #22a050; }
+    .btn-cat-ready.done { background: #2ecc71; cursor: default; }
+
+    .category-items {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
     .item-row {
       display: flex;
@@ -177,28 +218,6 @@
       font-weight: 500;
       line-height: 1.3;
     }
-
-    .card-footer {
-      padding: 12px 16px;
-      border-top: 1px solid #2a2a2a;
-    }
-
-    .btn-ready {
-      width: 100%;
-      padding: 14px;
-      background: #1a7a3a;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: 800;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: background 0.15s;
-    }
-
-    .btn-ready:hover { background: #22a050; }
-    .btn-ready:active { background: #156030; }
   </style>
 </head>
 <body>
@@ -262,8 +281,7 @@
     return m > 0 ? `${m}min ${ss < 10 ? "0" : ""}${ss}s` : `${ss}s`;
   }
 
-  function renderItemsByCategory(items) {
-    // Grouper par catégorie en conservant l'ordre d'apparition
+  function groupByCategory(items) {
     const groups = [];
     const seen = {};
     items.forEach(i => {
@@ -271,19 +289,49 @@
       if (!seen[cat]) { seen[cat] = true; groups.push({ cat, items: [] }); }
       groups.find(g => g.cat === cat).items.push(i);
     });
+    return groups;
+  }
 
-    return groups.map(g => `
-      <div class="category-label">${g.cat}</div>
-      ${g.items.map(i => `
-        <div class="item-row">
-          <span class="item-qty">${i.qty}x</span>
-          <span class="item-name">${i.name}</span>
+  function renderCategories(orderId, groups) {
+    return groups.map((g, idx) => `
+      <div class="category-section" id="cat-${orderId}-${idx}">
+        <div class="category-header">
+          <span class="category-label">${g.cat}</span>
+          <button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ Prêt</button>
         </div>
-      `).join("")}
+        <div class="category-items">
+          ${g.items.map(i => `
+            <div class="item-row">
+              <span class="item-qty">${i.qty}x</span>
+              <span class="item-name">${i.name}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
     `).join("");
   }
 
+  function markCatReady(orderId, catIdx) {
+    const section = document.getElementById(`cat-${orderId}-${catIdx}`);
+    if (!section || section.classList.contains("done")) return;
+    section.classList.add("done");
+    const btn = section.querySelector(".btn-cat-ready");
+    btn.textContent = "✓ Prêt";
+    btn.classList.add("done");
+    btn.disabled = true;
+
+    // Vérifier si toutes les catégories sont prêtes
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    const allSections = document.querySelectorAll(`[id^="cat-${orderId}-"]`);
+    const allDone = [...allSections].every(s => s.classList.contains("done"));
+    if (allDone) {
+      setTimeout(() => markReady(orderId), 400);
+    }
+  }
+
   function addOrder(order) {
+    const groups = groupByCategory(order.items);
     const card = document.createElement("div");
     card.className = "order-card fresh";
     card.id = `order-${order.id}`;
@@ -299,10 +347,7 @@
         </div>
       </div>
       <div class="card-items">
-        ${renderItemsByCategory(order.items)}
-      </div>
-      <div class="card-footer">
-        <button class="btn-ready" onclick="markReady('${order.id}')">✓ PRÊT</button>
+        ${renderCategories(order.id, groups)}
       </div>
     `;
 
