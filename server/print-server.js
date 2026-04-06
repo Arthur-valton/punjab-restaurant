@@ -89,9 +89,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   for (const group of groups) {
     // Séparateur de catégorie (seulement si plusieurs catégories)
     if (groups.length > 1) {
-      buf += CMD.BOLD_ON;
-      buf += `-- ${group.cat.toUpperCase()} --\n`;
-      buf += CMD.BOLD_OFF;
+      buf += CMD.CENTER;
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += `${group.cat.toUpperCase()}\n`;
+      buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+      buf += CMD.LEFT;
+      buf += line("-");
     }
 
     for (const item of group.items) {
