@@ -6,6 +6,21 @@ import PasswordGate, { isAppUnlocked, unlockApp, getDefaultPasswords } from "./c
 import "./App.css";
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
+
+// Pastel Apple colors par sous-catégorie
+const SUBCAT_COLORS = {
+  "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
+  "Salade / Soupe":  { bg: "rgba(52,199,89,0.10)",   active: "rgba(52,199,89,0.22)",   text: "#1e7a3a", border: "rgba(52,199,89,0.4)"    },
+  "Beignets":        { bg: "rgba(255,214,10,0.12)",   active: "rgba(255,214,10,0.25)",  text: "#8a6800", border: "rgba(255,214,10,0.5)"   },
+  "Naans":           { bg: "rgba(175,82,222,0.10)",   active: "rgba(175,82,222,0.22)",  text: "#7a38bb", border: "rgba(175,82,222,0.4)"   },
+  "Poulet":          { bg: "rgba(255,149,0,0.10)",    active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"    },
+  "Agneau":          { bg: "rgba(255,59,48,0.08)",    active: "rgba(255,59,48,0.18)",   text: "#c0271e", border: "rgba(255,59,48,0.35)"   },
+  "Boeuf":           { bg: "rgba(94,92,230,0.10)",    active: "rgba(94,92,230,0.22)",   text: "#3c3aaa", border: "rgba(94,92,230,0.4)"    },
+  "Poisson":         { bg: "rgba(10,132,255,0.10)",   active: "rgba(10,132,255,0.22)",  text: "#005bcc", border: "rgba(10,132,255,0.4)"   },
+  "Végétarien":      { bg: "rgba(0,199,190,0.10)",    active: "rgba(0,199,190,0.22)",   text: "#007a74", border: "rgba(0,199,190,0.4)"    },
+  "Riz":             { bg: "rgba(255,204,0,0.12)",    active: "rgba(255,204,0,0.25)",   text: "#806000", border: "rgba(255,204,0,0.45)"   },
+  "Entrée":          { bg: "rgba(255,45,85,0.08)",    active: "rgba(255,45,85,0.18)",   text: "#c0003a", border: "rgba(255,45,85,0.35)"   },
+};
 const SAVE_API_URL = "https://punjab-restaurant.vercel.app/api/save-menu";
 
 function getCachedMenu() {
@@ -238,9 +253,25 @@ function App() {
         {subcategories.length > 0 && (
           <div className="subcategory-tabs">
             <button className={`subcategory-tab ${!activeSubcategory ? "active" : ""}`} onClick={() => setActiveSubcategory(null)}>Tous</button>
-            {subcategories.map((sub) => (
-              <button key={sub} className={`subcategory-tab ${activeSubcategory === sub ? "active" : ""}`} onClick={() => setActiveSubcategory(sub)}>{sub}</button>
-            ))}
+            {subcategories.map((sub) => {
+              const c = SUBCAT_COLORS[sub];
+              const isActive = activeSubcategory === sub;
+              return (
+                <button
+                  key={sub}
+                  className="subcategory-tab"
+                  onClick={() => setActiveSubcategory(sub)}
+                  style={c ? {
+                    background: isActive ? c.active : c.bg,
+                    borderColor: isActive ? c.border : "transparent",
+                    color: c.text,
+                    fontWeight: isActive ? 700 : 500,
+                  } : undefined}
+                >
+                  {sub}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -248,11 +279,19 @@ function App() {
           <div className="menu-grid-items">
             {visibleItems.map((item) => {
               const qty = getItemQty(item.id);
+              const c = item.subcategory ? SUBCAT_COLORS[item.subcategory] : null;
               return (
-                <button key={item.id} className="menu-btn" onClick={() => addItem(item)}>
+                <button
+                  key={item.id}
+                  className="menu-btn"
+                  onClick={() => addItem(item)}
+                  style={c ? { borderColor: c.border, background: c.bg } : undefined}
+                >
                   {qty > 0 && <span className="menu-btn-badge">{qty}</span>}
                   <span className="menu-btn-name">{item.name}</span>
-                  <span className="menu-btn-price">{item.price.toFixed(2)} &euro;</span>
+                  <span className="menu-btn-price" style={c ? { color: c.text } : undefined}>
+                    {item.price.toFixed(2)} &euro;
+                  </span>
                 </button>
               );
             })}
