@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getDefaultPasswords, savePasswords, lockApp } from "./PasswordGate";
 
 export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }) {
   const [activeCategory, setActiveCategory] = useState(menuData[0].category);
@@ -11,6 +12,11 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     () => localStorage.getItem("punjab_print_url") || ""
   );
 
+  const pwds = getDefaultPasswords();
+  const [appPwd, setAppPwd] = useState(pwds.app);
+  const [settingsPwd, setSettingsPwd] = useState(pwds.settings);
+  const [pwdSaved, setPwdSaved] = useState(false);
+
   function savePrintUrl(val) {
     const trimmed = val.trim();
     if (trimmed) {
@@ -19,6 +25,12 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
       localStorage.removeItem("punjab_print_url");
     }
     setPrintUrl(trimmed);
+  }
+
+  function handleSavePasswords() {
+    savePasswords({ app: appPwd, settings: settingsPwd });
+    setPwdSaved(true);
+    setTimeout(() => setPwdSaved(false), 2000);
   }
 
   const section = menuData.find((s) => s.category === activeCategory);
@@ -148,6 +160,36 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
           <span className="settings-print-url-hint">
             Ex : http://192.168.1.62:3001
           </span>
+        </div>
+
+        <div className="settings-print-url-section">
+          <label className="settings-print-url-label">🔒 Mots de passe</label>
+          <div className="settings-pwd-row">
+            <span className="settings-pwd-label">Application</span>
+            <input
+              className="settings-print-url-input"
+              type="password"
+              value={appPwd}
+              onChange={(e) => setAppPwd(e.target.value)}
+              placeholder="Mot de passe app"
+            />
+          </div>
+          <div className="settings-pwd-row">
+            <span className="settings-pwd-label">Paramètres</span>
+            <input
+              className="settings-print-url-input"
+              type="password"
+              value={settingsPwd}
+              onChange={(e) => setSettingsPwd(e.target.value)}
+              placeholder="Mot de passe paramètres"
+            />
+          </div>
+          <button className="settings-pwd-save" onClick={handleSavePasswords}>
+            {pwdSaved ? "✓ Enregistré" : "Enregistrer les mots de passe"}
+          </button>
+          <button className="settings-pwd-lock" onClick={() => { lockApp(); window.location.reload(); }}>
+            Verrouiller l'application
+          </button>
         </div>
 
         <div className="settings-items">

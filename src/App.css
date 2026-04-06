@@ -133,6 +133,143 @@ body {
   color: #ffaaaa;
 }
 
+/* ===== PASSWORD GATE ===== */
+
+.pwgate-overlay {
+  position: fixed;
+  inset: 0;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.pwgate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+  padding: 32px 24px;
+}
+
+@keyframes pwgate-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
+
+.pwgate-shake {
+  animation: pwgate-shake 0.4s ease;
+}
+
+.pwgate-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.pwgate-subtitle {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.pwgate-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1.2rem;
+  text-align: center;
+  letter-spacing: 4px;
+  border: 2px solid #333;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  outline: none;
+}
+
+.pwgate-input--error {
+  border-color: #e74c3c;
+}
+
+.pwgate-input:focus {
+  border-color: #e67e22;
+}
+
+.pwgate-error {
+  font-size: 0.85rem;
+  color: #e74c3c;
+}
+
+.pwgate-confirm {
+  width: 100%;
+  padding: 14px;
+  background: #e67e22;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pwgate-confirm:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pwgate-cancel {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Settings passwords */
+.settings-pwd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.settings-pwd-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  white-space: nowrap;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.settings-pwd-save {
+  width: 100%;
+  padding: 10px;
+  background: #2a6e4a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.settings-pwd-lock {
+  width: 100%;
+  padding: 8px;
+  background: none;
+  color: #e74c3c;
+  border: 1px solid #e74c3c44;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .settings-close {
   width: 34px;
   height: 34px;

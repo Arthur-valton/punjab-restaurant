@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import defaultMenu from "./data/menu";
 import Ticket from "./components/Ticket";
 import MenuSettings from "./components/MenuSettings";
+import PasswordGate, { isAppUnlocked, unlockApp, getDefaultPasswords } from "./components/PasswordGate";
 import "./App.css";
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
@@ -42,6 +43,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
+  const [appUnlocked, setAppUnlocked] = useState(isAppUnlocked);
+  const [showSettingsPwd, setShowSettingsPwd] = useState(false);
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -136,6 +139,23 @@ function App() {
     setTicketData(null);
   }
 
+  // App-level password gate
+  if (!appUnlocked) {
+    return (
+      <PasswordGate
+        title="Punjab Restaurant"
+        onSuccess={(pwd) => {
+          if (pwd === getDefaultPasswords().app) {
+            unlockApp();
+            setAppUnlocked(true);
+            return true;
+          }
+          return false;
+        }}
+      />
+    );
+  }
+
   const cartContent = (
     <>
       {orderItems.length > 0 ? (
@@ -186,7 +206,7 @@ function App() {
         <header className="app-header">
           <h1>PUNJAB</h1>
           <div className="header-right">
-            <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙</button>
+            <button className="settings-btn" onClick={() => setShowSettingsPwd(true)}>⚙</button>
             <button className="table-btn" onClick={openNumpad}>
               <span className="table-btn-label">Table</span>
               <span className="table-btn-value">{tableNumber || "--"}</span>
@@ -294,6 +314,22 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Settings password prompt */}
+      {showSettingsPwd && (
+        <PasswordGate
+          title="Paramètres — mot de passe"
+          onSuccess={(pwd) => {
+            if (pwd === getDefaultPasswords().settings) {
+              setShowSettingsPwd(false);
+              setShowSettings(true);
+              return true;
+            }
+            return false;
+          }}
+          onCancel={() => setShowSettingsPwd(false)}
+        />
       )}
 
       {/* Settings overlay */}
