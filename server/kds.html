@@ -323,9 +323,20 @@
     btn.classList.add("done");
     btn.disabled = true;
 
-    // Vérifier si toutes les catégories sont prêtes
     const entry = orders.get(orderId);
     if (!entry) return;
+
+    // Imprimer ticket partiel pour cette catégorie
+    const group = entry.groups[catIdx];
+    ws.send(JSON.stringify({
+      type: "cat_ready",
+      tableNumber: entry.order.tableNumber,
+      orderNum: entry.order.orderNum,
+      catName: group.cat,
+      items: group.items,
+    }));
+
+    // Vérifier si toutes les catégories sont prêtes
     const allSections = document.querySelectorAll(`[id^="cat-${orderId}-"]`);
     const allDone = [...allSections].every(s => s.classList.contains("done"));
     if (allDone) {
@@ -372,7 +383,7 @@
       }
     }, 1000);
 
-    orders.set(order.id, { card, interval });
+    orders.set(order.id, { card, interval, groups, order });
     updateCounter();
   }
 

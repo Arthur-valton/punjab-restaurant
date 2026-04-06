@@ -78,14 +78,16 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += `Date: ${date}\n`;
   buf += line("=");
 
-  // Grouper par catégorie
-  const groups = [];
+  // Grouper par catégorie avec ordre fixe
+  const CAT_ORDER = ["Entrees", "Plats", "Biryani", "Naans", "Desserts", "Menu Midi"];
   const seenCats = {};
   for (const item of order) {
     const cat = item.category || "Autres";
-    if (!seenCats[cat]) { seenCats[cat] = true; groups.push({ cat, items: [] }); }
-    groups.find(g => g.cat === cat).items.push(item);
+    if (!seenCats[cat]) seenCats[cat] = [];
+    seenCats[cat].push(item);
   }
+  const sortedCats = [...CAT_ORDER.filter(c => seenCats[c]), ...Object.keys(seenCats).filter(c => !CAT_ORDER.includes(c))];
+  const groups = sortedCats.map(cat => ({ cat, items: seenCats[cat] }));
 
   for (const group of groups) {
     // Séparateur de catégorie — ticket cuisine uniquement
@@ -227,6 +229,42 @@ function formatReadyTicket({ tableNumber, orderNum, items, date }) {
   return buf;
 }
 
+// ----- Ticket partiel "SECTION PRÊTE" -----
+function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
+  const date = new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+  let buf = "";
+  buf += CMD.INIT;
+  buf += CMD.CENTER;
+  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += "PUNJAB\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  buf += "\n";
+  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += `${catName.toUpperCase()}\n`;
+  buf += "PRET !\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  buf += CMD.LEFT;
+  buf += line("=");
+  buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
+  buf += `TABLE ${tableNumber}\n`;
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+  buf += `Commande: #${orderNum}\n`;
+  buf += `Date: ${date}\n`;
+  buf += line("=");
+  for (const item of items) {
+    buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+    buf += `${item.qty}x ${item.name}\n`;
+    buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+    buf += ESC + "J\x0C";
+  }
+  buf += line("=");
+  buf += CMD.CENTER;
+  buf += "Pret a servir !\n";
+  buf += CMD.FEED;
+  buf += CMD.PARTIAL_CUT;
+  return buf;
+}
+
 // ----- WebSocket KDS -----
 function broadcast(msg) {
   const data = JSON.stringify(msg);
@@ -247,6 +285,14 @@ wss.on("connection", (ws) => {
   ws.on("message", async (raw) => {
     try {
       const msg = JSON.parse(raw);
+      if (msg.type === "cat_ready") {
+        try {
+          await sendToPrinter(formatPartialReadyTicket(msg));
+          console.log(`Ticket ${msg.catName} PRÊT — Table ${msg.tableNumber} #${msg.orderNum}`);
+        } catch (err) {
+          console.error("Erreur impression ticket partiel:", err.message);
+        }
+      }
       if (msg.type === "order_ready") {
         broadcast({ type: "order_ready", orderId: msg.orderId });
         // Imprimer ticket "Prêt"
