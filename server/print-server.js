@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import net from "net";
 import http from "http";
+import fs from "fs";
 import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -167,8 +168,29 @@ function sendToPrinter(data) {
   });
 }
 
-// ----- Stockage des commandes en cours -----
-const activeOrders = new Map(); // orderId -> order data
+// ----- Stockage des commandes en cours (avec persistance fichier) -----
+const ORDERS_FILE = path.join(__dirname, "active-orders.json");
+
+function loadOrders() {
+  try {
+    const data = fs.readFileSync(ORDERS_FILE, "utf8");
+    const arr = JSON.parse(data);
+    return new Map(arr.map((o) => [o.id, o]));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveOrders(map) {
+  try {
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify([...map.values()]), "utf8");
+  } catch (err) {
+    console.error("Erreur sauvegarde commandes:", err.message);
+  }
+}
+
+const activeOrders = loadOrders();
+console.log(`${activeOrders.size} commande(s) en cours chargée(s)`);
 
 // ----- Ticket "PRÊT" -----
 function formatReadyTicket({ tableNumber, orderNum, items, date }) {
@@ -215,6 +237,13 @@ function broadcast(msg) {
 
 wss.on("connection", (ws) => {
   console.log("KDS connecté");
+  // Envoyer toutes les commandes actives au nouveau client
+  if (activeOrders.size > 0) {
+    activeOrders.forEach((order) => {
+      ws.send(JSON.stringify({ type: "new_order", order }));
+    });
+  }
+
   ws.on("message", async (raw) => {
     try {
       const msg = JSON.parse(raw);
@@ -224,6 +253,7 @@ wss.on("connection", (ws) => {
         const order = activeOrders.get(msg.orderId);
         if (order) {
           activeOrders.delete(msg.orderId);
+          saveOrders(activeOrders);
           try {
             await sendToPrinter(formatReadyTicket(order));
             console.log(`Ticket PRÊT imprimé — Table ${order.tableNumber} #${order.orderNum}`);
@@ -264,6 +294,7 @@ app.post("/print-all", async (req, res) => {
     const orderId = `${orderNum}-${Date.now()}`;
     const orderData = { id: orderId, orderNum, tableNumber, date, items: cuisineAll, receivedAt: Date.now() };
     activeOrders.set(orderId, orderData);
+    saveOrders(activeOrders);
     broadcast({ type: "new_order", order: orderData });
 
     res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length });
