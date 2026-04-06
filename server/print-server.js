@@ -296,17 +296,11 @@ wss.on("connection", (ws) => {
       }
       if (msg.type === "order_ready") {
         broadcast({ type: "order_ready", orderId: msg.orderId });
-        // Imprimer ticket "Prêt"
         const order = activeOrders.get(msg.orderId);
         if (order) {
           activeOrders.delete(msg.orderId);
           saveOrders(activeOrders);
-          try {
-            await sendToPrinter(formatReadyTicket(order));
-            console.log(`Ticket PRÊT imprimé — Table ${order.tableNumber} #${order.orderNum}`);
-          } catch (err) {
-            console.error("Erreur impression ticket prêt:", err.message);
-          }
+          console.log(`Commande terminée — Table ${order.tableNumber} #${order.orderNum}`);
         }
       }
     } catch {}
