@@ -7,8 +7,8 @@ const SETTINGS_PWD_KEY = "punjab_settings_password";
 
 export function getDefaultPasswords() {
   return {
-    app: localStorage.getItem(APP_PWD_KEY) || "1234",
-    settings: localStorage.getItem(SETTINGS_PWD_KEY) || "1234",
+    app: localStorage.getItem(APP_PWD_KEY) || "Punjab2025",
+    settings: localStorage.getItem(SETTINGS_PWD_KEY) || "Punjab2025",
   };
 }
 
