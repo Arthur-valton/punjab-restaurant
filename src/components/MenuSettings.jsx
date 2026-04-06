@@ -12,20 +12,44 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
   const [printUrl, setPrintUrl] = useState(
     () => localStorage.getItem("punjab_print_url") || ""
   );
+  const [urlSaveStatus, setUrlSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
 
   const pwds = getDefaultPasswords();
   const [appPwd, setAppPwd] = useState(pwds.app);
   const [settingsPwd, setSettingsPwd] = useState(pwds.settings);
   const [pwdSaved, setPwdSaved] = useState(false);
 
-  function savePrintUrl(val) {
+  // Charger l'URL depuis GitHub au montage
+  useState(() => {
+    fetch("https://punjab-restaurant.vercel.app/api/get-config")
+      .then((r) => r.json())
+      .then((cfg) => {
+        if (cfg.printUrl) {
+          setPrintUrl(cfg.printUrl);
+          localStorage.setItem("punjab_print_url", cfg.printUrl);
+        }
+      })
+      .catch(() => {});
+  });
+
+  async function savePrintUrl(val) {
     const trimmed = val.trim();
-    if (trimmed) {
-      localStorage.setItem("punjab_print_url", trimmed);
-    } else {
-      localStorage.removeItem("punjab_print_url");
-    }
+    localStorage.setItem("punjab_print_url", trimmed);
     setPrintUrl(trimmed);
+    setUrlSaveStatus("saving");
+    try {
+      const res = await fetch("https://punjab-restaurant.vercel.app/api/save-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ printUrl: trimmed }),
+      });
+      if (!res.ok) throw new Error();
+      setUrlSaveStatus("ok");
+      setTimeout(() => setUrlSaveStatus(null), 2500);
+    } catch {
+      setUrlSaveStatus("error");
+      setTimeout(() => setUrlSaveStatus(null), 4000);
+    }
   }
 
   function handleSavePasswords() {
@@ -138,7 +162,7 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
               />
               <span className="settings-print-url-hint">Ex : http://192.168.1.62:3001</span>
               <button className="settings-pwd-save" onClick={() => savePrintUrl(printUrl)}>
-                Enregistrer l'URL
+                {urlSaveStatus === "saving" ? "Sauvegarde…" : urlSaveStatus === "ok" ? "✓ Enregistré" : urlSaveStatus === "error" ? "✗ Erreur" : "Enregistrer l'URL"}
               </button>
             </div>
 

@@ -22,6 +22,7 @@ function App() {
 
   // Fetch latest menu from GitHub on every load
   useEffect(() => {
+    // Chargement menu
     fetch(GET_MENU_URL)
       .then((r) => r.json())
       .then((data) => {
@@ -30,7 +31,15 @@ function App() {
           localStorage.setItem("punjab_menu_github", JSON.stringify(data));
         }
       })
-      .catch(() => {/* keep cached/default */});
+      .catch(() => {});
+
+    // Chargement config (printUrl)
+    fetch("https://punjab-restaurant.vercel.app/api/get-config")
+      .then((r) => r.json())
+      .then((cfg) => {
+        if (cfg.printUrl) localStorage.setItem("punjab_print_url", cfg.printUrl);
+      })
+      .catch(() => {});
   }, []);
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
