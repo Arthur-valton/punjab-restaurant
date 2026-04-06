@@ -229,6 +229,54 @@ body {
   padding: 4px;
 }
 
+/* Settings main tabs (Menu / Réglages) */
+.settings-main-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.settings-main-tab {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(255,255,255,0.1);
+  color: #aaa;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-main-tab.active {
+  background: #e67e22;
+  color: #fff;
+}
+
+/* Settings Réglages section */
+.settings-reglages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-reglages-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-reglages-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 2px;
+}
+
 /* Settings passwords */
 .settings-pwd-row {
   display: flex;

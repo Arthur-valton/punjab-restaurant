@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getDefaultPasswords, savePasswords, lockApp } from "./PasswordGate";
 
 export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }) {
+  const [activeTab, setActiveTab] = useState("menu"); // "menu" | "reglages"
   const [activeCategory, setActiveCategory] = useState(menuData[0].category);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
@@ -99,7 +100,20 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     <div className="settings-overlay">
       <div className="settings-panel">
         <div className="settings-header">
-          <h2>Modifier le menu</h2>
+          <div className="settings-main-tabs">
+            <button
+              className={`settings-main-tab ${activeTab === "menu" ? "active" : ""}`}
+              onClick={() => setActiveTab("menu")}
+            >
+              Menu
+            </button>
+            <button
+              className={`settings-main-tab ${activeTab === "reglages" ? "active" : ""}`}
+              onClick={() => setActiveTab("reglages")}
+            >
+              Réglages
+            </button>
+          </div>
           <div className="settings-header-right">
             {saveStatus === "saving" && <span className="save-status save-status--saving">Sauvegarde…</span>}
             {saveStatus === "ok" && <span className="save-status save-status--ok">✓ Sauvegardé</span>}
@@ -108,6 +122,56 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
           </div>
         </div>
 
+        {/* ── ONGLET RÉGLAGES ── */}
+        {activeTab === "reglages" && (
+          <div className="settings-reglages">
+            <div className="settings-reglages-section">
+              <div className="settings-reglages-title">🖨 Serveur d'impression</div>
+              <input
+                className="settings-print-url-input"
+                type="text"
+                placeholder={`Auto (${window.location.hostname}:3001)`}
+                value={printUrl}
+                onChange={(e) => setPrintUrl(e.target.value)}
+                onBlur={(e) => savePrintUrl(e.target.value)}
+              />
+              <span className="settings-print-url-hint">Ex : http://192.168.1.62:3001</span>
+            </div>
+
+            <div className="settings-reglages-section">
+              <div className="settings-reglages-title">🔒 Mots de passe</div>
+              <div className="settings-pwd-row">
+                <span className="settings-pwd-label">Application</span>
+                <input
+                  className="settings-print-url-input"
+                  type="password"
+                  value={appPwd}
+                  onChange={(e) => setAppPwd(e.target.value)}
+                  placeholder="Mot de passe app"
+                />
+              </div>
+              <div className="settings-pwd-row">
+                <span className="settings-pwd-label">Paramètres</span>
+                <input
+                  className="settings-print-url-input"
+                  type="password"
+                  value={settingsPwd}
+                  onChange={(e) => setSettingsPwd(e.target.value)}
+                  placeholder="Mot de passe paramètres"
+                />
+              </div>
+              <button className="settings-pwd-save" onClick={handleSavePasswords}>
+                {pwdSaved ? "✓ Enregistré" : "Enregistrer les mots de passe"}
+              </button>
+              <button className="settings-pwd-lock" onClick={() => { lockApp(); window.location.reload(); }}>
+                Verrouiller l'application
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── ONGLET MENU ── */}
+        {activeTab === "menu" && (<>
         <div className="settings-tabs">
           <button
             className="settings-tab settings-tab-add"
@@ -146,51 +210,6 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
             </button>
           </div>
         )}
-
-        <div className="settings-print-url-section">
-          <label className="settings-print-url-label">🖨 Serveur d'impression</label>
-          <input
-            className="settings-print-url-input"
-            type="text"
-            placeholder={`Auto (${window.location.hostname}:3001)`}
-            value={printUrl}
-            onChange={(e) => setPrintUrl(e.target.value)}
-            onBlur={(e) => savePrintUrl(e.target.value)}
-          />
-          <span className="settings-print-url-hint">
-            Ex : http://192.168.1.62:3001
-          </span>
-        </div>
-
-        <div className="settings-print-url-section">
-          <label className="settings-print-url-label">🔒 Mots de passe</label>
-          <div className="settings-pwd-row">
-            <span className="settings-pwd-label">Application</span>
-            <input
-              className="settings-print-url-input"
-              type="password"
-              value={appPwd}
-              onChange={(e) => setAppPwd(e.target.value)}
-              placeholder="Mot de passe app"
-            />
-          </div>
-          <div className="settings-pwd-row">
-            <span className="settings-pwd-label">Paramètres</span>
-            <input
-              className="settings-print-url-input"
-              type="password"
-              value={settingsPwd}
-              onChange={(e) => setSettingsPwd(e.target.value)}
-              placeholder="Mot de passe paramètres"
-            />
-          </div>
-          <button className="settings-pwd-save" onClick={handleSavePasswords}>
-            {pwdSaved ? "✓ Enregistré" : "Enregistrer les mots de passe"}
-          </button>
-          <button className="settings-pwd-lock" onClick={() => { lockApp(); window.location.reload(); }}>
-            Verrouiller l'application
-          </button>
-        </div>
 
         <div className="settings-items">
           <div className="settings-category-actions">
@@ -264,6 +283,7 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
             </div>
           </div>
         </div>
+        </>)}
       </div>
     </div>
   );
