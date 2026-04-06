@@ -257,23 +257,31 @@
 
     /* ── Section appelée par le service ── */
     @keyframes pulse-section {
-      0%, 100% { background: rgba(10,132,255,0.08); box-shadow: 0 0 0 1px rgba(10,132,255,0.4); }
-      50%       { background: rgba(10,132,255,0.22); box-shadow: 0 0 0 2px rgba(10,132,255,0.7); }
+      0%   { background: rgba(10,132,255,0.05); box-shadow: 0 0 0 1.5px rgba(10,132,255,0.5), 0 0 0 0 rgba(10,132,255,0.4); }
+      50%  { background: rgba(10,132,255,0.3);  box-shadow: 0 0 0 2px rgba(10,132,255,1),   0 0 20px 4px rgba(10,132,255,0.35); }
+      100% { background: rgba(10,132,255,0.05); box-shadow: 0 0 0 1.5px rgba(10,132,255,0.5), 0 0 0 0 rgba(10,132,255,0.4); }
     }
 
     .category-section.called {
-      animation: pulse-section 0.9s ease infinite;
+      animation: pulse-section 0.7s ease-in-out infinite;
       border-radius: 10px;
     }
 
+    @keyframes badge-flash {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(1.08); }
+    }
+
     .called-badge {
-      font-size: 0.58rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       color: #fff;
       background: var(--blue);
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 100px;
+      animation: badge-flash 0.7s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(10,132,255,0.6);
     }
 
     .category-header {
