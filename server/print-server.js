@@ -78,11 +78,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += `Date: ${date}\n`;
   buf += line("=");
 
-  // Grouper par catégorie avec ordre fixe
-  const CAT_ORDER = ["Entrees", "Plats", "Biryani", "Naans", "Desserts", "Menu Midi"];
+  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
+  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+  const CAT_MERGE = { "Biryani": "Plats" };
   const seenCats = {};
   for (const item of order) {
-    const cat = item.category || "Autres";
+    const cat = CAT_MERGE[item.category] || item.category || "Autres";
     if (!seenCats[cat]) seenCats[cat] = [];
     seenCats[cat].push(item);
   }
