@@ -281,15 +281,18 @@
     return m > 0 ? `${m}min ${ss < 10 ? "0" : ""}${ss}s` : `${ss}s`;
   }
 
+  const CAT_ORDER = ["Entrees", "Plats", "Biryani", "Naans", "Desserts", "Menu Midi"];
+
   function groupByCategory(items) {
-    const groups = [];
     const seen = {};
     items.forEach(i => {
       const cat = i.category || "Autres";
-      if (!seen[cat]) { seen[cat] = true; groups.push({ cat, items: [] }); }
-      groups.find(g => g.cat === cat).items.push(i);
+      if (!seen[cat]) seen[cat] = [];
+      seen[cat].push(i);
     });
-    return groups;
+    // Trier selon l'ordre défini, puis les catégories inconnues à la fin
+    const sorted = [...CAT_ORDER.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER.includes(c))];
+    return sorted.map(cat => ({ cat, items: seen[cat] }));
   }
 
   function renderCategories(orderId, groups) {
