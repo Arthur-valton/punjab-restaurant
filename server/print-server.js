@@ -34,6 +34,20 @@ app.get("/service", (req, res) => {
   res.sendFile(path.join(__dirname, "service.html"));
 });
 
+// Route DELETE /order/:id → supprime une commande
+app.delete("/order/:id", (req, res) => {
+  const orderId = decodeURIComponent(req.params.id);
+  if (activeOrders.has(orderId)) {
+    activeOrders.delete(orderId);
+    saveOrders(activeOrders);
+    broadcast({ type: "order_ready", orderId }); // retire des interfaces
+    console.log(`Commande supprimée manuellement : ${orderId}`);
+    res.json({ ok: true });
+  } else {
+    res.status(404).json({ error: "Commande introuvable" });
+  }
+});
+
 // ----- ESC/POS helpers -----
 const ESC = "\x1B";
 const GS = "\x1D";

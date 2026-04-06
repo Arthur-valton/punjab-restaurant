@@ -236,6 +236,23 @@
       cursor: default;
     }
 
+    .btn-delete {
+      width: 100%;
+      padding: 8px;
+      margin-top: 2px;
+      background: rgba(255,59,48,0.08);
+      color: rgba(255,59,48,0.5);
+      border: none;
+      border-top: 0.5px solid rgba(255,59,48,0.15);
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: all 0.15s;
+    }
+    .btn-delete:hover { background: rgba(255,59,48,0.18); color: var(--red); }
+
     /* ── Indicateur clignotant ── */
     @keyframes pulse-dot {
       0%, 100% { opacity: 1; }
@@ -321,6 +338,13 @@
     ws.send(JSON.stringify({ type: "service_call", orderId, catName }));
   }
 
+  async function deleteOrder(orderId) {
+    if (!confirm("Supprimer cette commande ?")) return;
+    try {
+      await fetch(`/order/${encodeURIComponent(orderId)}`, { method: "DELETE" });
+    } catch {}
+  }
+
   function buildCatRows(order) {
     const catStatus = order.catStatus || {};
     const cats = Object.keys(catStatus);
@@ -365,6 +389,7 @@
       </div>
       <div class="card-body" id="body-${order.id}">
         ${buildCatRows(order)}
+        <button class="btn-delete" onclick="deleteOrder('${order.id}')">Supprimer la commande</button>
       </div>
     `;
     ordersEl.prepend(card);
