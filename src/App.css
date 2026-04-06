@@ -29,6 +29,14 @@ body {
   display: none;
 }
 
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* permet au scroll de fonctionner dans un enfant flex */
+  overflow: hidden;
+}
+
 /* Header */
 .app-header {
   background: #1a1a1a;
@@ -812,6 +820,7 @@ body {
 .menu-grid {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 12px;
   padding-bottom: 160px; /* space for cart bar */
 }
