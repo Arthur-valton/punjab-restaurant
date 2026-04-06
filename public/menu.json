@@ -113,7 +113,15 @@
         "price": 15,
         "category": "Entrees",
         "subcategory": "Beignets"
-      }
+      },
+      { "id": 100, "name": "Nan Nature", "price": 3, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 101, "name": "Nan Fromage", "price": 3.5, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 102, "name": "Nan Ail", "price": 3.5, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 103, "name": "Chili Nan", "price": 3.5, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 104, "name": "Nan Punjab", "price": 4, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 105, "name": "Masala Kulcha", "price": 4, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 106, "name": "Nan Fromage & Ail", "price": 4.5, "category": "Entrees", "subcategory": "Naans" },
+      { "id": 107, "name": "Chappati", "price": 3, "category": "Entrees", "subcategory": "Naans" }
     ]
   },
   {
@@ -447,7 +455,15 @@
         "price": 4,
         "category": "Plats",
         "subcategory": "Riz"
-      }
+      },
+      { "id": 108, "name": "Nan Nature", "price": 3, "category": "Plats", "subcategory": "Naans" },
+      { "id": 109, "name": "Nan Fromage", "price": 3.5, "category": "Plats", "subcategory": "Naans" },
+      { "id": 110, "name": "Nan Ail", "price": 3.5, "category": "Plats", "subcategory": "Naans" },
+      { "id": 111, "name": "Chili Nan", "price": 3.5, "category": "Plats", "subcategory": "Naans" },
+      { "id": 112, "name": "Nan Punjab", "price": 4, "category": "Plats", "subcategory": "Naans" },
+      { "id": 113, "name": "Masala Kulcha", "price": 4, "category": "Plats", "subcategory": "Naans" },
+      { "id": 114, "name": "Nan Fromage & Ail", "price": 4.5, "category": "Plats", "subcategory": "Naans" },
+      { "id": 115, "name": "Chappati", "price": 3, "category": "Plats", "subcategory": "Naans" }
     ]
   },
   {
