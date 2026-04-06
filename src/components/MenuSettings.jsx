@@ -129,13 +129,17 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
               <div className="settings-reglages-title">🖨 Serveur d'impression</div>
               <input
                 className="settings-print-url-input"
-                type="text"
+                type="url"
+                inputMode="url"
+                autoCapitalize="none"
                 placeholder={`Auto (${window.location.hostname}:3001)`}
                 value={printUrl}
                 onChange={(e) => setPrintUrl(e.target.value)}
-                onBlur={(e) => savePrintUrl(e.target.value)}
               />
               <span className="settings-print-url-hint">Ex : http://192.168.1.62:3001</span>
+              <button className="settings-pwd-save" onClick={() => savePrintUrl(printUrl)}>
+                Enregistrer l'URL
+              </button>
             </div>
 
             <div className="settings-reglages-section">
