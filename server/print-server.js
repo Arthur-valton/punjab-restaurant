@@ -154,9 +154,10 @@ function formatReadyTicket({ tableNumber, orderNum, items, date }) {
   buf += "PUNJAB\n";
   buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   buf += "\n";
-  buf += CMD.BOLD_ON;
-  buf += "*** COMMANDE PRETE ***\n";
-  buf += CMD.BOLD_OFF;
+  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += "COMMANDE\n";
+  buf += "PRETE !\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   buf += CMD.LEFT;
   buf += line("=");
   buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
