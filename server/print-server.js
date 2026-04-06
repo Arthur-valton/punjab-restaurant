@@ -24,6 +24,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Route /kds → kds.html
+app.get("/kds", (req, res) => {
+  res.sendFile(path.join(__dirname, "kds.html"));
+});
+
 // ----- ESC/POS helpers -----
 const ESC = "\x1B";
 const GS = "\x1D";
