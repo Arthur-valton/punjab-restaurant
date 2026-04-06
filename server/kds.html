@@ -248,6 +248,43 @@
     .btn-cat-ready:active { background: rgba(52,199,89,0.28); color: var(--green); }
     .btn-cat-ready.done   { background: var(--bg3); color: rgba(52,199,89,0.45); cursor: default; }
 
+    /* ── Bouton En cours ── */
+    .btn-in-progress {
+      background: rgba(10,132,255,0.18) !important;
+      color: var(--blue) !important;
+    }
+    .btn-in-progress:hover { background: rgba(10,132,255,0.3) !important; }
+
+    /* ── Section appelée par le service ── */
+    .category-section.called {
+      border: 1px solid rgba(10,132,255,0.5) !important;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.5); }
+      50%       { box-shadow: 0 0 0 4px rgba(10,132,255,0.18); }
+    }
+    .category-section.called {
+      animation: pulse-border 1.2s ease infinite;
+    }
+
+    .called-badge {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--blue);
+      background: rgba(10,132,255,0.15);
+      padding: 2px 8px;
+      border-radius: 100px;
+      animation: pulse-border 1.2s ease infinite;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
     /* ── Item row ── */
     .item-row {
       display: flex;
@@ -317,8 +354,9 @@
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
-      if (msg.type === "new_order") addOrder(msg.order);
+      if (msg.type === "new_order")   addOrder(msg.order);
       if (msg.type === "order_ready") removeOrder(msg.orderId);
+      if (msg.type === "cat_status")  updateCatStatus(msg.orderId, msg.catName, msg.status);
     };
   }
 
@@ -349,11 +387,31 @@
     return sorted.map(cat => ({ cat, items: seen[cat] }));
   }
 
-  function renderCategories(orderId, groups) {
-    return groups.map((g, idx) => `
-      <div class="category-section" id="cat-${orderId}-${idx}">
+  // Rendu d'une section catégorie avec statut
+  function renderCatSection(orderId, g, idx, status) {
+    const catKey = g.cat.replace(/\s/g, "_");
+    const isCalled = status === "called";
+    const isInProgress = status === "in_progress";
+    const isDone = status === "done";
+
+    let btnHtml = "";
+    if (!isDone) {
+      if (isCalled) {
+        btnHtml = `<button class="btn-cat-ready btn-in-progress" onclick="markCatInProgress('${orderId}', ${idx})">▶ En cours</button>`;
+      } else if (isInProgress) {
+        btnHtml = `<button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>`;
+      } else {
+        // waiting : bouton PRÊT direct (si pas de service configuré)
+        btnHtml = `<button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>`;
+      }
+    }
+
+    return `
+      <div class="category-section ${isDone ? "done" : ""} ${isCalled ? "called" : ""}"
+           id="cat-${orderId}-${catKey}">
         <div class="category-header">
           <span class="category-label">${g.cat}</span>
+          ${isCalled ? '<span class="called-badge">SERVICE !</span>' : ""}
         </div>
         <div class="category-items">
           ${g.items.map(i => `
@@ -363,27 +421,55 @@
             </div>
           `).join("")}
         </div>
-        <button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>
+        ${btnHtml}
       </div>
-    `).join("");
+    `;
+  }
+
+  function renderCategories(orderId, groups, catStatus) {
+    return groups.map((g, idx) => renderCatSection(orderId, g, idx, (catStatus || {})[g.cat] || "waiting")).join("");
+  }
+
+  function updateCatStatus(orderId, catName, status) {
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    // Mettre à jour le statut local
+    if (!entry.order.catStatus) entry.order.catStatus = {};
+    entry.order.catStatus[catName] = status;
+
+    const catKey = catName.replace(/\s/g, "_");
+    const section = document.getElementById(`cat-${orderId}-${catKey}`);
+    if (!section) return;
+
+    const idx = entry.groups.findIndex(g => g.cat === catName);
+    if (idx === -1) return;
+
+    const g = entry.groups[idx];
+    const newHtml = renderCatSection(orderId, g, idx, status);
+    const temp = document.createElement("div");
+    temp.innerHTML = newHtml;
+    section.replaceWith(temp.firstElementChild);
+  }
+
+  function markCatInProgress(orderId, catIdx) {
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    const group = entry.groups[catIdx];
+    ws.send(JSON.stringify({ type: "cat_in_progress", orderId, catName: group.cat }));
   }
 
   function markCatReady(orderId, catIdx) {
-    const section = document.getElementById(`cat-${orderId}-${catIdx}`);
-    if (!section || section.classList.contains("done")) return;
-    section.classList.add("done");
-    const btn = section.querySelector(".btn-cat-ready");
-    btn.textContent = "✓ Prêt";
-    btn.classList.add("done");
-    btn.disabled = true;
-
     const entry = orders.get(orderId);
     if (!entry) return;
 
-    // Imprimer ticket partiel pour cette catégorie
     const group = entry.groups[catIdx];
+    const catKey = group.cat.replace(/\s/g, "_");
+    const section = document.getElementById(`cat-${orderId}-${catKey}`);
+    if (!section || section.classList.contains("done")) return;
+
     ws.send(JSON.stringify({
       type: "cat_ready",
+      orderId,
       tableNumber: entry.order.tableNumber,
       orderNum: entry.order.orderNum,
       catName: group.cat,
@@ -391,11 +477,11 @@
     }));
 
     // Vérifier si toutes les catégories sont prêtes
-    const allSections = document.querySelectorAll(`[id^="cat-${orderId}-"]`);
-    const allDone = [...allSections].every(s => s.classList.contains("done"));
-    if (allDone) {
-      setTimeout(() => markReady(orderId), 400);
-    }
+    setTimeout(() => {
+      const catStatus = entry.order.catStatus || {};
+      const allDone = entry.groups.every(g => catStatus[g.cat] === "done" || g.cat === group.cat);
+      if (allDone) setTimeout(() => markReady(orderId), 400);
+    }, 200);
   }
 
   function addOrder(order) {
@@ -405,7 +491,7 @@
     card.id = `order-${order.id}`;
     card.innerHTML = `
       <div class="card-header">
-        <div>
+        <div class="table-info">
           <div class="table-label">TABLE</div>
           <div class="table-num">${order.tableNumber}</div>
         </div>
@@ -415,7 +501,7 @@
         </div>
       </div>
       <div class="card-items">
-        ${renderCategories(order.id, groups)}
+        ${renderCategories(order.id, groups, order.catStatus)}
       </div>
     `;
 

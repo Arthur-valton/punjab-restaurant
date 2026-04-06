@@ -29,6 +29,11 @@ app.get("/kds", (req, res) => {
   res.sendFile(path.join(__dirname, "kds.html"));
 });
 
+// Route /service → service.html
+app.get("/service", (req, res) => {
+  res.sendFile(path.join(__dirname, "service.html"));
+});
+
 // ----- ESC/POS helpers -----
 const ESC = "\x1B";
 const GS = "\x1D";
@@ -271,7 +276,22 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
   return buf;
 }
 
-// ----- WebSocket KDS -----
+// ----- Helpers catégories (partagés) -----
+const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+const CAT_MERGE_SHARED = { "Biryani": "Plats" };
+
+function buildGroups(items) {
+  const seen = {};
+  for (const item of items) {
+    const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
+    if (!seen[cat]) seen[cat] = [];
+    seen[cat].push(item);
+  }
+  const sorted = [...CAT_ORDER_SHARED.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER_SHARED.includes(c))];
+  return sorted.map(cat => ({ cat, items: seen[cat] }));
+}
+
+// ----- WebSocket KDS + Service -----
 function broadcast(msg) {
   const data = JSON.stringify(msg);
   wss.clients.forEach((client) => {
@@ -280,7 +300,7 @@ function broadcast(msg) {
 }
 
 wss.on("connection", (ws) => {
-  console.log("KDS connecté");
+  console.log("Client connecté (KDS/Service)");
   // Envoyer toutes les commandes actives au nouveau client
   if (activeOrders.size > 0) {
     activeOrders.forEach((order) => {
@@ -291,7 +311,37 @@ wss.on("connection", (ws) => {
   ws.on("message", async (raw) => {
     try {
       const msg = JSON.parse(raw);
+
+      // Service → demande une catégorie
+      if (msg.type === "service_call") {
+        const order = activeOrders.get(msg.orderId);
+        if (order && order.catStatus && order.catStatus[msg.catName] === "waiting") {
+          order.catStatus[msg.catName] = "called";
+          saveOrders(activeOrders);
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "called" });
+          console.log(`Service demande ${msg.catName} — Table ${order.tableNumber}`);
+        }
+      }
+
+      // Cuisine → prend en charge
+      if (msg.type === "cat_in_progress") {
+        const order = activeOrders.get(msg.orderId);
+        if (order && order.catStatus) {
+          order.catStatus[msg.catName] = "in_progress";
+          saveOrders(activeOrders);
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "in_progress" });
+          console.log(`Cuisine en cours ${msg.catName} — Table ${order.tableNumber}`);
+        }
+      }
+
+      // Cuisine → prêt → imprime ticket
       if (msg.type === "cat_ready") {
+        const order = activeOrders.get(msg.orderId);
+        if (order && order.catStatus) {
+          order.catStatus[msg.catName] = "done";
+          saveOrders(activeOrders);
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "done" });
+        }
         try {
           await sendToPrinter(formatPartialReadyTicket(msg));
           console.log(`Ticket ${msg.catName} PRÊT — Table ${msg.tableNumber} #${msg.orderNum}`);
@@ -299,6 +349,8 @@ wss.on("connection", (ws) => {
           console.error("Erreur impression ticket partiel:", err.message);
         }
       }
+
+      // Toutes catégories prêtes → supprimer la commande
       if (msg.type === "order_ready") {
         broadcast({ type: "order_ready", orderId: msg.orderId });
         const order = activeOrders.get(msg.orderId);
@@ -308,9 +360,10 @@ wss.on("connection", (ws) => {
           console.log(`Commande terminée — Table ${order.tableNumber} #${order.orderNum}`);
         }
       }
+
     } catch {}
   });
-  ws.on("close", () => console.log("KDS déconnecté"));
+  ws.on("close", () => console.log("Client déconnecté"));
 });
 
 // ----- Route POST /print-all -----
@@ -338,7 +391,10 @@ app.post("/print-all", async (req, res) => {
 
     // Broadcast au KDS + stockage en mémoire
     const orderId = `${orderNum}-${Date.now()}`;
-    const orderData = { id: orderId, orderNum, tableNumber, date, items: cuisineAll, receivedAt: Date.now() };
+    const groups = buildGroups(cuisineAll);
+    const catStatus = {};
+    groups.forEach(g => { catStatus[g.cat] = "waiting"; });
+    const orderData = { id: orderId, orderNum, tableNumber, date, items: cuisineAll, receivedAt: Date.now(), catStatus };
     activeOrders.set(orderId, orderData);
     saveOrders(activeOrders);
     broadcast({ type: "new_order", order: orderData });
