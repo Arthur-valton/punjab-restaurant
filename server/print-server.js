@@ -142,6 +142,43 @@ function sendToPrinter(data) {
   });
 }
 
+// ----- Stockage des commandes en cours -----
+const activeOrders = new Map(); // orderId -> order data
+
+// ----- Ticket "PRÊT" -----
+function formatReadyTicket({ tableNumber, orderNum, items, date }) {
+  let buf = "";
+  buf += CMD.INIT;
+  buf += CMD.CENTER;
+  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += "PUNJAB\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  buf += "\n";
+  buf += CMD.BOLD_ON;
+  buf += "*** COMMANDE PRETE ***\n";
+  buf += CMD.BOLD_OFF;
+  buf += CMD.LEFT;
+  buf += line("=");
+  buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
+  buf += `TABLE ${tableNumber}\n`;
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+  buf += `Commande: #${orderNum}\n`;
+  buf += `Date: ${date}\n`;
+  buf += line("=");
+  for (const item of items) {
+    buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+    buf += `${item.qty}x ${item.name}\n`;
+    buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+    buf += ESC + "J\x0C";
+  }
+  buf += line("=");
+  buf += CMD.CENTER;
+  buf += "Plat(s) pret(s) a servir !\n";
+  buf += CMD.FEED;
+  buf += CMD.PARTIAL_CUT;
+  return buf;
+}
+
 // ----- WebSocket KDS -----
 function broadcast(msg) {
   const data = JSON.stringify(msg);
@@ -152,12 +189,22 @@ function broadcast(msg) {
 
 wss.on("connection", (ws) => {
   console.log("KDS connecté");
-  ws.on("message", (raw) => {
+  ws.on("message", async (raw) => {
     try {
       const msg = JSON.parse(raw);
-      // Un écran cuisine marque une commande comme prête → on broadcast à tous
       if (msg.type === "order_ready") {
         broadcast({ type: "order_ready", orderId: msg.orderId });
+        // Imprimer ticket "Prêt"
+        const order = activeOrders.get(msg.orderId);
+        if (order) {
+          activeOrders.delete(msg.orderId);
+          try {
+            await sendToPrinter(formatReadyTicket(order));
+            console.log(`Ticket PRÊT imprimé — Table ${order.tableNumber} #${order.orderNum}`);
+          } catch (err) {
+            console.error("Erreur impression ticket prêt:", err.message);
+          }
+        }
       }
     } catch {}
   });
@@ -187,18 +234,11 @@ app.post("/print-all", async (req, res) => {
     console.log(`Impression Table ${tableNumber} #${orderNum} : ${tickets.length} ticket(s)`);
     await sendToPrinter(tickets.join(""));
 
-    // Broadcast au KDS
-    broadcast({
-      type: "new_order",
-      order: {
-        id: `${orderNum}-${Date.now()}`,
-        orderNum,
-        tableNumber,
-        date,
-        items: cuisineAll,
-        receivedAt: Date.now(),
-      },
-    });
+    // Broadcast au KDS + stockage en mémoire
+    const orderId = `${orderNum}-${Date.now()}`;
+    const orderData = { id: orderId, orderNum, tableNumber, date, items: cuisineAll, receivedAt: Date.now() };
+    activeOrders.set(orderId, orderData);
+    broadcast({ type: "new_order", order: orderData });
 
     res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length });
   } catch (err) {
