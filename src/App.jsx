@@ -67,7 +67,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
-  const [appUnlocked, setAppUnlocked] = useState(isAppUnlocked);
+  const autoLogin = new URLSearchParams(window.location.search).get("autoLogin") === "1";
+  const [appUnlocked, setAppUnlocked] = useState(isAppUnlocked || autoLogin);
   const [showSettingsPwd, setShowSettingsPwd] = useState(false);
 
   async function updateMenu(newMenu) {
