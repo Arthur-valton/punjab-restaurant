@@ -3,6 +3,7 @@ import cors from "cors";
 import net from "net";
 import http from "http";
 import fs from "fs";
+import { execSync } from "child_process";
 import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -14,8 +15,28 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/kds-ws" });
 
 const PORT = 3001;
-const PRINTER_IP = "192.168.110.21";
 const PRINTER_PORT = 9100;
+
+// IP imprimante selon le réseau WiFi
+const PRINTER_IPS = {
+  "popina-new-punjab": "192.168.110.21",
+  "Internet":          "192.168.1.29",
+};
+const PRINTER_IP_DEFAULT = "192.168.110.21";
+
+function getPrinterIp() {
+  try {
+    const ssid = execSync("iwgetid -r 2>/dev/null").toString().trim();
+    const ip = PRINTER_IPS[ssid] || PRINTER_IP_DEFAULT;
+    console.log(`WiFi: "${ssid}" → Imprimante: ${ip}`);
+    return ip;
+  } catch {
+    console.log(`WiFi inconnu → Imprimante: ${PRINTER_IP_DEFAULT}`);
+    return PRINTER_IP_DEFAULT;
+  }
+}
+
+const PRINTER_IP = getPrinterIp();
 
 const WIDTH = 48;
 const WIDTH_DOUBLE = 24;
