@@ -326,10 +326,22 @@
     <div id="counter">0 table(s)</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
+    <button onclick="openOrderApp()" style="background:rgba(10,132,255,0.18);border:none;color:#0a84ff;font-size:0.72rem;font-weight:600;padding:0 12px;height:32px;border-radius:100px;cursor:pointer;" title="Nouvelle commande">+ Commande</button>
     <button onclick="location.reload()" style="background:rgba(84,84,88,0.2);border:none;color:rgba(235,235,245,0.5);font-size:1rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Rafraîchir">↺</button>
     <div id="status" class="disconnected">Déconnecté</div>
   </div>
 </header>
+
+<!-- Popup app de commande -->
+<div id="order-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+  <div style="background:#1c1c1e;border-radius:20px;overflow:hidden;width:min(420px,94vw);height:min(780px,92vh);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.6);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:0.5px solid rgba(84,84,88,0.4);">
+      <span style="font-size:0.9rem;font-weight:700;color:#fff;">Nouvelle commande</span>
+      <button onclick="closeOrderApp()" style="background:rgba(84,84,88,0.3);border:none;color:rgba(235,235,245,0.7);font-size:1.1rem;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <iframe id="order-iframe" src="https://mini-app-restaurant.vercel.app" style="flex:1;border:none;width:100%;"></iframe>
+  </div>
+</div>
 
 <div id="empty">
   <span>🍽️</span>
@@ -348,6 +360,18 @@
   const orders = new Map();
   let ws;
   let pingInterval;
+
+  function openOrderApp() {
+    const modal = document.getElementById("order-modal");
+    modal.style.display = "flex";
+  }
+  function closeOrderApp() {
+    document.getElementById("order-modal").style.display = "none";
+  }
+  // Fermer en cliquant en dehors
+  document.getElementById("order-modal").addEventListener("click", function(e) {
+    if (e.target === this) closeOrderApp();
+  });
 
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
   const CAT_LABELS = { Entrees: "Entrées", Plats: "Plats", Naans: "Naans", Desserts: "Desserts", Boissons: "Boissons", "Menu Midi": "Menu Midi" };
