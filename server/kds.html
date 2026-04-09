@@ -599,6 +599,7 @@
   }
 
   function addOrder(order) {
+    if (orders.has(order.id)) return; // déjà affiché, pas de doublon
     const groups = groupByCategory(order.items);
     const card = document.createElement("div");
     card.className = "order-card fresh";
