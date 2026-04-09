@@ -231,7 +231,19 @@ function loadOrders() {
   try {
     const data = fs.readFileSync(ORDERS_FILE, "utf8");
     const arr = JSON.parse(data);
-    return new Map(arr.map((o) => [o.id, o]));
+    const maxAge = 12 * 60 * 60 * 1000; // 12h
+    const now = Date.now();
+    const active = arr.filter((o) => {
+      // Supprimer si trop vieux
+      if (o.receivedAt && now - o.receivedAt > maxAge) return false;
+      // Supprimer si toutes catégories terminées
+      if (o.catStatus) {
+        const statuses = Object.values(o.catStatus);
+        if (statuses.length > 0 && statuses.every(s => s === "done" || s === "delivered")) return false;
+      }
+      return true;
+    });
+    return new Map(active.map((o) => [o.id, o]));
   } catch {
     return new Map();
   }
