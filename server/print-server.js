@@ -354,6 +354,15 @@ function broadcast(msg) {
   });
 }
 
+// Ping toutes les 20s pour garder les connexions Cloudflare actives
+setInterval(() => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify({ type: "ping" }));
+    }
+  });
+}, 20000);
+
 wss.on("connection", (ws) => {
   console.log("Client connecté (KDS/Service)");
   // Envoyer toutes les commandes actives au nouveau client
