@@ -98,23 +98,41 @@
     /* ── Grid commandes ── */
     #orders {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
       gap: 12px;
       padding: 14px;
     }
 
-    /* ── Carte commande ── */
+    @media (min-width: 768px) {
+      #orders {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 20px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #orders {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 24px;
+      }
+    }
+
+    /* ── Card ── */
     .order-card {
       background: var(--bg2);
       border-radius: 16px;
       overflow: hidden;
-      animation: spring-in 0.38s cubic-bezier(0.34,1.56,0.64,1) both;
-      box-shadow: 0 6px 28px rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+      animation: spring-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
 
     @keyframes spring-in {
-      from { transform: scale(0.93) translateY(-8px); opacity: 0; }
-      to   { transform: scale(1) translateY(0);       opacity: 1; }
+      from { transform: scale(0.92) translateY(-10px); opacity: 0; }
+      to   { transform: scale(1) translateY(0);        opacity: 1; }
     }
 
     @keyframes spring-out {
@@ -122,22 +140,22 @@
     }
     .order-card.removing { animation: spring-out 0.22s ease forwards; }
 
-    /* ── Header carte ── */
+    /* ── Card header ── */
     .card-header {
       padding: 12px 14px 10px;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      border-bottom: 0.5px solid var(--sep);
+      border-bottom: 0.5px solid rgba(84,84,88,0.3);
     }
 
     .table-info { display: flex; flex-direction: column; gap: 1px; }
 
     .table-label {
-      font-size: 0.56rem;
+      font-size: 0.58rem;
       color: var(--label3);
       text-transform: uppercase;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       font-weight: 600;
     }
 
@@ -149,7 +167,7 @@
       line-height: 1;
     }
 
-    .order-meta { text-align: right; }
+    .order-meta { text-align: right; display: flex; flex-direction: column; gap: 3px; }
 
     .order-num {
       font-size: 0.65rem;
@@ -157,93 +175,139 @@
       font-weight: 500;
     }
 
-    /* ── Body carte ── */
+    /* ── Card body ── */
     .card-body {
-      padding: 10px;
+      padding: 8px 10px 10px;
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
     }
 
-    /* ── Section catégorie ── */
-    .cat-row {
+    /* ── Section catégorie (même style que KDS) ── */
+    .cat-section {
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg3);
+      transition: opacity 0.4s ease;
+    }
+
+    /* Flash vert quand la cuisine a terminé — même style que le bleu KDS */
+    @keyframes pulse-done {
+      0%   { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
+      49%  { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
+      50%  { background: var(--bg3); box-shadow: none; }
+      99%  { background: var(--bg3); box-shadow: none; }
+      100% { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
+    }
+    .cat-section.done      { animation: pulse-done 0.6s steps(1) infinite; cursor: pointer; }
+    .cat-section.delivered { opacity: 0.22; }
+
+    .cat-header {
+      padding: 6px 11px 5px;
+      border-bottom: 0.5px solid rgba(84,84,88,0.3);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--bg3);
-      border-radius: 10px;
-      padding: 10px 12px;
-      gap: 10px;
-      transition: opacity 0.3s;
     }
 
-    .cat-row.done { opacity: 0.25; }
-
-    .cat-info { display: flex; flex-direction: column; gap: 2px; }
-
-    .cat-name {
-      font-size: 0.82rem;
+    .cat-label {
+      font-size: 0.6rem;
       font-weight: 700;
-      color: var(--label);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .cat-status-label {
-      font-size: 0.68rem;
-      font-weight: 500;
+      letter-spacing: 0.1em;
       color: var(--label3);
     }
-    .cat-status-label.called     { color: var(--blue); }
-    .cat-status-label.in_progress { color: var(--orange); }
-    .cat-status-label.done       { color: var(--green); }
 
-    /* ── Bouton Envoyer ── */
-    .btn-send {
-      flex-shrink: 0;
-      padding: 8px 16px;
+    .cat-status-pill {
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 2px 8px;
       border-radius: 100px;
+    }
+    .cat-status-pill.waiting    { background: rgba(84,84,88,0.2);    color: var(--label3); }
+    .cat-status-pill.called     { background: rgba(10,132,255,0.18); color: var(--blue); }
+    .cat-status-pill.in_progress{ background: rgba(255,159,10,0.18); color: var(--orange); }
+    .cat-status-pill.done       { background: rgba(52,199,89,0.15);  color: var(--green); }
+    .cat-status-pill.delivered  { background: rgba(52,199,89,0.08);  color: rgba(52,199,89,0.5); }
+
+    /* ── Items ── */
+    .cat-items {
+      padding: 7px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-qty {
+      background: var(--bg4);
+      color: var(--label2);
+      font-weight: 600;
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .item-name {
+      font-size: 0.86rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--label);
+    }
+
+    /* ── Bouton Envoyer (pleine largeur, bas de section) ── */
+    .btn-send {
+      width: 100%;
+      padding: 9px 11px;
       border: none;
+      border-top: 0.5px solid rgba(84,84,88,0.3);
       font-family: inherit;
       font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.18s;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.04em;
+      transition: background 0.18s, color 0.18s;
+      text-align: center;
     }
 
-    .btn-send.waiting {
-      background: var(--blue);
-      color: #fff;
-    }
-    .btn-send.waiting:active { opacity: 0.7; transform: scale(0.96); }
+    .btn-send.waiting    { background: rgba(10,132,255,0.18); color: var(--blue); }
+    .btn-send.waiting:hover   { background: rgba(10,132,255,0.3); }
+    .btn-send.waiting:active  { opacity: 0.7; }
+    .btn-send.called     { background: var(--bg4); color: var(--blue); cursor: default; opacity: 0.6; }
+    .btn-send.in_progress{ background: var(--bg4); color: var(--orange); cursor: default; opacity: 0.6; }
+    .btn-send.done       { background: rgba(52,199,89,0.18); color: var(--green); font-weight: 700; cursor: pointer; }
+    .btn-send.done:hover { background: rgba(52,199,89,0.30); }
+    .btn-send.delivered  { background: var(--bg3); color: rgba(52,199,89,0.4); cursor: default; }
 
-    .btn-send.called {
-      background: rgba(10,132,255,0.15);
-      color: var(--blue);
-      cursor: default;
+    /* ── Timer catégorie ── */
+    .cat-timer {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--label2);
+      background: rgba(84,84,88,0.3);
+      padding: 2px 7px;
+      border-radius: 100px;
     }
-
-    .btn-send.in_progress {
-      background: rgba(255,159,10,0.15);
-      color: var(--orange);
-      cursor: default;
-    }
-
-    .btn-send.done {
-      background: rgba(52,199,89,0.12);
+    .cat-timer.ready {
+      background: rgba(52,199,89,0.2);
       color: var(--green);
-      cursor: default;
     }
 
     .btn-delete {
       width: 100%;
-      padding: 8px;
-      margin-top: 2px;
+      margin: 2px 0 0;
+      padding: 9px;
       background: rgba(255,59,48,0.08);
       color: rgba(255,59,48,0.5);
       border: none;
-      border-top: 0.5px solid rgba(255,59,48,0.15);
+      border-radius: 10px;
       font-family: inherit;
       font-size: 0.72rem;
       font-weight: 500;
@@ -252,23 +316,6 @@
       transition: all 0.15s;
     }
     .btn-delete:hover { background: rgba(255,59,48,0.18); color: var(--red); }
-
-    /* ── Indicateur clignotant ── */
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 5px;
-      vertical-align: middle;
-    }
-    .dot.called     { background: var(--blue);   animation: pulse-dot 1s infinite; }
-    .dot.in_progress { background: var(--orange); animation: pulse-dot 0.8s infinite; }
-    .dot.done       { background: var(--green); animation: none; }
-    .dot.waiting    { display: none; }
   </style>
 </head>
 <body>
@@ -278,7 +325,10 @@
     <h1>SERVICE</h1>
     <div id="counter">0 table(s)</div>
   </div>
-  <div id="status" class="disconnected">Déconnecté</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button onclick="location.reload()" style="background:rgba(84,84,88,0.2);border:none;color:rgba(235,235,245,0.5);font-size:1rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Rafraîchir">↺</button>
+    <div id="status" class="disconnected">Déconnecté</div>
+  </div>
 </header>
 
 <div id="empty">
@@ -297,25 +347,40 @@
 
   const orders = new Map();
   let ws;
+  let pingInterval;
 
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
-  const CAT_LABELS = { Entrees: "Entrées", Plats: "Plats", Naans: "Naans", Desserts: "Desserts", "Menu Midi": "Menu Midi" };
-  const STATUS_LABELS = { waiting: "En attente", called: "Demandé…", in_progress: "En cours", done: "Prêt ✓" };
-  const BTN_LABELS = { waiting: "Envoyer", called: "Demandé", in_progress: "En cours", done: "Prêt" };
+  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
+  const CAT_LABELS = { Entrees: "Entrées", Plats: "Plats", Naans: "Naans", Desserts: "Desserts", Boissons: "Boissons", "Menu Midi": "Menu Midi" };
+  const CAT_MERGE = { "Biryani": "Plats" };
+  const STATUS_LABELS = { waiting: "En attente", called: "Demandé…", in_progress: "En cours", done: "Prêt ✓", delivered: "Livré ✓" };
+  const BTN_LABELS   = { waiting: "Appeler cuisine", called: "Demandé…", in_progress: "En cours…", done: "✓ Confirmer livraison", delivered: "Livré ✓" };
 
   function connect() {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       statusEl.textContent = "Connecté";
       statusEl.className = "connected";
+      clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
+        } else {
+          clearInterval(pingInterval);
+          connect();
+        }
+      }, 10000);
     };
 
     ws.onclose = () => {
       statusEl.textContent = "Déconnecté";
       statusEl.className = "disconnected";
-      setTimeout(connect, 3000);
+      clearInterval(pingInterval);
+      setTimeout(connect, 1000);
     };
+
+    ws.onerror = () => { ws.close(); };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
@@ -325,17 +390,33 @@
       }
 
       if (msg.type === "cat_status") {
-        updateCatStatus(msg.orderId, msg.catName, msg.status);
+        updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
       }
 
       if (msg.type === "order_ready") {
-        removeOrder(msg.orderId);
+        // La commande reste visible dans le service jusqu'à suppression manuelle
       }
     };
   }
 
+  const CAT_NO_KITCHEN = ["Boissons"];
+
   function sendServiceCall(orderId, catName) {
-    ws.send(JSON.stringify({ type: "service_call", orderId, catName }));
+    if (CAT_NO_KITCHEN.includes(catName)) {
+      // Boissons : passe directement en in_progress (bar gère sans cuisine)
+      ws.send(JSON.stringify({ type: "cat_in_progress", orderId, catName }));
+    } else {
+      ws.send(JSON.stringify({ type: "service_call", orderId, catName }));
+    }
+  }
+
+  function markBoissonsReady(orderId, catName) {
+    ws.send(JSON.stringify({ type: "cat_ready", orderId, catName }));
+  }
+
+  function markDelivered(orderId, catName) {
+    ws.send(JSON.stringify({ type: "cat_delivered", orderId, catName }));
+    updateCatStatus(orderId, catName, "delivered"); // mise à jour locale immédiate (l'order peut déjà être supprimé côté serveur)
   }
 
   async function deleteOrder(orderId) {
@@ -345,31 +426,62 @@
     } catch {}
   }
 
+  function buildCatSection(order, cat, status) {
+    const label    = CAT_LABELS[cat] || cat;
+    const catKey   = cat.replace(/\s/g, '_');
+    const oid      = order.id;
+    const noKitchen = CAT_NO_KITCHEN.includes(cat);
+
+    // Éléments de la catégorie
+    const catItems = (order.items || []).filter(i => (CAT_MERGE[i.category] || i.category) === cat);
+    const itemsHtml = catItems.map(i =>
+      `<div class="item-row"><span class="item-qty">${i.qty}×</span><span class="item-name">${i.name}</span></div>`
+    ).join("");
+
+    // Onclick sur la section entière
+    let onclickAttr = "";
+    if (status === "waiting") {
+      onclickAttr = `onclick="sendServiceCall('${oid}','${cat}')" style="cursor:pointer;"`;
+    } else if (status === "in_progress" && noKitchen) {
+      onclickAttr = `onclick="markBoissonsReady('${oid}','${cat}')" style="cursor:pointer;"`;
+    } else if (status === "done") {
+      onclickAttr = `onclick="markDelivered('${oid}','${cat}')" style="cursor:pointer;"`;
+    }
+
+    // Timers
+    const showCallTimer  = status === "called" || status === "in_progress";
+    const showReadyTimer = status === "done";
+
+    // Label du bouton
+    let btnLabel;
+    if (noKitchen) {
+      btnLabel = { waiting: "Servir", in_progress: "Marquer servi", done: "✓ Confirmer livraison", delivered: "Livré ✓" }[status] || status;
+    } else {
+      btnLabel = BTN_LABELS[status] || status;
+    }
+
+    // Classe section
+    const sectionClass = status === "done" ? "done" : status === "delivered" ? "delivered" : "";
+
+    return `<div class="cat-section ${sectionClass}" id="cat-row-${oid}-${catKey}" ${onclickAttr}>
+        <div class="cat-header">
+          <span class="cat-label">${label}</span>
+          <div style="display:flex;align-items:center;gap:5px;">
+            ${showCallTimer  ? `<span class="cat-timer" id="svc-cat-timer-${oid}-${catKey}">0s</span>` : ""}
+            ${showReadyTimer ? `<span class="cat-timer ready" id="svc-ready-timer-${oid}-${catKey}">0s</span>` : ""}
+            <span class="cat-status-pill ${status}">${STATUS_LABELS[status] || status}</span>
+          </div>
+        </div>
+        <div class="cat-items">${itemsHtml}</div>
+        <div class="btn-send ${status}">${btnLabel}</div>
+      </div>`;
+  }
+
   function buildCatRows(order) {
     const catStatus = order.catStatus || {};
     const cats = Object.keys(catStatus);
     const sorted = [...CAT_ORDER.filter(c => cats.includes(c)), ...cats.filter(c => !CAT_ORDER.includes(c))];
-
-    return sorted.map(cat => {
-      const status = catStatus[cat] || "waiting";
-      const label = CAT_LABELS[cat] || cat;
-      const isWaiting = status === "waiting";
-      return `
-        <div class="cat-row ${status === 'done' ? 'done' : ''}" id="cat-row-${order.id}-${cat.replace(/\s/g,'_')}">
-          <div class="cat-info">
-            <div class="cat-name">
-              <span class="dot ${status}"></span>${label}
-            </div>
-            <div class="cat-status-label ${status}">${STATUS_LABELS[status] || status}</div>
-          </div>
-          <button
-            class="btn-send ${status}"
-            ${!isWaiting ? "disabled" : ""}
-            onclick="sendServiceCall('${order.id}', '${cat}')"
-          >${BTN_LABELS[status]}</button>
-        </div>
-      `;
-    }).join("");
+    return sorted.map(cat => buildCatSection(order, cat, catStatus[cat] || "waiting")).join("");
   }
 
   function addOrder(order) {
@@ -393,39 +505,84 @@
       </div>
     `;
     ordersEl.prepend(card);
-    orders.set(order.id, order);
+
+    const catStartTimes = {};
+    const catReadyTimes = {};
+    // Restaurer les timers depuis catCalledAt / catReadyAt persistés
+    const catStatus  = order.catStatus  || {};
+    const catCalledAt = order.catCalledAt || {};
+    const catReadyAt  = order.catReadyAt  || {};
+    for (const [cat, st] of Object.entries(catStatus)) {
+      if (st === "called" || st === "in_progress") {
+        catStartTimes[cat] = catCalledAt[cat] ? Number(catCalledAt[cat]) : Date.now();
+      }
+      if (st === "done") {
+        catReadyTimes[cat] = catReadyAt[cat] ? Number(catReadyAt[cat]) : Date.now();
+      }
+    }
+
+    function tickSvc() {
+      for (const [cat, startTime] of Object.entries(catStartTimes)) {
+        const el = document.getElementById(`svc-cat-timer-${order.id}-${cat.replace(/\s/g,'_')}`);
+        if (el) el.textContent = formatElapsed(Date.now() - Number(startTime));
+      }
+      for (const [cat, readyTime] of Object.entries(catReadyTimes)) {
+        const el = document.getElementById(`svc-ready-timer-${order.id}-${cat.replace(/\s/g,'_')}`);
+        if (el) el.textContent = formatElapsed(Date.now() - Number(readyTime));
+      }
+    }
+    tickSvc(); // mise à jour immédiate
+    const interval = setInterval(tickSvc, 1000);
+
+    orders.set(order.id, { ...order, _catStartTimes: catStartTimes, _catReadyTimes: catReadyTimes, _interval: interval });
     updateCounter();
   }
 
-  function updateCatStatus(orderId, catName, status) {
-    const order = orders.get(orderId);
-    if (!order) return;
-    if (!order.catStatus) order.catStatus = {};
-    order.catStatus[catName] = status;
+  function formatElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return m > 0 ? `${m}min ${ss < 10 ? "0" : ""}${ss}s` : `${ss}s`;
+  }
 
-    // Mettre à jour la ligne catégorie
+  function updateCatStatus(orderId, catName, status, msg = {}) {
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    if (!entry.catStatus) entry.catStatus = {};
+    entry.catStatus[catName] = status;
+    const order = entry;
+
+    // Timer de demande (called, ou in_progress pour Boissons)
+    if ((status === "called" || (status === "in_progress" && CAT_NO_KITCHEN.includes(catName)))
+        && entry._catStartTimes && !entry._catStartTimes[catName]) {
+      entry._catStartTimes[catName] = msg.calledAt || Date.now();
+    }
+
+    // Cuisine a terminé → démarrer timer "prêt" (cuisine attend le service)
+    if (status === "done") {
+      if (entry._catReadyTimes) entry._catReadyTimes[catName] = msg.readyAt || Date.now();
+      if (entry._catStartTimes) delete entry._catStartTimes[catName];
+    }
+
+    // Service confirme livraison → arrêter timer "prêt"
+    if (status === "delivered") {
+      if (entry._catReadyTimes) delete entry._catReadyTimes[catName];
+      if (entry._catStartTimes) delete entry._catStartTimes[catName];
+    }
+
     const rowId = `cat-row-${orderId}-${catName.replace(/\s/g,'_')}`;
     const row = document.getElementById(rowId);
     if (!row) return;
 
-    const label = CAT_LABELS[catName] || catName;
-    row.className = `cat-row${status === 'done' ? ' done' : ''}`;
-    row.innerHTML = `
-      <div class="cat-info">
-        <div class="cat-name">
-          <span class="dot ${status}"></span>${label}
-        </div>
-        <div class="cat-status-label ${status}">${STATUS_LABELS[status] || status}</div>
-      </div>
-      <button
-        class="btn-send ${status}"
-        ${status !== 'waiting' ? "disabled" : ""}
-        onclick="sendServiceCall('${orderId}', '${catName}')"
-      >${BTN_LABELS[status]}</button>
-    `;
+    const newHtml = buildCatSection(order, catName, status);
+    const tmp = document.createElement("div");
+    tmp.innerHTML = newHtml;
+    row.replaceWith(tmp.firstElementChild);
   }
 
   function removeOrder(orderId) {
+    const entry = orders.get(orderId);
+    if (entry && entry._interval) clearInterval(entry._interval);
     const card = document.getElementById(`order-${orderId}`);
     if (card) {
       card.classList.add("removing");

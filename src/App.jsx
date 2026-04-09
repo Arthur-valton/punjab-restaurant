@@ -151,6 +151,10 @@ function App() {
   }
 
   function validateOrder() {
+    if (!tableNumber) {
+      openNumpad();
+      return;
+    }
     setTicketData({ items: [...orderItems], table: tableNumber });
     setShowTicket(true);
     setCartOpen(false);
@@ -206,7 +210,7 @@ function App() {
             </div>
           </div>
           <div className="cart-bottom">
-            <button className="btn-validate-big" disabled={!tableNumber} onClick={validateOrder}>
+            <button className="btn-validate-big" onClick={validateOrder}>
               <span className="btn-validate-label">{tableNumber ? "Valider" : "Entrez la table"}</span>
               <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
             </button>
@@ -326,7 +330,7 @@ function App() {
                 <span className="cart-count">{totalQty}</span>
                 <span className="cart-expand-arrow">{cartOpen ? "▼" : "▲"}</span>
               </button>
-              <button className="btn-validate-big" disabled={!tableNumber} onClick={validateOrder}>
+              <button className="btn-validate-big" onClick={validateOrder}>
                 <span className="btn-validate-label">{tableNumber ? "Valider" : "Entrez la table"}</span>
                 <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
               </button>

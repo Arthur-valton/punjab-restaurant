@@ -110,6 +110,22 @@
       padding: 14px;
     }
 
+    @media (min-width: 768px) {
+      #orders {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 20px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #orders {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 24px;
+      }
+    }
+
     /* ── Card — Grouped list style iOS ── */
     .order-card {
       background: var(--bg2);
@@ -170,7 +186,7 @@
       font-weight: 500;
     }
 
-    /* ── Timer pill ── */
+    /* ── Timer pill global (neutre, pas de changement couleur) ── */
     .timer {
       font-size: 0.72rem;
       font-weight: 600;
@@ -178,10 +194,19 @@
       border-radius: 100px;
       display: inline-block;
       align-self: flex-end;
+      background: var(--bg3);
+      color: var(--label2);
     }
-    .timer.fresh   { background: var(--bg3); color: var(--label2); }
-    .timer.warning { background: rgba(255,159,10,0.18); color: var(--orange); }
-    .timer.urgent  { background: var(--red-fill); color: var(--red); }
+
+    /* ── Timer par catégorie ── */
+    .cat-timer {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--label2);
+      background: rgba(84,84,88,0.3);
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
 
     /* ── Card body ── */
     .card-items {
@@ -200,14 +225,27 @@
       transition: opacity 0.4s ease;
     }
 
-    .category-section.done { opacity: 0.22; }
+    .category-section.done {
+      opacity: 0.22;
+      pointer-events: none;
+      filter: grayscale(60%);
+    }
+    .category-section.done .category-label { color: var(--green) !important; }
+
+    /* Card entière quand toutes les catégories sont prêtes */
+    .order-card.all-done {
+      opacity: 0.5;
+      box-shadow: 0 0 0 1.5px var(--green), 0 8px 24px rgba(52,199,89,0.15);
+      transition: opacity 0.4s ease, box-shadow 0.4s ease;
+    }
 
     .category-header {
-      padding: 6px 11px 5px;
+      padding: 8px 12px 7px;
       border-bottom: 0.5px solid var(--sep-light);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
     }
 
     .category-label {
@@ -227,43 +265,48 @@
       gap: 5px;
     }
 
-    /* ── PRÊT button ── */
-    .btn-cat-ready {
-      width: 100%;
-      padding: 9px 11px;
-      background: var(--bg4);
-      color: var(--label2);
-      border: none;
-      border-top: 0.5px solid var(--sep-light);
-      font-family: inherit;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.18s, color 0.18s;
+    /* ── Hint action bas de section ── */
+    .cat-action-hint {
+      display: block;
       text-align: center;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 7px;
+      border-top: 0.5px solid rgba(84,84,88,0.3);
+      color: var(--label3);
+      letter-spacing: 0.04em;
+    }
+    .cat-action-hint.in_progress { color: var(--orange); }
+
+    /* ── Badge EN COURS ── */
+    .in-progress-badge {
+      background: var(--orange) !important;
+      box-shadow: 0 0 8px rgba(255,159,10,0.6) !important;
     }
 
-    .btn-cat-ready:hover  { background: rgba(52,199,89,0.16); color: var(--green); }
-    .btn-cat-ready:active { background: rgba(52,199,89,0.28); color: var(--green); }
-    .btn-cat-ready.done   { background: var(--bg3); color: rgba(52,199,89,0.45); cursor: default; }
-
-    /* ── Bouton En cours ── */
-    .btn-in-progress {
-      background: rgba(10,132,255,0.18) !important;
-      color: var(--blue) !important;
+    /* ── Section EN COURS ── */
+    .in-progress-section {
+      box-shadow: 0 0 0 1.5px var(--orange);
     }
-    .btn-in-progress:hover { background: rgba(10,132,255,0.3) !important; }
+
+    /* ── Badge ✓ done ── */
+    .done-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--green);
+    }
 
     /* ── Section appelée par le service ── */
     @keyframes pulse-section {
-      0%   { background: rgba(10,132,255,0.05); box-shadow: 0 0 0 1.5px rgba(10,132,255,0.5), 0 0 0 0 rgba(10,132,255,0.4); }
-      50%  { background: rgba(10,132,255,0.3);  box-shadow: 0 0 0 2px rgba(10,132,255,1),   0 0 20px 4px rgba(10,132,255,0.35); }
-      100% { background: rgba(10,132,255,0.05); box-shadow: 0 0 0 1.5px rgba(10,132,255,0.5), 0 0 0 0 rgba(10,132,255,0.4); }
+      0%   { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
+      49%  { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
+      50%  { background: var(--bg3);            box-shadow: none; }
+      99%  { background: var(--bg3);            box-shadow: none; }
+      100% { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
     }
 
     .category-section.called {
-      animation: pulse-section 0.7s ease-in-out infinite;
+      animation: pulse-section 0.6s steps(1) infinite;
       border-radius: 10px;
     }
 
@@ -301,15 +344,15 @@
       background: var(--bg4);
       color: var(--label2);
       font-weight: 600;
-      font-size: 0.68rem;
-      padding: 2px 7px;
+      font-size: 0.75rem;
+      padding: 3px 8px;
       border-radius: 6px;
       flex-shrink: 0;
       font-variant-numeric: tabular-nums;
     }
 
     .item-name {
-      font-size: 0.86rem;
+      font-size: 1rem;
       font-weight: 400;
       line-height: 1.3;
       color: var(--label);
@@ -320,7 +363,7 @@
 
 <header>
   <div class="header-left">
-    <h1>PUNJAB</h1>
+    <h1>CUISINE</h1>
     <div id="counter">0 commande(s)</div>
   </div>
   <div id="status" class="disconnected">Déconnecté</div>
@@ -340,28 +383,45 @@
   const statusEl = document.getElementById("status");
   const counterEl = document.getElementById("counter");
 
-  const orders = new Map(); // id -> { data, timerInterval }
+  const orders = new Map();
   let ws;
+  let pingInterval;
 
   function connect() {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       statusEl.textContent = "Connecté";
       statusEl.className = "connected";
+      // Ping toutes les 10s pour garder la connexion vivante
+      clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
+        } else {
+          clearInterval(pingInterval);
+          connect();
+        }
+      }, 10000);
     };
 
     ws.onclose = () => {
       statusEl.textContent = "Déconnecté";
       statusEl.className = "disconnected";
-      setTimeout(connect, 3000); // reconnexion auto
+      clearInterval(pingInterval);
+      setTimeout(connect, 1000); // reconnexion rapide
+    };
+
+    ws.onerror = () => {
+      ws.close();
     };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.type === "new_order")   addOrder(msg.order);
       if (msg.type === "order_ready") removeOrder(msg.orderId);
-      if (msg.type === "cat_status")  updateCatStatus(msg.orderId, msg.catName, msg.status);
+      if (msg.type === "cat_status")  updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
     };
   }
 
@@ -379,12 +439,14 @@
   }
 
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+  const CAT_EXCLUDE_KDS = ["Boissons"];
   const CAT_MERGE = { "Biryani": "Plats" };
 
   function groupByCategory(items) {
     const seen = {};
     items.forEach(i => {
       const cat = CAT_MERGE[i.category] || i.category || "Autres";
+      if (CAT_EXCLUDE_KDS.includes(cat)) return; // Boissons → pas en cuisine
       if (!seen[cat]) seen[cat] = [];
       seen[cat].push(i);
     });
@@ -395,65 +457,109 @@
   // Rendu d'une section catégorie avec statut
   function renderCatSection(orderId, g, idx, status) {
     const catKey = g.cat.replace(/\s/g, "_");
-    const isCalled = status === "called";
+    const isCalled     = status === "called";
     const isInProgress = status === "in_progress";
-    const isDone = status === "done";
+    const isDone       = status === "done" || status === "delivered";
 
-    let btnHtml = "";
-    if (!isDone) {
-      if (isCalled) {
-        btnHtml = `<button class="btn-cat-ready btn-in-progress" onclick="markCatInProgress('${orderId}', ${idx})">▶ En cours</button>`;
-      } else if (isInProgress) {
-        btnHtml = `<button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>`;
-      } else {
-        // waiting : bouton PRÊT direct (si pas de service configuré)
-        btnHtml = `<button class="btn-cat-ready" onclick="markCatReady('${orderId}', ${idx})">✓ PRÊT</button>`;
-      }
+    // Grisé inline pour que ça marche même au chargement initial
+    if (isDone) {
+      const itemsHtml = g.items.map(i =>
+        `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}</span></div>`
+      ).join("");
+      return `<div class="category-section done" id="cat-${orderId}-${catKey}" style="opacity:0.22;pointer-events:none;filter:grayscale(60%);">
+        <div class="category-header">
+          <span class="category-label" style="color:var(--green)">${g.cat}</span>
+          <div style="display:flex;align-items:center;gap:6px;"><span class="done-badge">✓</span></div>
+        </div>
+        <div class="category-items">${itemsHtml}</div>
+      </div>`;
     }
 
-    return `
-      <div class="category-section ${isDone ? "done" : ""} ${isCalled ? "called" : ""}"
-           id="cat-${orderId}-${catKey}">
-        <div class="category-header">
-          <span class="category-label">${g.cat}</span>
-          ${isCalled ? '<span class="called-badge">SERVICE !</span>' : ""}
+    let onclick = "";
+    let statusLabel = "";
+    if (isCalled) {
+      onclick = `onclick="markCatInProgress('${orderId}', ${idx})"`;
+      statusLabel = `<span class="cat-action-hint">Appuyer pour démarrer</span>`;
+    } else if (isInProgress) {
+      onclick = `onclick="markCatReady('${orderId}', ${idx})"`;
+      statusLabel = `<span class="cat-action-hint in_progress">Appuyer pour valider</span>`;
+    }
+
+    const showTimer = isCalled || isInProgress;
+
+    return `<div class="category-section ${isCalled ? "called" : ""} ${isInProgress ? "in-progress-section" : ""}"
+         id="cat-${orderId}-${catKey}"
+         ${onclick}
+         style="${showTimer ? 'cursor:pointer;' : ''}">
+      <div class="category-header">
+        <span class="category-label">${g.cat}</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${showTimer ? `<span class="cat-timer" id="cat-timer-${orderId}-${catKey}">0s</span>` : ""}
+          ${isCalled    ? '<span class="called-badge">SERVICE !</span>' : ""}
+          ${isInProgress ? '<span class="called-badge in-progress-badge">EN COURS</span>' : ""}
         </div>
-        <div class="category-items">
-          ${g.items.map(i => `
-            <div class="item-row">
-              <span class="item-qty">${i.qty}x</span>
-              <span class="item-name">${i.name}</span>
-            </div>
-          `).join("")}
-        </div>
-        ${btnHtml}
       </div>
-    `;
+      <div class="category-items">
+        ${g.items.map(i => `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}</span></div>`).join("")}
+      </div>
+      ${statusLabel}
+    </div>`;
   }
 
   function renderCategories(orderId, groups, catStatus) {
     return groups.map((g, idx) => renderCatSection(orderId, g, idx, (catStatus || {})[g.cat] || "waiting")).join("");
   }
 
-  function updateCatStatus(orderId, catName, status) {
+  function updateCatStatus(orderId, catName, status, msg = {}) {
     const entry = orders.get(orderId);
     if (!entry) return;
-    // Mettre à jour le statut local
     if (!entry.order.catStatus) entry.order.catStatus = {};
     entry.order.catStatus[catName] = status;
 
+    if (status === "called" && !entry.catStartTimes[catName]) {
+      entry.catStartTimes[catName] = msg.calledAt ? Number(msg.calledAt) : Date.now();
+    }
+    if (status === "done") {
+      delete entry.catStartTimes[catName];
+    }
+
     const catKey = catName.replace(/\s/g, "_");
     const section = document.getElementById(`cat-${orderId}-${catKey}`);
-    if (!section) return;
 
-    const idx = entry.groups.findIndex(g => g.cat === catName);
-    if (idx === -1) return;
+    if (section) {
+      if (status === "done" || status === "delivered") {
+        // Grisé direct — manipulation de l'élément existant
+        section.className = "category-section done";
+        section.onclick = null;
+        section.removeAttribute("style");
+        const badgesDiv = section.querySelector(".category-header > div");
+        if (badgesDiv) badgesDiv.innerHTML = '<span class="done-badge">✓</span>';
+        const hint = section.querySelector(".cat-action-hint");
+        if (hint) hint.remove();
+        const timerEl = section.querySelector(".cat-timer");
+        if (timerEl) timerEl.remove();
+      } else {
+        const idx = entry.groups.findIndex(g => g.cat === catName);
+        if (idx !== -1) {
+          const newHtml = renderCatSection(orderId, entry.groups[idx], idx, status);
+          const temp = document.createElement("div");
+          temp.innerHTML = newHtml.trim();
+          const newEl = temp.firstElementChild;
+          if (newEl) section.replaceWith(newEl);
+        }
+      }
+    }
 
-    const g = entry.groups[idx];
-    const newHtml = renderCatSection(orderId, g, idx, status);
-    const temp = document.createElement("div");
-    temp.innerHTML = newHtml;
-    section.replaceWith(temp.firstElementChild);
+    // Toutes catégories done → carte verte puis suppression
+    if (status === "done") {
+      const catStatus = entry.order.catStatus || {};
+      const allDone = entry.groups.every(g => catStatus[g.cat] === "done");
+      if (allDone) {
+        const card = document.getElementById(`order-${orderId}`);
+        if (card) card.classList.add("all-done");
+        setTimeout(() => markReady(orderId), 3000);
+      }
+    }
   }
 
   function markCatInProgress(orderId, catIdx) {
@@ -472,6 +578,16 @@
     const section = document.getElementById(`cat-${orderId}-${catKey}`);
     if (!section || section.classList.contains("done")) return;
 
+    // Grisé immédiat sans attendre le serveur
+    section.classList.remove("in-progress-section", "called");
+    section.classList.add("done");
+    section.onclick = null;
+    section.style.cursor = "default";
+    const hint = section.querySelector(".cat-action-hint");
+    if (hint) hint.remove();
+    const badge = section.querySelector(".called-badge");
+    if (badge) { badge.className = "done-badge"; badge.textContent = "✓"; }
+
     ws.send(JSON.stringify({
       type: "cat_ready",
       orderId,
@@ -480,13 +596,6 @@
       catName: group.cat,
       items: group.items,
     }));
-
-    // Vérifier si toutes les catégories sont prêtes
-    setTimeout(() => {
-      const catStatus = entry.order.catStatus || {};
-      const allDone = entry.groups.every(g => catStatus[g.cat] === "done" || g.cat === group.cat);
-      if (allDone) setTimeout(() => markReady(orderId), 400);
-    }, 200);
   }
 
   function addOrder(order) {
@@ -512,24 +621,41 @@
 
     ordersEl.prepend(card);
 
-    // Chrono
-    const timerEl = document.getElementById(`timer-${order.id}`);
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - order.receivedAt;
-      timerEl.textContent = formatElapsed(elapsed);
-
-      const minutes = elapsed / 60000;
-      if (minutes >= 10) {
-        timerEl.className = "timer urgent";
-        card.className = "order-card urgent";
-      } else if (minutes >= 5) {
-        timerEl.className = "timer warning";
-        card.className = "order-card warning";
+    const catStartTimes = {};
+    // Restaurer les timers de catégorie depuis catCalledAt (persisté)
+    if (order.catCalledAt) {
+      for (const [cat, ts] of Object.entries(order.catCalledAt)) {
+        if (order.catStatus && order.catStatus[cat] !== "done") {
+          catStartTimes[cat] = Number(ts);
+        }
       }
-    }, 1000);
+    }
+    const orderStart = order.receivedAt ? Number(order.receivedAt) : Date.now();
 
-    orders.set(order.id, { card, interval, groups, order });
+    function tick() {
+      const timerEl = document.getElementById(`timer-${order.id}`);
+      if (timerEl) timerEl.textContent = formatElapsed(Date.now() - orderStart);
+      for (const [catName, startTime] of Object.entries(catStartTimes)) {
+        const catKey = catName.replace(/\s/g, "_");
+        const catTimerEl = document.getElementById(`cat-timer-${order.id}-${catKey}`);
+        if (catTimerEl) catTimerEl.textContent = formatElapsed(Date.now() - startTime);
+      }
+    }
+    tick(); // mise à jour immédiate
+    const interval = setInterval(tick, 1000);
+
+    orders.set(order.id, { card, interval, groups, order, catStartTimes });
     updateCounter();
+
+    // Si toutes les catégories sont déjà "done" au chargement → supprimer après délai
+    const loadedCatStatus = order.catStatus || {};
+    const allDoneOnLoad = groups.length > 0 && groups.every(g =>
+      loadedCatStatus[g.cat] === "done" || loadedCatStatus[g.cat] === "delivered"
+    );
+    if (allDoneOnLoad) {
+      card.classList.add("all-done");
+      setTimeout(() => markReady(order.id), 3000);
+    }
   }
 
   function markReady(orderId) {

@@ -14,7 +14,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/kds-ws" });
 
 const PORT = 3001;
-const PRINTER_IP = "192.168.1.29";
+const PRINTER_IP = "192.168.110.21";
 const PRINTER_PORT = 9100;
 
 const WIDTH = 48;
@@ -26,11 +26,13 @@ app.use(express.static(__dirname));
 
 // Route /kds → kds.html
 app.get("/kds", (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.sendFile(path.join(__dirname, "kds.html"));
 });
 
 // Route /service → service.html
 app.get("/service", (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.sendFile(path.join(__dirname, "service.html"));
 });
 
@@ -291,7 +293,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
 }
 
 // ----- Helpers catégories (partagés) -----
-const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
 const CAT_MERGE_SHARED = { "Biryani": "Plats" };
 
 function buildGroups(items) {
@@ -331,8 +333,10 @@ wss.on("connection", (ws) => {
         const order = activeOrders.get(msg.orderId);
         if (order && order.catStatus && order.catStatus[msg.catName] === "waiting") {
           order.catStatus[msg.catName] = "called";
+          if (!order.catCalledAt) order.catCalledAt = {};
+          order.catCalledAt[msg.catName] = Date.now();
           saveOrders(activeOrders);
-          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "called" });
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "called", calledAt: order.catCalledAt[msg.catName] });
           console.log(`Service demande ${msg.catName} — Table ${order.tableNumber}`);
         }
       }
@@ -353,8 +357,10 @@ wss.on("connection", (ws) => {
         const order = activeOrders.get(msg.orderId);
         if (order && order.catStatus) {
           order.catStatus[msg.catName] = "done";
+          if (!order.catReadyAt) order.catReadyAt = {};
+          order.catReadyAt[msg.catName] = Date.now();
           saveOrders(activeOrders);
-          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "done" });
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "done", readyAt: order.catReadyAt[msg.catName] });
         }
         try {
           await sendToPrinter(formatPartialReadyTicket(msg));
@@ -364,7 +370,18 @@ wss.on("connection", (ws) => {
         }
       }
 
-      // Toutes catégories prêtes → supprimer la commande
+      // Service → confirme livraison
+      if (msg.type === "cat_delivered") {
+        const order = activeOrders.get(msg.orderId);
+        if (order && order.catStatus) {
+          order.catStatus[msg.catName] = "delivered";
+          saveOrders(activeOrders);
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "delivered" });
+          console.log(`Service livré ${msg.catName} — Table ${order.tableNumber}`);
+        }
+      }
+
+      // Toutes catégories prêtes → supprimer la commande du serveur
       if (msg.type === "order_ready") {
         broadcast({ type: "order_ready", orderId: msg.orderId });
         const order = activeOrders.get(msg.orderId);
