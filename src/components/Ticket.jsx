@@ -78,6 +78,10 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
       <div className="ticket" id="ticket">
         <div className="ticket-header">
           <h2>PUNJAB</h2>
+          <p className="ticket-legal">3 RUE RENE D'ANJOU</p>
+          <p className="ticket-legal">53200 CHÂTEAU-GONTIER-SUR-MAYENNE</p>
+          <p className="ticket-legal">SIRET : 94372706500014</p>
+          <p className="ticket-legal">APE : 5610A — TVA : FR12943727065</p>
         </div>
 
         <div className="ticket-sep" />

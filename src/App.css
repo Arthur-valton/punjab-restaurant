@@ -1165,6 +1165,12 @@ body {
   color: #555;
 }
 
+.ticket-legal {
+  font-size: 0.65rem;
+  color: #777;
+  margin: 1px 0 !important;
+}
+
 .ticket-sep {
   border-bottom: 1px dashed #999;
   margin: 8px 0;

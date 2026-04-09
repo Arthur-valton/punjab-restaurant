@@ -87,6 +87,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += "PUNJAB\n";
   buf += CMD.DOUBLE_OFF;
   buf += CMD.BOLD_OFF;
+  if (showTotal) {
+    buf += "3 RUE RENE D'ANJOU\n";
+    buf += "53200 CHATEAU-GONTIER-SUR-MAYENNE\n";
+    buf += "SIRET: 94372706500014\n";
+    buf += "APE: 5610A - TVA: FR12943727065\n";
+  }
   buf += "\n";
   buf += CMD.BOLD_ON;
   buf += `*** ${title} ***\n`;
