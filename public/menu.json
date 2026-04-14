@@ -706,6 +706,13 @@
         "name": "Produit 2",
         "price": 0,
         "category": "Menu Rajasthan"
+      },
+      {
+        "id": 116,
+        "name": "Test",
+        "price": 6,
+        "category": "Menu Rajasthan",
+        "subcategory": "Plat"
       }
     ]
   },
