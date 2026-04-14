@@ -694,6 +694,12 @@
         "name": "Coupe glace",
         "price": 6.9,
         "category": "Desserts"
+      },
+      {
+        "id": 118,
+        "name": "Coupe 2 glace",
+        "price": 5,
+        "category": "Desserts"
       }
     ]
   },
