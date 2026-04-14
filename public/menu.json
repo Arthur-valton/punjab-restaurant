@@ -688,6 +688,12 @@
         "name": "Sorbet 2 Boules",
         "price": 5,
         "category": "Desserts"
+      },
+      {
+        "id": 117,
+        "name": "Coupe glace",
+        "price": 6.9,
+        "category": "Desserts"
       }
     ]
   },
