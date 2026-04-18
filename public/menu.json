@@ -756,6 +756,12 @@
         "price": 5,
         "category": "Boissons",
         "subcategory": "Lait"
+      },
+      {
+        "id": 120,
+        "name": "Vin verre",
+        "price": 4,
+        "category": "Boissons"
       }
     ]
   }
