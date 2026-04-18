@@ -768,6 +768,12 @@
         "name": "Vin verre",
         "price": 4,
         "category": "Boissons"
+      },
+      {
+        "id": 122,
+        "name": "Bière",
+        "price": 6,
+        "category": "Boissons"
       }
     ]
   }
