@@ -730,7 +730,14 @@
   },
   {
     "category": "Menu Taj Mahal",
-    "items": []
+    "items": [
+      {
+        "id": 119,
+        "name": "Menu",
+        "price": 29.9,
+        "category": "Menu Taj Mahal"
+      }
+    ]
   },
   {
     "category": "Menu 15,9",
