@@ -776,5 +776,9 @@
         "category": "Boissons"
       }
     ]
+  },
+  {
+    "category": "Vin",
+    "items": []
   }
 ]
