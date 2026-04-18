@@ -779,6 +779,13 @@
   },
   {
     "category": "Vin",
-    "items": []
+    "items": [
+      {
+        "id": 123,
+        "name": "Chinon 75cl",
+        "price": 25,
+        "category": "Vin"
+      }
+    ]
   }
 ]
