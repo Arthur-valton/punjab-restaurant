@@ -774,6 +774,12 @@
         "name": "Bière",
         "price": 6,
         "category": "Boissons"
+      },
+      {
+        "id": 124,
+        "name": "Lassi",
+        "price": 5.5,
+        "category": "Boissons"
       }
     ]
   },
