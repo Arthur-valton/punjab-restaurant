@@ -3,12 +3,28 @@ import cors from "cors";
 import net from "net";
 import http from "http";
 import fs from "fs";
-import { execSync } from "child_process";
+import { execSync, exec } from "child_process";
 import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Assurer que cloudflared tourne au démarrage
+try {
+  const status = execSync("systemctl is-active cloudflared 2>/dev/null").toString().trim();
+  if (status !== "active") {
+    console.log("cloudflared inactif — redémarrage...");
+    exec("systemctl restart cloudflared", (err) => {
+      if (err) console.error("Échec redémarrage cloudflared:", err.message);
+      else console.log("cloudflared redémarré avec succès");
+    });
+  } else {
+    console.log("cloudflared actif ✓");
+  }
+} catch {
+  exec("systemctl restart cloudflared", () => {});
+}
 
 const app = express();
 const server = http.createServer(app);
