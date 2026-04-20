@@ -10,6 +10,13 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Installer le cron de vérification urgente (toutes les 5 min) si absent
+exec(
+  `crontab -l 2>/dev/null | grep -q check-urgent || ` +
+  `(crontab -l 2>/dev/null; echo "*/5 * * * * bash /home/punjab/punjab-restaurant/server/check-urgent.sh >> /tmp/punjab-urgent.log 2>&1") | crontab -`,
+  () => {}
+);
+
 // Assurer que cloudflared tourne au démarrage
 try {
   const status = execSync("systemctl is-active cloudflared 2>/dev/null").toString().trim();
