@@ -19,10 +19,10 @@ exec(
 
 // Assurer que cloudflared tourne au démarrage
 try {
-  const status = execSync("systemctl is-active cloudflared 2>/dev/null").toString().trim();
+  const status = execSync("systemctl is-active punjab-cloudflared 2>/dev/null").toString().trim();
   if (status !== "active") {
     console.log("cloudflared inactif — redémarrage...");
-    exec("systemctl restart cloudflared", (err) => {
+    exec("systemctl restart punjab-cloudflared", (err) => {
       if (err) console.error("Échec redémarrage cloudflared:", err.message);
       else console.log("cloudflared redémarré avec succès");
     });
@@ -30,7 +30,7 @@ try {
     console.log("cloudflared actif ✓");
   }
 } catch {
-  exec("systemctl restart cloudflared", () => {});
+  exec("systemctl restart punjab-cloudflared", () => {});
 }
 
 const app = express();
