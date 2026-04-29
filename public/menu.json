@@ -798,6 +798,12 @@
         "name": "Café Allongé",
         "price": 2.5,
         "category": "Boissons"
+      },
+      {
+        "id": 128,
+        "name": "Café crème",
+        "price": 3,
+        "category": "Boissons"
       }
     ]
   },
