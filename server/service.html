@@ -380,7 +380,7 @@
   const BTN_LABELS   = { waiting: "Appeler cuisine", called: "Demandé…", in_progress: "En cours…", done: "✓ Confirmer livraison", delivered: "Livré ✓" };
 
   function connect() {
-    if (ws && ws.readyState === WebSocket.OPEN) return;
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
@@ -407,18 +407,12 @@
     ws.onerror = () => { ws.close(); };
 
     ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-
-      if (msg.type === "new_order") {
-        addOrder(msg.order);
-      }
-
-      if (msg.type === "cat_status") {
-        updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
-      }
-
-      if (msg.type === "order_ready") {
-        // La commande reste visible dans le service jusqu'à suppression manuelle
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "new_order")  addOrder(msg.order);
+        if (msg.type === "cat_status") updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
+      } catch (err) {
+        console.error("WS message error:", err.message);
       }
     };
   }

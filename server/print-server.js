@@ -273,10 +273,13 @@ function loadOrders() {
 }
 
 function saveOrders(map) {
+  const tmp = ORDERS_FILE + ".tmp";
   try {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify([...map.values()]), "utf8");
+    fs.writeFileSync(tmp, JSON.stringify([...map.values()]), "utf8");
+    fs.renameSync(tmp, ORDERS_FILE);
   } catch (err) {
     console.error("Erreur sauvegarde commandes:", err.message);
+    try { fs.unlinkSync(tmp); } catch {}
   }
 }
 
@@ -463,7 +466,9 @@ wss.on("connection", (ws) => {
         }
       }
 
-    } catch {}
+    } catch (err) {
+      console.error("WS message error:", err.message);
+    }
   });
   ws.on("close", () => console.log("Client déconnecté"));
 });

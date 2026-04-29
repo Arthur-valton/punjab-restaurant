@@ -388,7 +388,7 @@
   let pingInterval;
 
   function connect() {
-    if (ws && ws.readyState === WebSocket.OPEN) return;
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
@@ -418,10 +418,14 @@
     };
 
     ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === "new_order")   addOrder(msg.order);
-      if (msg.type === "order_ready") removeOrder(msg.orderId);
-      if (msg.type === "cat_status")  updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "new_order")   addOrder(msg.order);
+        if (msg.type === "order_ready") removeOrder(msg.orderId);
+        if (msg.type === "cat_status")  updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
+      } catch (err) {
+        console.error("WS message error:", err.message);
+      }
     };
   }
 
