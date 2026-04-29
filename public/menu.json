@@ -792,6 +792,12 @@
         "name": "Lassi",
         "price": 5.5,
         "category": "Boissons"
+      },
+      {
+        "id": 127,
+        "name": "Café Allongé",
+        "price": 2.5,
+        "category": "Boissons"
       }
     ]
   },
