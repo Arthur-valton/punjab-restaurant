@@ -37,23 +37,41 @@ const wss = new WebSocketServer({ server, path: "/kds-ws" });
 const PORT = 3001;
 const PRINTER_PORT = 9100;
 
-// IP imprimante selon le réseau WiFi
+// IP imprimante selon le réseau WiFi ou la plage IP locale
 const PRINTER_IPS = {
   "popina-new-punjab": "192.168.110.21",
   "Internet":          "192.168.1.29",
+};
+const IP_RANGE_PRINTER = {
+  "192.168.1.":   "192.168.1.29",
+  "192.168.110.": "192.168.110.21",
 };
 const PRINTER_IP_DEFAULT = "192.168.110.21";
 
 function getPrinterIp() {
   try {
     const ssid = execSync("iwgetid -r 2>/dev/null").toString().trim();
-    const ip = PRINTER_IPS[ssid] || PRINTER_IP_DEFAULT;
-    console.log(`WiFi: "${ssid}" → Imprimante: ${ip}`);
-    return ip;
-  } catch {
-    console.log(`WiFi inconnu → Imprimante: ${PRINTER_IP_DEFAULT}`);
-    return PRINTER_IP_DEFAULT;
-  }
+    if (ssid && PRINTER_IPS[ssid]) {
+      console.log(`WiFi: "${ssid}" → Imprimante: ${PRINTER_IPS[ssid]}`);
+      return PRINTER_IPS[ssid];
+    }
+  } catch {}
+  // Fallback : détection par plage IP locale
+  try {
+    const ifaces = require("os").networkInterfaces();
+    for (const iface of Object.values(ifaces).flat()) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        for (const [range, ip] of Object.entries(IP_RANGE_PRINTER)) {
+          if (iface.address.startsWith(range)) {
+            console.log(`Réseau local ${iface.address} → Imprimante: ${ip}`);
+            return ip;
+          }
+        }
+      }
+    }
+  } catch {}
+  console.log(`Réseau inconnu → Imprimante: ${PRINTER_IP_DEFAULT}`);
+  return PRINTER_IP_DEFAULT;
 }
 
 const PRINTER_IP = getPrinterIp();
