@@ -831,6 +831,13 @@
   },
   {
     "category": "Apéritifs",
-    "items": []
+    "items": [
+      {
+        "id": 130,
+        "name": "Kir indien",
+        "price": 7,
+        "category": "Apéritifs"
+      }
+    ]
   }
 ]
