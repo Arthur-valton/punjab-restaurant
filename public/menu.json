@@ -851,6 +851,12 @@
         "name": "Jus",
         "price": 3.5,
         "category": "Boissons"
+      },
+      {
+        "id": 139,
+        "name": "Ice tea",
+        "price": 3,
+        "category": "Boissons"
       }
     ]
   },
