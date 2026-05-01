@@ -845,6 +845,12 @@
         "name": "Coca 33cl",
         "price": 3.5,
         "category": "Boissons"
+      },
+      {
+        "id": 137,
+        "name": "Jus",
+        "price": 3.5,
+        "category": "Boissons"
       }
     ]
   },
