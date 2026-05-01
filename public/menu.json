@@ -818,6 +818,12 @@
         "price": 4,
         "category": "Boissons",
         "subcategory": "1"
+      },
+      {
+        "id": 133,
+        "name": "C.M",
+        "price": 5,
+        "category": "Boissons"
       }
     ]
   },
