@@ -542,6 +542,12 @@ app.get("/ping-printer", async (req, res) => {
   }
 });
 
+app.post("/admin/stop-tunnel", (req, res) => {
+  exec("pkill -f cloudflared", (err) => {
+    res.json({ success: true, message: "Tunnel arrêté" });
+  });
+});
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Serveur d'impression sur http://0.0.0.0:${PORT}`);
   console.log(`KDS disponible sur http://0.0.0.0:${PORT}/kds.html`);
