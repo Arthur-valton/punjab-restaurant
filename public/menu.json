@@ -857,6 +857,12 @@
         "name": "Ice tea",
         "price": 3,
         "category": "Boissons"
+      },
+      {
+        "id": 140,
+        "name": "Chivas",
+        "price": 7.9,
+        "category": "Boissons"
       }
     ]
   },
