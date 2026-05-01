@@ -833,6 +833,12 @@
         "price": 3.5,
         "category": "Boissons",
         "subcategory": "2"
+      },
+      {
+        "id": 135,
+        "name": "St pelg 50cl",
+        "price": 3,
+        "category": "Boissons"
       }
     ]
   },
