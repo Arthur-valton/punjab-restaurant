@@ -824,6 +824,12 @@
         "name": "C.M",
         "price": 5,
         "category": "Boissons"
+      },
+      {
+        "id": 134,
+        "name": "Tea Maison",
+        "price": 3.5,
+        "category": "Boissons"
       }
     ]
   },
