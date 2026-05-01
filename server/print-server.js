@@ -7,6 +7,7 @@ import { execSync, exec } from "child_process";
 import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -58,7 +59,7 @@ function getPrinterIp() {
   } catch {}
   // Fallback : détection par plage IP locale
   try {
-    const ifaces = require("os").networkInterfaces();
+    const ifaces = os.networkInterfaces();
     for (const iface of Object.values(ifaces).flat()) {
       if (iface.family === "IPv4" && !iface.internal) {
         for (const [range, ip] of Object.entries(IP_RANGE_PRINTER)) {
