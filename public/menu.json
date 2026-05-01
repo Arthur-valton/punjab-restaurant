@@ -810,7 +810,8 @@
         "id": 128,
         "name": "Café crème",
         "price": 3,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "2"
       },
       {
         "id": 132,
