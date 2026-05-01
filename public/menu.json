@@ -886,6 +886,12 @@
         "name": "Saumur champ 37,5",
         "price": 17,
         "category": "Vin"
+      },
+      {
+        "id": 143,
+        "name": "Syrah",
+        "price": 22,
+        "category": "Vin"
       }
     ]
   },
