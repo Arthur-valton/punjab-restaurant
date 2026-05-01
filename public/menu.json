@@ -908,6 +908,12 @@
         "name": "Kir indien",
         "price": 7,
         "category": "Apéritifs"
+      },
+      {
+        "id": 142,
+        "name": "Kir",
+        "price": 5,
+        "category": "Apéritifs"
       }
     ]
   }
