@@ -839,6 +839,12 @@
         "name": "St pelg 50cl",
         "price": 3,
         "category": "Boissons"
+      },
+      {
+        "id": 136,
+        "name": "Coca 33cl",
+        "price": 3.5,
+        "category": "Boissons"
       }
     ]
   },
