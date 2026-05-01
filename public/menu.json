@@ -829,7 +829,8 @@
         "id": 134,
         "name": "Tea Maison",
         "price": 3.5,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "2"
       }
     ]
   },
