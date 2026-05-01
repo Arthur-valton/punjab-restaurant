@@ -863,6 +863,12 @@
         "name": "Chivas",
         "price": 7.9,
         "category": "Boissons"
+      },
+      {
+        "id": 141,
+        "name": "St pelg 50 cl",
+        "price": 3,
+        "category": "Boissons"
       }
     ]
   },
