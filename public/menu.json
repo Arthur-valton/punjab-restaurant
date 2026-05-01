@@ -791,7 +791,8 @@
         "id": 122,
         "name": "Bière indienne",
         "price": 6,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "1"
       },
       {
         "id": 124,
