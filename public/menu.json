@@ -804,7 +804,8 @@
         "id": 127,
         "name": "Café Allongé",
         "price": 2.5,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "2"
       },
       {
         "id": 128,
