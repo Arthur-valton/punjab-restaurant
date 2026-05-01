@@ -17,21 +17,18 @@ exec(
   () => {}
 );
 
-// Assurer que cloudflared tourne au démarrage
-try {
-  const status = execSync("systemctl is-active punjab-cloudflared 2>/dev/null").toString().trim();
-  if (status !== "active") {
-    console.log("cloudflared inactif — redémarrage...");
-    exec("systemctl restart punjab-cloudflared", (err) => {
-      if (err) console.error("Échec redémarrage cloudflared:", err.message);
-      else console.log("cloudflared redémarré avec succès");
-    });
-  } else {
-    console.log("cloudflared actif ✓");
+// Forcer cloudflared en HTTP/2 (TCP) — le routeur restaurant coupe QUIC (UDP) après 60s
+exec(
+  "grep -q 'protocol http2' /etc/systemd/system/punjab-cloudflared.service 2>/dev/null || " +
+  "(sudo sed -i 's|--no-autoupdate tunnel run|--no-autoupdate --protocol http2 tunnel run|' " +
+  "/etc/systemd/system/punjab-cloudflared.service && " +
+  "sudo systemctl daemon-reload && " +
+  "sudo systemctl restart punjab-cloudflared)",
+  (err, stdout, stderr) => {
+    if (err) console.error("CF protocol fix failed:", stderr || err.message);
+    else console.log("cloudflared HTTP/2 OK");
   }
-} catch {
-  exec("systemctl restart punjab-cloudflared", () => {});
-}
+);
 
 const app = express();
 const server = http.createServer(app);
