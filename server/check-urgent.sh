@@ -15,5 +15,5 @@ fi
 if echo "$LATEST_MSG" | grep -qi "urgent"; then
   echo "$(date): Mise à jour urgente détectée — $LATEST_MSG"
   git reset --hard origin/main
-  sudo systemctl restart punjab-print
+  pkill -f "node server/print-server.js" || true
 fi
