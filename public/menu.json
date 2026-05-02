@@ -8,7 +8,8 @@
         "price": 7,
         "category": "Entrees",
         "subcategory": "Grillades",
-        "piment": false
+        "piment": false,
+        "isFormula": true
       },
       {
         "id": 2,
