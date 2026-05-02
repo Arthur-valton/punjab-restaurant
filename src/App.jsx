@@ -246,7 +246,7 @@ function App() {
       qty: i.qty,
       piment: i.piment || null,
       formulaChoices: i.formulaChoices || null,
-      cartId: i.formulaChoices ? `${i.id}-f${Date.now() + Math.random()}` : (i.piment ? `${i.id}-p${i.piment}` : String(i.id)),
+      cartId: i.cartId || (i.formulaChoices ? `${i.id}-f${Date.now() + Math.random()}` : (i.piment ? `${i.id}-p${i.piment}` : String(i.id))),
     }));
     setOrderItems(items);
     setTableNumber(serverOrder.tableNumber);

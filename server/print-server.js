@@ -236,11 +236,40 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += `Date: ${date}\n`;
   buf += line("=");
 
+  // Mapping labels de formule → catégories ticket (insensible aux accents/casse/pluriel)
+  const FORMULA_LABEL_MAP = {
+    "entree": "Entrees", "entrees": "Entrees",
+    "plat": "Plats", "plats": "Plats",
+    "dessert": "Desserts", "desserts": "Desserts",
+    "naan": "Naans", "naans": "Naans",
+    "boisson": "Boissons", "boissons": "Boissons",
+  };
+  function mapFormulaLabel(label) {
+    const key = label.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    return FORMULA_LABEL_MAP[key] || label;
+  }
+
+  // Pour ticket cuisine : éclater les formules en articles par étape dans leurs vraies catégories
+  const itemsToGroup = [];
+  if (!showTotal) {
+    for (const item of order) {
+      if (item.formulaChoices && item.formulaChoices.length > 0) {
+        for (const choice of item.formulaChoices) {
+          itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabel(choice.label), qty: item.qty, piment: choice.piment || null });
+        }
+      } else {
+        itemsToGroup.push(item);
+      }
+    }
+  } else {
+    itemsToGroup.push(...order);
+  }
+
   // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
   const CAT_MERGE = { "Biryani": "Plats" };
   const seenCats = {};
-  for (const item of order) {
+  for (const item of itemsToGroup) {
     const cat = CAT_MERGE[item.category] || item.category || "Autres";
     if (!seenCats[cat]) seenCats[cat] = [];
     seenCats[cat].push(item);
@@ -253,7 +282,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     if (!showTotal && groups.length > 1) {
       buf += CMD.CENTER;
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `${group.cat.toUpperCase()}\n`;
+      buf += `${group.cat.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase()}\n`;
       buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
       buf += CMD.LEFT;
       buf += line("-");
@@ -266,10 +295,10 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
         buf += CMD.BOLD_ON;
         buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
-        if (item.piment && item.piment > 1) buf += `   ${pimentSymbols[item.piment]}\n`;
+        if (item.piment) buf += `   ${pimentSymbols[item.piment]}\n`;
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
-            const pimentTxt = choice.piment > 1 ? `  ${pimentSymbols[choice.piment]}` : "";
+            const pimentTxt = choice.piment ? `  ${pimentSymbols[choice.piment]}` : "";
             buf += `   > ${choice.label}: ${choice.itemName}${pimentTxt}\n`;
           }
         }
@@ -279,17 +308,10 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
         buf += CMD.DOUBLE_H + CMD.BOLD_ON;
         buf += `${item.qty}x ${item.name}\n`;
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-        if (item.piment && item.piment > 1) {
+        if (item.piment) {
           buf += CMD.BOLD_ON;
           buf += `  ${pimentSymbols[item.piment]}\n`;
           buf += CMD.BOLD_OFF;
-        }
-        if (item.formulaChoices) {
-          for (const choice of item.formulaChoices) {
-            buf += CMD.BOLD_ON;
-            buf += `  > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${pimentSymbols[choice.piment]}` : ""}\n`;
-            buf += CMD.BOLD_OFF;
-          }
         }
         buf += ESC + "J\x0C";
       }
