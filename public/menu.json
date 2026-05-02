@@ -943,5 +943,9 @@
         "category": "Apéritifs"
       }
     ]
+  },
+  {
+    "category": "Menu Test",
+    "items": []
   }
 ]
