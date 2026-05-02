@@ -740,6 +740,27 @@
         "price": 6,
         "category": "Menu Rajasthan",
         "subcategory": "Plat"
+      },
+      {
+        "id": 146,
+        "name": "Menu Rajasthan",
+        "price": 15.9,
+        "category": "Menu Rajasthan",
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Entrée",
+            "category": "Entrees"
+          },
+          {
+            "label": "Plat",
+            "category": "Plats"
+          },
+          {
+            "label": "Dessert",
+            "category": "Desserts"
+          }
+        ]
       }
     ]
   },
