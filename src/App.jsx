@@ -330,12 +330,10 @@ function App() {
           <h1>PUNJAB</h1>
           <div className="header-right">
             <button className="settings-btn" onClick={() => setShowSettingsPwd(true)}>⚙</button>
-            {serverOrders.length > 0 && (
-              <button className="orders-btn" onClick={() => setShowOrders(true)}>
-                <span className="orders-btn-label">En cours</span>
-                <span className="orders-btn-count">{serverOrders.length}</span>
-              </button>
-            )}
+            <button className="orders-btn" onClick={() => setShowOrders(true)}>
+              <span className="orders-btn-label">En cours</span>
+              {serverOrders.length > 0 && <span className="orders-btn-count">{serverOrders.length}</span>}
+            </button>
             <button className="table-btn" onClick={openNumpad}>
               <span className="table-btn-label">Table</span>
               <span className="table-btn-value">{tableNumber || "--"}</span>
