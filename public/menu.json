@@ -7,7 +7,8 @@
         "name": "Poulet Tandoori",
         "price": 7,
         "category": "Entrees",
-        "subcategory": "Grillades"
+        "subcategory": "Grillades",
+        "piment": true
       },
       {
         "id": 2,
