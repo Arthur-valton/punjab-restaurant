@@ -6,6 +6,7 @@ import PasswordGate, { isAppUnlocked, unlockApp, getDefaultPasswords } from "./c
 import "./App.css";
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
+const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
 
 function getPrintUrl() {
   const host = window.location.hostname;
@@ -58,9 +59,9 @@ function App() {
       })
       .catch(() => {});
 
-    // Chargement commandes actives
+    // Chargement commandes actives (stockées sur Vercel)
     function fetchOrders() {
-      fetch(`${getPrintUrl()}/orders`)
+      fetch(ORDERS_API_URL)
         .then((r) => r.json())
         .then((data) => setServerOrders(Array.isArray(data) ? data : []))
         .catch(() => {});
@@ -214,7 +215,9 @@ function App() {
       openNumpad();
       return;
     }
-    setTicketData({ items: [...orderItems], table: tableNumber });
+    const orderNum = Math.floor(Math.random() * 9000) + 1000;
+    const orderId = editingOrderId || `order-${orderNum}-${Date.now()}`;
+    setTicketData({ items: [...orderItems], table: tableNumber, orderNum, orderId });
     setShowTicket(true);
     setCartOpen(false);
   }
@@ -232,7 +235,14 @@ function App() {
   }
 
   async function closeTable(orderId) {
-    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}`, { method: "DELETE" });
+    // Supprimer de Vercel (source de vérité)
+    fetch(ORDERS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", order: { id: orderId } }),
+    }).catch(() => {});
+    // Supprimer aussi du ThinkCentre si disponible
+    fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}`, { method: "DELETE" }).catch(() => {});
     setServerOrders((prev) => prev.filter((o) => o.id !== orderId));
   }
 
@@ -679,6 +689,8 @@ function App() {
         <Ticket
           order={ticketData.items}
           tableNumber={ticketData.table}
+          orderNum={ticketData.orderNum}
+          orderId={ticketData.orderId}
           onNewOrder={newOrder}
           editingOrderId={editingOrderId}
         />

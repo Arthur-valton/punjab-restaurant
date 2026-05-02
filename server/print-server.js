@@ -718,7 +718,7 @@ wss.on("connection", (ws) => {
 // ----- Route POST /print-all -----
 app.post("/print-all", async (req, res) => {
   try {
-    const { order, tableNumber, orderNum, date } = req.body;
+    const { order, tableNumber, orderNum, date, orderId: clientOrderId } = req.body;
 
     if (!order || !tableNumber || !orderNum) {
       return res.status(400).json({ error: "Donnees manquantes" });
@@ -739,7 +739,7 @@ app.post("/print-all", async (req, res) => {
     await sendToPrinter(tickets.join(""));
 
     // Broadcast au KDS + stockage en mémoire
-    const orderId = `${orderNum}-${Date.now()}`;
+    const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
     const groups = buildGroups(cuisineAll);
     const catStatus = {};
     groups.forEach(g => { catStatus[g.cat] = "waiting"; });
@@ -748,7 +748,7 @@ app.post("/print-all", async (req, res) => {
     saveOrders(activeOrders);
     broadcast({ type: "new_order", order: orderData });
 
-    res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length });
+    res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length, orderId });
   } catch (err) {
     console.error("Erreur impression:", err.message);
     res.status(500).json({ error: err.message });
