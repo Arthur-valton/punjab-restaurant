@@ -898,6 +898,12 @@
         "name": "50cl pichet",
         "price": 11,
         "category": "Vin"
+      },
+      {
+        "id": 145,
+        "name": "Chinon 37,5",
+        "price": 15,
+        "category": "Vin"
       }
     ]
   },
