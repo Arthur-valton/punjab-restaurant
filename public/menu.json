@@ -9,7 +9,7 @@
         "category": "Entrees",
         "subcategory": "Grillades",
         "piment": false,
-        "isFormula": true
+        "isFormula": false
       },
       {
         "id": 2,
