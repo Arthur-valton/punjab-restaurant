@@ -973,13 +973,6 @@
   },
   {
     "category": "Menu Test",
-    "items": [
-      {
-        "id": 148,
-        "name": "Menu Midi",
-        "price": 17.9,
-        "category": "Menu Test"
-      }
-    ]
+    "items": []
   }
 ]
