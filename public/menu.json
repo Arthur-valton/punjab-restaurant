@@ -9,7 +9,13 @@
         "category": "Entrees",
         "subcategory": "Grillades",
         "piment": false,
-        "isFormula": true
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Plat",
+            "category": "Entrees"
+          }
+        ]
       },
       {
         "id": 2,
