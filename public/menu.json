@@ -973,6 +973,34 @@
   },
   {
     "category": "Menu Test",
-    "items": []
+    "items": [
+      {
+        "id": 148,
+        "name": "Menu Midi",
+        "price": 15.7,
+        "category": "Menu Test",
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Entrée",
+            "articleIds": [
+              3
+            ]
+          },
+          {
+            "label": "Plat",
+            "articleIds": [
+              20
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articleIds": [
+              82
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
