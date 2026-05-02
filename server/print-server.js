@@ -96,7 +96,7 @@ app.get("/service", (req, res) => {
   res.sendFile(path.join(__dirname, "service.html"));
 });
 
-// Route GET /orders → liste les commandes actives (v2)
+// Route GET /orders → liste les commandes actives
 app.get("/orders", (req, res) => {
   res.json([...activeOrders.values()]);
 });
