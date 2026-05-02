@@ -195,7 +195,8 @@
         "name": "Poulet Jalfreji",
         "price": 15.5,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 20,
