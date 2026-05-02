@@ -231,7 +231,8 @@
         "name": "Poulet Tikka Massala",
         "price": 16.5,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 24,
