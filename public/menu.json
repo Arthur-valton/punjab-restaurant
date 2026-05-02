@@ -790,6 +790,12 @@
         "name": "Menu 17€90",
         "price": 17.9,
         "category": "Menu Taj Mahal"
+      },
+      {
+        "id": 149,
+        "name": "Menu 2 pers",
+        "price": 75,
+        "category": "Menu Taj Mahal"
       }
     ]
   },
