@@ -899,6 +899,12 @@
         "name": "St pelg 50 cl",
         "price": 3,
         "category": "Boissons"
+      },
+      {
+        "id": 147,
+        "name": "Gin tonic",
+        "price": 6.9,
+        "category": "Boissons"
       }
     ]
   },
