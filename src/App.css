@@ -766,6 +766,559 @@ body {
   text-align: center;
 }
 
+/* ---- PIMENT ---- */
+.cart-piment { margin-left: 6px; font-size: 1rem; display: inline; }
+.cart-piment--none { font-size: 0.75rem; opacity: 0.6; font-style: italic; }
+.ticket-piment { margin-left: 6px; font-size: 1rem; }
+
+.piment-picker {
+  background: #fff;
+  border-radius: 16px;
+  width: min(320px, 88vw);
+  padding: 24px 20px 20px;
+  text-align: center;
+}
+.piment-picker-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.piment-picker-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 20px;
+}
+.piment-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.piment-picker-btn:active { background: #f0f0f0; border-color: #e44; }
+.piment-picker-emoji { font-size: 1.3rem; }
+.piment-picker-label { font-size: 1rem; font-weight: 600; }
+
+.settings-piment-toggle {
+  background: none;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.15s;
+}
+.settings-piment-toggle:hover {
+  opacity: 1;
+}
+.settings-piment-toggle.active {
+  opacity: 1;
+  border-color: #e44;
+  background: rgba(255,60,60,0.08);
+}
+
+/* ---- ADD ITEM FORM ---- */
+.settings-new-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 12px;
+  border: 2px dashed var(--border-input);
+  margin-top: 4px;
+}
+.settings-new-type-toggle {
+  display: flex;
+  gap: 6px;
+}
+.settings-new-type-btn {
+  flex: 1;
+  padding: 7px;
+  border: 2px solid var(--border-input);
+  border-radius: 8px;
+  background: var(--bg-item);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-new-type-btn.active {
+  border-color: var(--accent-orange);
+  background: rgba(230,126,34,0.1);
+  color: var(--accent-orange);
+}
+.settings-new-main-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.settings-new-main-row .settings-add-name {
+  flex: 1;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-item);
+  outline: none;
+}
+.settings-new-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- FORMULA STEP BLOCKS (settings) ---- */
+.settings-formula {
+  padding: 8px 10px;
+  background: var(--bg-item);
+  border-radius: 8px;
+  border: 1px solid var(--border-input);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.settings-formula-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.settings-formula-step-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.settings-formula-step-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.settings-formula-select {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-input);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings-formula-articles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.formula-article-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(230,126,34,0.12);
+  border: 1px solid rgba(230,126,34,0.35);
+  color: var(--accent-orange);
+  border-radius: 20px;
+  padding: 3px 8px 3px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.formula-article-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-orange);
+  opacity: 0.7;
+  font-size: 0.75rem;
+  padding: 0 1px;
+  line-height: 1;
+}
+.formula-article-chip button:hover { opacity: 1; }
+.formula-article-chip.piment {
+  background: rgba(231,76,60,0.12);
+  border-color: rgba(231,76,60,0.4);
+  color: #c0271e;
+}
+.formula-chip-piment {
+  opacity: 0.3;
+  font-size: 0.8rem !important;
+}
+.formula-chip-piment.active {
+  opacity: 1;
+}
+.settings-formula-article-add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 2px;
+}
+.settings-formula-article-input {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px dashed var(--border-input);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  outline: none;
+}
+.settings-formula-article-input:focus {
+  border-color: var(--accent-orange);
+  border-style: solid;
+}
+.settings-formula-article-input::placeholder { color: var(--text-tertiary); }
+.settings-formula-article-add-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent-orange);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.settings-formula-article-add-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.settings-formula-add {
+  background: none;
+  border: 1px dashed var(--border-input);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 100%;
+  margin-top: 2px;
+}
+.settings-formula-add:hover { border-color: var(--accent-orange); color: var(--accent-orange); }
+.settings-formula-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-red);
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.settings-formula-remove:hover { opacity: 1; }
+
+/* ---- FORMULA CHOICES IN CART ---- */
+.cart-item-block {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.cart-item-block .cart-item {
+  border-bottom: none;
+}
+.cart-formula-choice {
+  padding: 1px 16px 5px 28px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-style: italic;
+}
+
+/* ---- FORMULA PICKER ---- */
+.formula-picker {
+  background: #fff;
+  border-radius: 18px;
+  width: min(360px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.formula-picker-header {
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid #eee;
+}
+.formula-picker-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 10px;
+}
+.formula-picker-progress {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.formula-picker-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ddd;
+  transition: background 0.2s;
+}
+.formula-picker-dot.active {
+  background: #e67e22;
+  transform: scale(1.25);
+}
+.formula-picker-dot.done {
+  background: #27ae60;
+}
+.formula-picker-recap {
+  margin: 0 16px 4px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.formula-picker-recap-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.formula-picker-recap-label {
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+.formula-picker-recap-name {
+  color: #222;
+  font-weight: 500;
+}
+.formula-picker-recap-row::before {
+  content: "✓";
+  color: #27ae60;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.formula-picker-step-label {
+  padding: 10px 20px 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.formula-picker-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.formula-picker-item-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  background: #fafafa;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.formula-picker-item-btn:active {
+  background: #fff3e8;
+  border-color: #e67e22;
+  color: #e67e22;
+}
+.formula-picker-empty {
+  text-align: center;
+  color: #aaa;
+  padding: 20px;
+  font-size: 0.9rem;
+}
+.formula-picker-cancel {
+  margin: 8px 12px 12px;
+  padding: 12px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #888;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.formula-picker-cancel:active { background: #f5f5f5; }
+
+/* ── Confirmation screen ── */
+.formula-picker-confirm {
+  margin: 0 12px 8px;
+  padding: 14px;
+  background: #27ae60;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.formula-picker-confirm:active { background: #219a52; }
+
+/* ── Summary rows ── */
+.formula-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f7f9f7;
+  border-radius: 10px;
+  border-left: 3px solid #27ae60;
+}
+.formula-summary-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #27ae60;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 64px;
+  flex-shrink: 0;
+}
+.formula-summary-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111;
+}
+
+/* ---- TICKET FORMULA CHOICE ---- */
+.ticket-formula-choice {
+  font-size: 0.72rem;
+  color: #666;
+  font-style: italic;
+  padding-left: 8px;
+}
+
+/* ---- ORDERS BUTTON ---- */
+.orders-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2px solid rgba(255, 200, 0, 0.6);
+  border-radius: 10px;
+  background: rgba(255, 200, 0, 0.2);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.orders-btn:active { background: rgba(255, 200, 0, 0.35); }
+.orders-btn-label { font-size: 0.8rem; font-weight: 600; opacity: 0.9; }
+.orders-btn-count {
+  font-size: 1rem;
+  font-weight: 800;
+  background: rgba(255,200,0,0.8);
+  color: #333;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- ORDERS PANEL ---- */
+.orders-panel {
+  background: #fff;
+  border-radius: 16px;
+  width: min(420px, 92vw);
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 0 0 16px;
+}
+.orders-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+.orders-panel-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  padding: 4px 8px;
+}
+.orders-panel-empty { padding: 24px 20px; color: #999; text-align: center; }
+.orders-panel-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.orders-panel-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.orders-panel-meta strong { font-size: 1rem; }
+.orders-panel-num { font-size: 0.85rem; color: #888; }
+.orders-panel-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.orders-panel-tag {
+  background: #f4f4f4;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  color: #444;
+}
+.orders-panel-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.orders-panel-edit-btn,
+.orders-panel-bill-btn,
+.orders-panel-close-btn {
+  padding: 10px 6px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.orders-panel-edit-btn { background: #1a1a2e; color: #fff; }
+.orders-panel-bill-btn { background: #2e7d32; color: #fff; }
+.orders-panel-close-btn { background: #c62828; color: #fff; }
+.orders-panel-edit-btn:active,
+.orders-panel-bill-btn:active,
+.orders-panel-close-btn:active { opacity: 0.8; }
+
 /* ---- NUMPAD OVERLAY ---- */
 .numpad-overlay {
   position: fixed;

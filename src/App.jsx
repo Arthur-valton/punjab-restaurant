@@ -7,6 +7,16 @@ import "./App.css";
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
 
+function getPrintUrl() {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
+    return `http://${host}:3001`;
+  }
+  const saved = localStorage.getItem("punjab_print_url");
+  if (saved) return saved.replace(/\/+$/, "");
+  return "https://print.restaurant-dev.fr";
+}
+
 // Pastel Apple colors par sous-catégorie
 const SUBCAT_COLORS = {
   "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
@@ -48,6 +58,16 @@ function App() {
       })
       .catch(() => {});
 
+    // Chargement commandes actives
+    function fetchOrders() {
+      fetch(`${getPrintUrl()}/orders`)
+        .then((r) => r.json())
+        .then((data) => setServerOrders(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }
+    fetchOrders();
+    const ordersInterval = setInterval(fetchOrders, 15000);
+
     // Chargement config (printUrl)
     fetch("https://punjab-restaurant.vercel.app/api/get-config")
       .then((r) => r.json())
@@ -55,6 +75,8 @@ function App() {
         if (cfg.printUrl) localStorage.setItem("punjab_print_url", cfg.printUrl);
       })
       .catch(() => {});
+
+    return () => clearInterval(ordersInterval);
   }, []);
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
@@ -70,6 +92,11 @@ function App() {
   const autoLogin = new URLSearchParams(window.location.search).get("autoLogin") === "1";
   const [appUnlocked, setAppUnlocked] = useState(isAppUnlocked || autoLogin);
   const [showSettingsPwd, setShowSettingsPwd] = useState(false);
+  const [serverOrders, setServerOrders] = useState([]);
+  const [showOrders, setShowOrders] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [pimentPicker, setPimentPicker] = useState(null); // { item } | null
+  const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -130,25 +157,56 @@ function App() {
   const totalQty = orderItems.reduce((s, i) => s + i.qty, 0);
   const totalPrice = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
 
-  function addItem(item) {
+  function addItem(item, piment = null) {
+    // Formula item → open multi-step picker
+    if (item.isFormula && item.formulaSteps?.length > 0) {
+      setFormulaPicker({ item, currentStep: 0, choices: [] });
+      return;
+    }
+    if (item.piment && piment === null) {
+      setPimentPicker({ item });
+      return;
+    }
+    const cartId = piment ? `${item.id}-p${piment}` : String(item.id);
     setOrderItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) return prev.map((i) => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...item, qty: 1 }];
+      const existing = prev.find((i) => i.cartId === cartId);
+      if (existing) return prev.map((i) => i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...item, cartId, qty: 1, ...(piment ? { piment } : {}) }];
     });
   }
 
-  function updateQty(id, qty) {
-    if (qty < 1) return removeItem(id);
-    setOrderItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
+  function pickFormulaItem(articleName, piment = null) {
+    const { item, currentStep, choices } = formulaPicker;
+    const step = item.formulaSteps[currentStep];
+    const choice = { label: step.label, itemName: articleName };
+    if (piment && piment > 1) choice.piment = piment;
+    const newChoices = [...choices, choice];
+    if (currentStep + 1 >= item.formulaSteps.length) {
+      // Dernière étape → afficher le récap avant d'ajouter
+      setFormulaPicker({ item, currentStep, choices: newChoices, showSummary: true });
+    } else {
+      setFormulaPicker({ item, currentStep: currentStep + 1, choices: newChoices });
+    }
   }
 
-  function removeItem(id) {
-    setOrderItems((prev) => prev.filter((i) => i.id !== id));
+  function confirmFormulaOrder() {
+    const { item, choices } = formulaPicker;
+    const cartId = `${item.id}-f${Date.now()}`;
+    setOrderItems((prev) => [...prev, { ...item, cartId, qty: 1, formulaChoices: choices }]);
+    setFormulaPicker(null);
+  }
+
+  function updateQty(cartId, qty) {
+    if (qty < 1) return removeItem(cartId);
+    setOrderItems((prev) => prev.map((i) => (i.cartId === cartId ? { ...i, qty } : i)));
+  }
+
+  function removeItem(cartId) {
+    setOrderItems((prev) => prev.filter((i) => i.cartId !== cartId));
   }
 
   function getItemQty(id) {
-    return orderItems.find((i) => i.id === id)?.qty || 0;
+    return orderItems.filter((i) => i.id === id).reduce((s, i) => s + i.qty, 0);
   }
 
   function validateOrder() {
@@ -166,6 +224,34 @@ function App() {
     setTableNumber("");
     setShowTicket(false);
     setTicketData(null);
+    setEditingOrderId(null);
+  }
+
+  async function reprintBill(orderId) {
+    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}/reprint-bill`, { method: "POST" });
+  }
+
+  async function closeTable(orderId) {
+    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}`, { method: "DELETE" });
+    setServerOrders((prev) => prev.filter((o) => o.id !== orderId));
+  }
+
+  function loadOrderForEdit(serverOrder) {
+    const items = serverOrder.items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      price: i.price,
+      category: i.category,
+      subcategory: i.subcategory || null,
+      qty: i.qty,
+      piment: i.piment || null,
+      formulaChoices: i.formulaChoices || null,
+      cartId: i.formulaChoices ? `${i.id}-f${Date.now() + Math.random()}` : (i.piment ? `${i.id}-p${i.piment}` : String(i.id)),
+    }));
+    setOrderItems(items);
+    setTableNumber(serverOrder.tableNumber);
+    setEditingOrderId(serverOrder.id);
+    setShowOrders(false);
   }
 
   // App-level password gate
@@ -191,19 +277,27 @@ function App() {
         <>
           <div className="cart-detail cart-detail--always">
             {orderItems.map((item) => (
-              <div key={item.id} className="cart-item">
-                <span className="cart-item-name">{item.name}</span>
-                <div className="cart-item-controls">
-                  <button
-                    className={`qty-btn ${item.qty === 1 ? "delete" : ""}`}
-                    onClick={() => updateQty(item.id, item.qty - 1)}
-                  >
-                    {item.qty === 1 ? "✕" : "−"}
-                  </button>
-                  <span className="cart-item-qty">{item.qty}</span>
-                  <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+              <div key={item.cartId} className="cart-item-block">
+                <div className="cart-item">
+                  <span className="cart-item-name">
+                    {item.name}
+                    {item.piment > 0 && <span className="cart-piment">{"🌶️".repeat(item.piment)}</span>}
+                  </span>
+                  <div className="cart-item-controls">
+                    <button
+                      className={`qty-btn ${item.qty === 1 ? "delete" : ""}`}
+                      onClick={() => updateQty(item.cartId, item.qty - 1)}
+                    >
+                      {item.qty === 1 ? "✕" : "−"}
+                    </button>
+                    <span className="cart-item-qty">{item.qty}</span>
+                    <button className="qty-btn" onClick={() => updateQty(item.cartId, item.qty + 1)}>+</button>
+                  </div>
+                  <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                 </div>
-                <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
+                {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                  <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
+                ))}
               </div>
             ))}
             <div className="cart-detail-actions">
@@ -236,6 +330,12 @@ function App() {
           <h1>PUNJAB</h1>
           <div className="header-right">
             <button className="settings-btn" onClick={() => setShowSettingsPwd(true)}>⚙</button>
+            {serverOrders.length > 0 && (
+              <button className="orders-btn" onClick={() => setShowOrders(true)}>
+                <span className="orders-btn-label">En cours</span>
+                <span className="orders-btn-count">{serverOrders.length}</span>
+              </button>
+            )}
             <button className="table-btn" onClick={openNumpad}>
               <span className="table-btn-label">Table</span>
               <span className="table-btn-value">{tableNumber || "--"}</span>
@@ -309,16 +409,24 @@ function App() {
             {cartOpen && (
               <div className="cart-detail">
                 {orderItems.map((item) => (
-                  <div key={item.id} className="cart-item">
-                    <span className="cart-item-name">{item.name}</span>
-                    <div className="cart-item-controls">
-                      <button className={`qty-btn ${item.qty === 1 ? "delete" : ""}`} onClick={() => updateQty(item.id, item.qty - 1)}>
-                        {item.qty === 1 ? "✕" : "−"}
-                      </button>
-                      <span className="cart-item-qty">{item.qty}</span>
-                      <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                  <div key={item.cartId} className="cart-item-block">
+                    <div className="cart-item">
+                      <span className="cart-item-name">
+                        {item.name}
+                        {item.piment > 0 && <span className="cart-piment">{"🌶️".repeat(item.piment)}</span>}
+                      </span>
+                      <div className="cart-item-controls">
+                        <button className={`qty-btn ${item.qty === 1 ? "delete" : ""}`} onClick={() => updateQty(item.cartId, item.qty - 1)}>
+                          {item.qty === 1 ? "✕" : "−"}
+                        </button>
+                        <span className="cart-item-qty">{item.qty}</span>
+                        <button className="qty-btn" onClick={() => updateQty(item.cartId, item.qty + 1)}>+</button>
+                      </div>
+                      <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                     </div>
-                    <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
+                    {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                      <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
+                    ))}
                   </div>
                 ))}
                 <div className="cart-detail-actions">
@@ -390,9 +498,192 @@ function App() {
         <MenuSettings menuData={menuData} onUpdate={updateMenu} onClose={() => setShowSettings(false)} saveStatus={saveStatus} />
       )}
 
+      {/* Piment picker */}
+      {pimentPicker && (
+        <div className="numpad-overlay" onClick={() => setPimentPicker(null)}>
+          <div className="piment-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="piment-picker-title">{pimentPicker.item.name}</div>
+            <div className="piment-picker-subtitle">Niveau de piment ?</div>
+            {[
+              { level: 1, label: "Sans piment", emoji: "🌶️" },
+              { level: 2, label: "Moyen",       emoji: "🌶️🌶️" },
+              { level: 3, label: "Fort",         emoji: "🌶️🌶️🌶️" },
+            ].map(({ level, label, emoji }) => (
+              <button
+                key={level}
+                className="piment-picker-btn"
+                onClick={() => { addItem(pimentPicker.item, level); setPimentPicker(null); }}
+              >
+                <span className="piment-picker-emoji">{emoji}</span>
+                <span className="piment-picker-label">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Formula picker */}
+      {formulaPicker && (
+        <div className="numpad-overlay" onClick={() => setFormulaPicker(null)}>
+          <div className="formula-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="formula-picker-header">
+              <div className="formula-picker-title">{formulaPicker.item.name}</div>
+              <div className="formula-picker-progress">
+                {formulaPicker.item.formulaSteps.map((_, i) => (
+                  <span key={i} className={`formula-picker-dot ${i < formulaPicker.currentStep ? "done" : i === formulaPicker.currentStep ? "active" : ""}`} />
+                ))}
+              </div>
+            </div>
+
+            {formulaPicker.showSummary ? (
+              /* ── Écran de confirmation ── */
+              <>
+                <div className="formula-picker-step-label" style={{ color: "#27ae60" }}>✓ Récapitulatif</div>
+                <div className="formula-picker-items">
+                  {formulaPicker.choices.map((c, i) => (
+                    <div key={i} className="formula-summary-row">
+                      <span className="formula-summary-label">{c.label}</span>
+                      <span className="formula-summary-name">
+                        {c.itemName}
+                        {c.piment > 1 && <span style={{ marginLeft: 5 }}>{"🌶️".repeat(c.piment)}</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button className="formula-picker-confirm" onClick={confirmFormulaOrder}>
+                  Ajouter au panier
+                </button>
+                <button className="formula-picker-cancel" onClick={() => setFormulaPicker(null)}>Annuler</button>
+              </>
+            ) : (
+            /* ── Récap des choix déjà faits (étapes précédentes) ── */
+            <>
+            {formulaPicker.choices.length > 0 && (
+              <div className="formula-picker-recap">
+                {formulaPicker.choices.map((c, i) => (
+                  <div key={i} className="formula-picker-recap-row">
+                    <span className="formula-picker-recap-label">{c.label}</span>
+                    <span className="formula-picker-recap-name">
+                      {c.itemName}
+                      {c.piment > 1 && <span style={{ marginLeft: 4 }}>{"🌶️".repeat(c.piment)}</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {formulaPicker.pendingArticle ? (
+              /* ── Sous-étape piment ── */
+              <>
+                <div className="formula-picker-step-label">
+                  🌶️ Niveau de piment — <strong>{formulaPicker.pendingArticle}</strong>
+                </div>
+                <div className="formula-picker-items">
+                  {[
+                    { level: 1, label: "Sans piment",  emoji: "🌶️" },
+                    { level: 2, label: "Moyen",         emoji: "🌶️🌶️" },
+                    { level: 3, label: "Fort",           emoji: "🌶️🌶️🌶️" },
+                  ].map(({ level, label, emoji }) => (
+                    <button
+                      key={level}
+                      className="formula-picker-item-btn"
+                      onClick={() => {
+                        const { pendingArticle, ...rest } = formulaPicker;
+                        setFormulaPicker(rest); // efface pendingArticle avant pick
+                        pickFormulaItem(pendingArticle, level);
+                      }}
+                    >
+                      <span style={{ marginRight: 8 }}>{emoji}</span>{label}
+                    </button>
+                  ))}
+                </div>
+                <button className="formula-picker-cancel" onClick={() => setFormulaPicker({ ...formulaPicker, pendingArticle: null })}>← Retour</button>
+              </>
+            ) : (
+              /* ── Liste articles ── */
+              <>
+                <div className="formula-picker-step-label">
+                  {`Étape ${formulaPicker.currentStep + 1}/${formulaPicker.item.formulaSteps.length} — ${formulaPicker.item.formulaSteps[formulaPicker.currentStep].label}`}
+                </div>
+                <div className="formula-picker-items">
+                  {(() => {
+                    const step = formulaPicker.item.formulaSteps[formulaPicker.currentStep];
+                    const articles = step.articles || [];
+                    return articles.length > 0
+                      ? articles.map((article, ai) => {
+                          const name = typeof article === "string" ? article : article.name;
+                          const hasPiment = typeof article !== "string" && article.piment;
+                          return (
+                            <button
+                              key={ai}
+                              className="formula-picker-item-btn"
+                              onClick={() => {
+                                if (hasPiment) {
+                                  setFormulaPicker({ ...formulaPicker, pendingArticle: name });
+                                } else {
+                                  pickFormulaItem(name);
+                                }
+                              }}
+                            >
+                              {name}{hasPiment && <span style={{ marginLeft: 6, opacity: 0.6 }}>🌶️</span>}
+                            </button>
+                          );
+                        })
+                      : <p className="formula-picker-empty">Aucun article configuré pour cette étape</p>;
+                  })()}
+                </div>
+                <button className="formula-picker-cancel" onClick={() => setFormulaPicker(null)}>Annuler</button>
+              </>
+            )}
+            </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Orders panel */}
+      {showOrders && (
+        <div className="numpad-overlay" onClick={() => setShowOrders(false)}>
+          <div className="orders-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="orders-panel-header">
+              <span>Commandes en cours</span>
+              <button className="orders-panel-close" onClick={() => setShowOrders(false)}>✕</button>
+            </div>
+            {serverOrders.length === 0 ? (
+              <p className="orders-panel-empty">Aucune commande active</p>
+            ) : (
+              serverOrders.map((o) => (
+                <div key={o.id} className="orders-panel-item">
+                  <div className="orders-panel-meta">
+                    <strong>Table {o.tableNumber}</strong>
+                    <span className="orders-panel-num">#{o.orderNum}</span>
+                  </div>
+                  <div className="orders-panel-items">
+                    {o.items.slice(0, 4).map((item, i) => (
+                      <span key={i} className="orders-panel-tag">{item.qty}× {item.name}</span>
+                    ))}
+                    {o.items.length > 4 && <span className="orders-panel-tag">+{o.items.length - 4}</span>}
+                  </div>
+                  <div className="orders-panel-actions">
+                    <button className="orders-panel-edit-btn" onClick={() => loadOrderForEdit(o)}>Modifier</button>
+                    <button className="orders-panel-bill-btn" onClick={() => reprintBill(o.id)}>Addition</button>
+                    <button className="orders-panel-close-btn" onClick={() => closeTable(o.id)}>Clôturer</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Ticket overlay */}
       {showTicket && ticketData && (
-        <Ticket order={ticketData.items} tableNumber={ticketData.table} onNewOrder={newOrder} />
+        <Ticket
+          order={ticketData.items}
+          tableNumber={ticketData.table}
+          onNewOrder={newOrder}
+          editingOrderId={editingOrderId}
+        />
       )}
     </div>
   );

@@ -7,6 +7,9 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newSubcat, setNewSubcat] = useState("");
+  const [newItemType, setNewItemType] = useState("article"); // "article" | "menu"
+  const [newFormulaSteps, setNewFormulaSteps] = useState([]);
+  const [newStepInputs, setNewStepInputs] = useState({}); // { [stepIndex]: string }
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [printUrl, setPrintUrl] = useState(
@@ -73,6 +76,12 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
       onUpdate(menuData.map((s) => ({ ...s, items: s.items.map((i) => i.id === itemId ? { ...i, name: value.trim() } : i) })));
     } else if (field === "subcategory") {
       onUpdate(menuData.map((s) => ({ ...s, items: s.items.map((i) => i.id === itemId ? { ...i, subcategory: value.trim() || undefined } : i) })));
+    } else if (field === "piment") {
+      onUpdate(menuData.map((s) => ({ ...s, items: s.items.map((i) => i.id === itemId ? { ...i, piment: value } : i) })));
+    } else if (field === "isFormula") {
+      onUpdate(menuData.map((s) => ({ ...s, items: s.items.map((i) => i.id === itemId ? { ...i, isFormula: value } : i) })));
+    } else if (field === "formulaSteps") {
+      onUpdate(menuData.map((s) => ({ ...s, items: s.items.map((i) => i.id === itemId ? { ...i, formulaSteps: value || undefined } : i) })));
     }
   }
 
@@ -88,11 +97,20 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     const newId = Math.max(...allIds, 0) + 1;
     const newItem = { id: newId, name: newName.trim(), price, category: activeCategory };
     if (newSubcat.trim()) newItem.subcategory = newSubcat.trim();
+    if (newItemType === "menu" && newFormulaSteps.length > 0) {
+      newItem.isFormula = true;
+      newItem.formulaSteps = newFormulaSteps;
+    }
     onUpdate(menuData.map((s) => s.category === activeCategory ? { ...s, items: [...s.items, newItem] } : s));
     setNewName("");
     setNewPrice("");
     setNewSubcat("");
+    setNewFormulaSteps([]);
+    setNewStepInputs({});
+    setNewItemType("article");
   }
+
+  const STEP_LABELS_NEW = ["Entrée", "Plat", "Dessert", "Naan", "Boisson", "Supplément"];
 
   function addCategory() {
     if (!newCategoryName.trim()) return;
@@ -110,6 +128,8 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     onUpdate(newMenu);
     setActiveCategory(newMenu[0].category);
   }
+
+  const allMenuItems = menuData.flatMap((s) => s.items);
 
   const grouped = section?.items.reduce((acc, item) => {
     const key = item.subcategory || "__none__";
@@ -259,38 +279,38 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                   <div className="settings-subcat-label">{subcat}</div>
                 )}
                 {items.map((item) => (
-                  <ItemRow key={item.id} item={item} onUpdate={updateField} onDelete={deleteItem} showSubcat />
+                  <ItemRow key={item.id} item={item} onUpdate={updateField} onDelete={deleteItem} showSubcat allMenuItems={allMenuItems} />
                 ))}
               </div>
             ))
           ) : (
             section?.items.map((item) => (
-              <ItemRow key={item.id} item={item} onUpdate={updateField} onDelete={deleteItem} showSubcat />
+              <ItemRow key={item.id} item={item} onUpdate={updateField} onDelete={deleteItem} showSubcat allMenuItems={allMenuItems} />
             ))
           )}
 
-          <div className="settings-add-row settings-add-row--tall">
-            <div className="settings-add-fields">
+          <div className="settings-new-item-form">
+            {/* Ligne 1 : toggle Article / Menu */}
+            <div className="settings-new-type-toggle">
+              <button
+                className={`settings-new-type-btn ${newItemType === "article" ? "active" : ""}`}
+                onClick={() => setNewItemType("article")}
+              >Article</button>
+              <button
+                className={`settings-new-type-btn ${newItemType === "menu" ? "active" : ""}`}
+                onClick={() => setNewItemType("menu")}
+              >🍽️ Menu</button>
+            </div>
+
+            {/* Ligne 2 : nom + prix + bouton + */}
+            <div className="settings-new-main-row">
               <input
                 className="settings-add-name"
                 type="text"
-                placeholder="Nom de l'article"
+                placeholder="Nom"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
               />
-              <input
-                className="settings-add-subcat"
-                type="text"
-                placeholder="Sous-catégorie (optionnel)"
-                value={newSubcat}
-                onChange={(e) => setNewSubcat(e.target.value)}
-                list="subcat-list"
-              />
-              <datalist id="subcat-list">
-                {subcategories.map((s) => <option key={s} value={s} />)}
-              </datalist>
-            </div>
-            <div className="settings-item-right">
               <input
                 className="settings-price-input"
                 type="number"
@@ -305,10 +325,94 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                 className="settings-add-btn"
                 onClick={addItem}
                 disabled={!newName.trim() || !newPrice}
-              >
-                +
-              </button>
+              >+</button>
             </div>
+
+            {/* Ligne 3 : sous-catégorie (article) ou étapes (menu) */}
+            {newItemType === "article" && (
+              <>
+                <input
+                  className="settings-add-subcat"
+                  type="text"
+                  placeholder="Sous-catégorie (optionnel)"
+                  value={newSubcat}
+                  onChange={(e) => setNewSubcat(e.target.value)}
+                  list="subcat-list"
+                />
+                <datalist id="subcat-list">
+                  {subcategories.map((s) => <option key={s} value={s} />)}
+                </datalist>
+              </>
+            )}
+
+            {newItemType === "menu" && (
+              <div className="settings-new-steps">
+                {newFormulaSteps.map((step, i) => (
+                  <div key={i} className="settings-formula-step-block">
+                    <div className="settings-formula-step-header">
+                      <select
+                        className="settings-formula-select"
+                        value={step.label}
+                        onChange={(e) => setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}
+                      >
+                        {STEP_LABELS_NEW.map(l => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                      <button className="settings-formula-remove" onClick={() => {
+                        setNewFormulaSteps(newFormulaSteps.filter((_, idx) => idx !== i));
+                        setNewStepInputs(prev => { const n = {...prev}; delete n[i]; return n; });
+                      }}>✕</button>
+                    </div>
+                    <div className="settings-formula-articles">
+                      {(step.articles || []).map((article, ai) => {
+                        const name = typeof article === "string" ? article : article.name;
+                        const hasPiment = typeof article === "string" ? false : article.piment;
+                        return (
+                          <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
+                            {name}
+                            <button
+                              className={`formula-chip-piment ${hasPiment ? "active" : ""}`}
+                              onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? {
+                                ...s,
+                                articles: s.articles.map((a, aii) => aii === ai ? { ...a, piment: !a.piment } : a)
+                              } : s))}
+                              title="Piment"
+                            >🌶️</button>
+                            <button onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? { ...s, articles: s.articles.filter((_, aii) => aii !== ai) } : s))}>✕</button>
+                          </span>
+                        );
+                      })}
+                      <div className="settings-formula-article-add">
+                        <input
+                          className="settings-formula-article-input"
+                          type="text"
+                          placeholder="Nom de l'article..."
+                          value={newStepInputs[i] || ""}
+                          onChange={(e) => setNewStepInputs({...newStepInputs, [i]: e.target.value})}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && (newStepInputs[i] || "").trim()) {
+                              setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? { ...s, articles: [...(s.articles || []), { name: newStepInputs[i].trim(), piment: false }] } : s));
+                              setNewStepInputs({...newStepInputs, [i]: ""});
+                            }
+                          }}
+                        />
+                        <button
+                          className="settings-formula-article-add-btn"
+                          disabled={!(newStepInputs[i] || "").trim()}
+                          onClick={() => {
+                            setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? { ...s, articles: [...(s.articles || []), { name: newStepInputs[i].trim(), piment: false }] } : s));
+                            setNewStepInputs({...newStepInputs, [i]: ""});
+                          }}
+                        >+</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  className="settings-formula-add"
+                  onClick={() => setNewFormulaSteps([...newFormulaSteps, { label: "Plat", articles: [] }])}
+                >+ Ajouter une étape</button>
+              </div>
+            )}
           </div>
         </div>
         </>)}
@@ -318,6 +422,52 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
 }
 
 function ItemRow({ item, onUpdate, onDelete, showSubcat }) {
+  const [showFormula, setShowFormula] = useState(false);
+  const [stepInputs, setStepInputs] = useState({}); // { [stepIndex]: string }
+  const STEP_LABELS = ["Entrée", "Plat", "Dessert", "Naan", "Boisson", "Supplément"];
+
+  function addFormulaStep() {
+    const steps = [...(item.formulaSteps || []), { label: "Plat", articles: [] }];
+    onUpdate(item.id, "formulaSteps", steps);
+  }
+
+  function updateStepLabel(index, value) {
+    const steps = (item.formulaSteps || []).map((s, i) => i === index ? { ...s, label: value } : s);
+    onUpdate(item.id, "formulaSteps", steps);
+  }
+
+  function addArticleToStep(index, name) {
+    const steps = (item.formulaSteps || []).map((s, i) =>
+      i === index ? { ...s, articles: [...(s.articles || []), { name, piment: false }] } : s
+    );
+    onUpdate(item.id, "formulaSteps", steps);
+  }
+
+  function toggleArticlePiment(stepIndex, articleIndex) {
+    const steps = (item.formulaSteps || []).map((s, i) =>
+      i === stepIndex ? {
+        ...s,
+        articles: (s.articles || []).map((a, ai) =>
+          ai === articleIndex ? { ...a, piment: !a.piment } : a
+        )
+      } : s
+    );
+    onUpdate(item.id, "formulaSteps", steps);
+  }
+
+  function removeArticleFromStep(index, articleIndex) {
+    const steps = (item.formulaSteps || []).map((s, i) =>
+      i === index ? { ...s, articles: (s.articles || []).filter((_, ai) => ai !== articleIndex) } : s
+    );
+    onUpdate(item.id, "formulaSteps", steps);
+  }
+
+  function removeStep(index) {
+    const steps = (item.formulaSteps || []).filter((_, i) => i !== index);
+    onUpdate(item.id, "formulaSteps", steps.length > 0 ? steps : null);
+    if (steps.length === 0) onUpdate(item.id, "isFormula", false);
+  }
+
   return (
     <div className="settings-item settings-item--col">
       <div className="settings-item-top">
@@ -328,6 +478,20 @@ function ItemRow({ item, onUpdate, onDelete, showSubcat }) {
           onBlur={(e) => onUpdate(item.id, "name", e.target.value)}
         />
         <div className="settings-item-right">
+          <button
+            className={`settings-piment-toggle ${item.piment ? "active" : ""}`}
+            onClick={() => onUpdate(item.id, "piment", !item.piment)}
+            title="Option piment"
+          >
+            🌶️
+          </button>
+          <button
+            className={`settings-piment-toggle ${item.isFormula ? "active" : ""}`}
+            onClick={() => { onUpdate(item.id, "isFormula", !item.isFormula); setShowFormula(!item.isFormula); }}
+            title="Menu/Formule"
+          >
+            🍽️
+          </button>
           <input
             className="settings-price-input"
             type="number"
@@ -340,6 +504,68 @@ function ItemRow({ item, onUpdate, onDelete, showSubcat }) {
           <button className="settings-delete" onClick={() => onDelete(item.id)}>✕</button>
         </div>
       </div>
+      {item.isFormula && (
+        <div className="settings-formula">
+          <div className="settings-formula-header">
+            <span>Étapes du menu</span>
+            <button className="settings-formula-add" onClick={() => { addFormulaStep(); setShowFormula(true); }}>+ Ajouter étape</button>
+          </div>
+          {(item.formulaSteps || []).map((step, i) => (
+            <div key={i} className="settings-formula-step-block">
+              <div className="settings-formula-step-header">
+                <select
+                  className="settings-formula-select"
+                  value={step.label}
+                  onChange={(e) => updateStepLabel(i, e.target.value)}
+                >
+                  {STEP_LABELS.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+                <button className="settings-formula-remove" onClick={() => removeStep(i)}>✕</button>
+              </div>
+              <div className="settings-formula-articles">
+                {(step.articles || []).map((article, ai) => {
+                  const name = typeof article === "string" ? article : article.name;
+                  const hasPiment = typeof article === "string" ? false : article.piment;
+                  return (
+                    <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
+                      {name}
+                      <button
+                        className={`formula-chip-piment ${hasPiment ? "active" : ""}`}
+                        onClick={() => toggleArticlePiment(i, ai)}
+                        title="Piment"
+                      >🌶️</button>
+                      <button onClick={() => removeArticleFromStep(i, ai)}>✕</button>
+                    </span>
+                  );
+                })}
+                <div className="settings-formula-article-add">
+                  <input
+                    className="settings-formula-article-input"
+                    type="text"
+                    placeholder="Nom de l'article..."
+                    value={stepInputs[i] || ""}
+                    onChange={(e) => setStepInputs({...stepInputs, [i]: e.target.value})}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (stepInputs[i] || "").trim()) {
+                        addArticleToStep(i, stepInputs[i].trim());
+                        setStepInputs({...stepInputs, [i]: ""});
+                      }
+                    }}
+                  />
+                  <button
+                    className="settings-formula-article-add-btn"
+                    disabled={!(stepInputs[i] || "").trim()}
+                    onClick={() => {
+                      addArticleToStep(i, stepInputs[i].trim());
+                      setStepInputs({...stepInputs, [i]: ""});
+                    }}
+                  >+</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {showSubcat && (
         <input
           className="settings-subcat-input"

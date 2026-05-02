@@ -96,6 +96,72 @@ app.get("/service", (req, res) => {
   res.sendFile(path.join(__dirname, "service.html"));
 });
 
+// Route GET /orders → liste les commandes actives
+app.get("/orders", (req, res) => {
+  res.json([...activeOrders.values()]);
+});
+
+// Route PUT /order/:id → modifie et réimprime une commande
+app.put("/order/:id", async (req, res) => {
+  try {
+    const orderId = decodeURIComponent(req.params.id);
+    const { order, tableNumber, orderNum, date } = req.body;
+    const existing = activeOrders.get(orderId);
+    if (!existing) return res.status(404).json({ error: "Commande introuvable" });
+
+    const boissons = order.filter((i) => i.category === "Boissons");
+    const cuisine = order.filter((i) => i.category !== "Boissons");
+    const cuisineAll = [...cuisine, ...boissons];
+    const common = { tableNumber, orderNum, date };
+
+    const oldItems = existing.items || [];
+    const tickets = [];
+    if (cuisineAll.length > 0) {
+      tickets.push(formatModifTicket({ title: "CUISINE (MODIF)", oldItems, newItems: cuisineAll, showTotal: false, ...common }));
+    }
+    tickets.push(formatModifTicket({ title: "SERVICE (MODIF)", oldItems, newItems: order, showTotal: true, ...common }));
+
+    await sendToPrinter(tickets.join(""));
+
+    const groups = buildGroups(cuisineAll);
+    const catStatus = {};
+    groups.forEach((g) => { catStatus[g.cat] = existing.catStatus?.[g.cat] || "waiting"; });
+
+    const updatedOrder = { ...existing, items: cuisineAll, tableNumber, date, catStatus };
+    activeOrders.set(orderId, updatedOrder);
+    saveOrders(activeOrders);
+    broadcast({ type: "update_order", order: updatedOrder });
+
+    console.log(`Modification Table ${tableNumber} #${orderNum}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Erreur modification:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route POST /order/:id/reprint-bill → réimprime l'addition
+app.post("/order/:id/reprint-bill", async (req, res) => {
+  try {
+    const orderId = decodeURIComponent(req.params.id);
+    const order = activeOrders.get(orderId);
+    if (!order) return res.status(404).json({ error: "Commande introuvable" });
+    const ticket = formatTicket({
+      title: "ADDITION",
+      order: order.items,
+      tableNumber: order.tableNumber,
+      orderNum: order.orderNum,
+      date: order.date,
+      showTotal: true,
+    });
+    await sendToPrinter(ticket);
+    console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Route DELETE /order/:id → supprime une commande
 app.delete("/order/:id", (req, res) => {
   const orderId = decodeURIComponent(req.params.id);
@@ -194,19 +260,37 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     }
 
     for (const item of group.items) {
+      const pimentSymbols = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
       if (showTotal) {
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
         buf += CMD.BOLD_ON;
         buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
+        if (item.piment && item.piment > 1) buf += `   ${pimentSymbols[item.piment]}\n`;
+        if (item.formulaChoices) {
+          for (const choice of item.formulaChoices) {
+            const pimentTxt = choice.piment > 1 ? `  ${pimentSymbols[choice.piment]}` : "";
+            buf += `   > ${choice.label}: ${choice.itemName}${pimentTxt}\n`;
+          }
+        }
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
         buf += ESC + "J\x06";
       } else {
-        buf += CMD.DOUBLE_H;
-        buf += CMD.BOLD_ON;
+        buf += CMD.DOUBLE_H + CMD.BOLD_ON;
         buf += `${item.qty}x ${item.name}\n`;
-        buf += CMD.BOLD_OFF;
-        buf += CMD.DOUBLE_OFF;
+        buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+        if (item.piment && item.piment > 1) {
+          buf += CMD.BOLD_ON;
+          buf += `  ${pimentSymbols[item.piment]}\n`;
+          buf += CMD.BOLD_OFF;
+        }
+        if (item.formulaChoices) {
+          for (const choice of item.formulaChoices) {
+            buf += CMD.BOLD_ON;
+            buf += `  > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${pimentSymbols[choice.piment]}` : ""}\n`;
+            buf += CMD.BOLD_OFF;
+          }
+        }
         buf += ESC + "J\x0C";
       }
     }
@@ -236,6 +320,126 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
 
   buf += CMD.FEED;
   buf += CMD.PARTIAL_CUT;
+  return buf;
+}
+
+function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, date, showTotal }) {
+  // Clé unique par item : cartId si présent (formules), sinon id
+  const itemKey = (i) => i.cartId || String(i.id);
+  const oldMap = new Map((oldItems || []).map((i) => [itemKey(i), i]));
+  const newMap = new Map((newItems || []).map((i) => [itemKey(i), i]));
+  const allKeys = new Set([...oldMap.keys(), ...newMap.keys()]);
+
+  const added = [], removed = [];
+  for (const key of allKeys) {
+    const oldQty = oldMap.get(key)?.qty || 0;
+    const newQty = newMap.get(key)?.qty || 0;
+    const delta = newQty - oldQty;
+    const item = newMap.get(key) || oldMap.get(key);
+    if (delta > 0) added.push({ ...item, qty: delta });
+    else if (delta < 0) removed.push({ ...item, qty: -delta });
+  }
+
+  let buf = "";
+  buf += CMD.INIT;
+  buf += CMD.CENTER;
+  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += "PUNJAB\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  buf += "\n";
+  buf += CMD.BOLD_ON;
+  buf += `*** ${title} ***\n`;
+  buf += CMD.BOLD_OFF;
+  buf += CMD.LEFT;
+  buf += line("=");
+  buf += `Commande: #${orderNum}\n`;
+  buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
+  buf += `TABLE ${tableNumber}\n`;
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+  buf += `Date: ${date}\n`;
+  buf += line("=");
+
+  // ── Section MODIFICATIONS ──
+  if (added.length > 0 || removed.length > 0) {
+    buf += CMD.CENTER + CMD.DOUBLE_ON + CMD.BOLD_ON;
+    buf += "MODIFICATIONS\n";
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+    buf += line("-");
+    const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
+    for (const item of added) {
+      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += `++ ${item.qty}x ${item.name}\n`;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+      if (item.piment && item.piment > 1) {
+        buf += CMD.BOLD_ON + `   ${ps[item.piment]}\n` + CMD.BOLD_OFF;
+      }
+      if (item.formulaChoices) {
+        for (const choice of item.formulaChoices) {
+          buf += CMD.BOLD_ON;
+          buf += `   > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += CMD.BOLD_OFF;
+        }
+      }
+    }
+    for (const item of removed) {
+      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += `-- ${item.qty}x ${item.name}\n`;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+      if (item.formulaChoices) {
+        for (const choice of item.formulaChoices) {
+          buf += `   > ${choice.label}: ${choice.itemName}\n`;
+        }
+      }
+    }
+    buf += line("=");
+  }
+
+  // ── Section COMMANDE COMPLÈTE ──
+  buf += CMD.CENTER + CMD.DOUBLE_ON + CMD.BOLD_ON;
+  buf += "COMMANDE COMPLETE\n";
+  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+  buf += line("-");
+
+  for (const item of newItems) {
+    if (showTotal) {
+      const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
+      buf += CMD.BOLD_ON;
+      buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
+      buf += CMD.BOLD_OFF;
+      if (item.formulaChoices) {
+        const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
+        for (const choice of item.formulaChoices) {
+          buf += `   > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+        }
+      }
+      buf += `   ${item.price.toFixed(2)} EUR/u\n`;
+    } else {
+      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += `${item.qty}x ${item.name}\n`;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+      if (item.formulaChoices) {
+        const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
+        for (const choice of item.formulaChoices) {
+          buf += CMD.BOLD_ON;
+          buf += `  > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += CMD.BOLD_OFF;
+        }
+      }
+    }
+  }
+
+  buf += line("=");
+  if (showTotal) {
+    const total = newItems.reduce((s, i) => s + i.price * i.qty, 0);
+    buf += CMD.BOLD_ON + CMD.DOUBLE_ON;
+    buf += pad("TOTAL", `${total.toFixed(2)} EUR`, WIDTH_DOUBLE);
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + line("=");
+  } else {
+    const totalQty = newItems.reduce((s, i) => s + i.qty, 0);
+    buf += CMD.CENTER + `${totalQty} article(s)\n`;
+  }
+
+  buf += CMD.FEED + CMD.PARTIAL_CUT;
   return buf;
 }
 

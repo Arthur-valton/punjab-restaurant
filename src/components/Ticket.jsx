@@ -1,12 +1,16 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 
 function getPrintUrl() {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
+    return `http://${host}:3001`;
+  }
   const saved = localStorage.getItem("punjab_print_url");
   if (saved) return saved.replace(/\/+$/, "");
   return "https://print.restaurant-dev.fr";
 }
 
-export default function Ticket({ order, tableNumber, onNewOrder }) {
+export default function Ticket({ order, tableNumber, onNewOrder, editingOrderId }) {
   const [printStatus, setPrintStatus] = useState(null); // null | "printing" | "ok" | "error"
   const [printMsg, setPrintMsg] = useState("");
   const now = useRef(new Date());
@@ -29,8 +33,14 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
     setPrintStatus("printing");
     setPrintMsg("");
     try {
-      const res = await fetch(`${getPrintUrl()}/print-all`, {
-        method: "POST",
+      const base = getPrintUrl();
+      const url = editingOrderId
+        ? `${base}/order/${encodeURIComponent(editingOrderId)}`
+        : `${base}/print-all`;
+      const method = editingOrderId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           order,
@@ -44,7 +54,7 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
       if (!res.ok) throw new Error(data.error || "Erreur impression");
 
       setPrintStatus("ok");
-      setPrintMsg(`${data.tickets} ticket(s)`);
+      setPrintMsg(editingOrderId ? "Modifié !" : `${data.tickets} ticket(s)`);
       setTimeout(() => setPrintStatus(null), 2500);
     } catch (err) {
       console.error("Print error:", err);
@@ -107,13 +117,26 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
             <table className="ticket-items">
               <tbody>
                 {cuisine.map((item) => (
-                  <tr key={item.id}>
-                    <td className="c">
-                      <strong>{item.qty}x</strong>
-                    </td>
-                    <td className="l">{item.name}</td>
-                    <td className="r">{(item.price * item.qty).toFixed(2)} &euro;</td>
-                  </tr>
+                  <React.Fragment key={item.cartId || item.id}>
+                    <tr>
+                      <td className="c"><strong>{item.qty}x</strong></td>
+                      <td className="l">
+                        {item.name}
+                        {item.piment && <span className="ticket-piment">{"🌶️".repeat(item.piment)}</span>}
+                      </td>
+                      <td className="r">{(item.price * item.qty).toFixed(2)} &euro;</td>
+                    </tr>
+                    {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                      <tr key={`fc-${ci}`}>
+                        <td className="c"></td>
+                        <td className="l ticket-formula-choice">
+                          ↳ {choice.label} : {choice.itemName}
+                          {choice.piment > 1 && <span className="ticket-piment">{"🌶️".repeat(choice.piment)}</span>}
+                        </td>
+                        <td className="r"></td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -127,7 +150,7 @@ export default function Ticket({ order, tableNumber, onNewOrder }) {
             <table className="ticket-items">
               <tbody>
                 {boissons.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.cartId || item.id}>
                     <td className="c">
                       <strong>{item.qty}x</strong>
                     </td>
