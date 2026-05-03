@@ -936,6 +936,12 @@
         "name": "Poulet tandoori",
         "price": 7,
         "category": "Entrées"
+      },
+      {
+        "id": 184,
+        "name": "Seekh kebab",
+        "price": 8,
+        "category": "Entrées"
       }
     ]
   }
