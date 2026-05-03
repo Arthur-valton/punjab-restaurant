@@ -777,6 +777,12 @@
         "name": "EAU 50cl",
         "price": 3,
         "category": "Apéritifs"
+      },
+      {
+        "id": 165,
+        "name": "Eau 1l",
+        "price": 5,
+        "category": "Apéritifs"
       }
     ]
   },
