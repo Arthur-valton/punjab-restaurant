@@ -651,6 +651,12 @@
         "name": "Saumur champ 37,5",
         "price": 15,
         "category": "Vin"
+      },
+      {
+        "id": 179,
+        "name": "Saumur champ 75cl",
+        "price": 28,
+        "category": "Vin"
       }
     ]
   },
