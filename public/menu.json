@@ -735,6 +735,12 @@
         "name": "Gin tonic",
         "price": 6.9,
         "category": "Apéritifs"
+      },
+      {
+        "id": 158,
+        "name": "Bière indienne",
+        "price": 6,
+        "category": "Apéritifs"
       }
     ]
   },
