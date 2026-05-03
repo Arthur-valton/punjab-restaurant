@@ -801,6 +801,12 @@
         "name": "Lassi Maison",
         "price": 5.5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 169,
+        "name": "Lassi nature",
+        "price": 4.5,
+        "category": "Apéritifs"
       }
     ]
   },
