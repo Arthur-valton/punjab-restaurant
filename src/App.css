@@ -740,13 +740,15 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  height: 38px;
+  padding: 0 14px;
   border: 2px solid rgba(255, 255, 255, 0.4);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   cursor: pointer;
   transition: all 0.15s;
+  box-sizing: border-box;
 }
 
 .table-btn:active {
@@ -1218,13 +1220,15 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  height: 38px;
+  padding: 0 12px;
   border: 2px solid rgba(255, 200, 0, 0.6);
   border-radius: 10px;
   background: rgba(255, 200, 0, 0.2);
   color: #fff;
   cursor: pointer;
   transition: all 0.15s;
+  box-sizing: border-box;
 }
 .orders-btn:active { background: rgba(255, 200, 0, 0.35); }
 .orders-btn-label { font-size: 0.8rem; font-weight: 600; opacity: 0.9; }
