@@ -813,6 +813,12 @@
         "name": "Café",
         "price": 2,
         "category": "Apéritifs"
+      },
+      {
+        "id": 171,
+        "name": "Café allongé / crème",
+        "price": 3,
+        "category": "Apéritifs"
       }
     ]
   },
