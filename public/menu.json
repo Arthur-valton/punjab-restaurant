@@ -842,7 +842,15 @@
               3
             ],
             "articles": [
-              "Poulet",
+              {
+                "0": "P",
+                "1": "o",
+                "2": "u",
+                "3": "l",
+                "4": "e",
+                "5": "t",
+                "piment": true
+              },
               "Boeuf",
               "Agneau"
             ]
