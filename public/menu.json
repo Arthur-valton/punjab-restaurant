@@ -680,6 +680,12 @@
         "name": "Terrebrune",
         "price": 30,
         "category": "Rosé"
+      },
+      {
+        "id": 177,
+        "name": "Chardonnay",
+        "price": 23,
+        "category": "Rosé"
       }
     ]
   },
