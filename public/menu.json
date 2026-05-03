@@ -819,6 +819,12 @@
         "name": "Café allongé / crème",
         "price": 3,
         "category": "Apéritifs"
+      },
+      {
+        "id": 172,
+        "name": "Tea",
+        "price": 3.5,
+        "category": "Apéritifs"
       }
     ]
   },
