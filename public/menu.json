@@ -741,6 +741,12 @@
         "name": "Bière indienne",
         "price": 6,
         "category": "Apéritifs"
+      },
+      {
+        "id": 159,
+        "name": "Bière",
+        "price": 4,
+        "category": "Apéritifs"
       }
     ]
   },
