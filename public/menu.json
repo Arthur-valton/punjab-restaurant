@@ -668,6 +668,12 @@
         "name": "Côte de Provence",
         "price": 30,
         "category": "Rosé"
+      },
+      {
+        "id": 175,
+        "name": "Armunia",
+        "price": 25,
+        "category": "Rosé"
       }
     ]
   },
