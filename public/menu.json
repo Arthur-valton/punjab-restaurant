@@ -771,6 +771,12 @@
         "name": "Sirop - DIABLO",
         "price": 3,
         "category": "Apéritifs"
+      },
+      {
+        "id": 164,
+        "name": "EAU 50cl",
+        "price": 3,
+        "category": "Apéritifs"
       }
     ]
   },
