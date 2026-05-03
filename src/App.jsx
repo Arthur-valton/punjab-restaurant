@@ -217,6 +217,24 @@ function App() {
     }
     const orderNum = Math.floor(Math.random() * 9000) + 1000;
     const orderId = editingOrderId || `order-${orderNum}-${Date.now()}`;
+    const orderData = {
+      id: orderId,
+      orderNum,
+      tableNumber,
+      items: [...orderItems],
+      receivedAt: Date.now(),
+    };
+    // Sauvegarder immédiatement sur Vercel (indépendant de l'impression)
+    fetch(ORDERS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", order: orderData }),
+    })
+      .then(() => setServerOrders((prev) => {
+        const idx = prev.findIndex((o) => o.id === orderId);
+        return idx >= 0 ? prev.map((o, i) => (i === idx ? orderData : o)) : [...prev, orderData];
+      }))
+      .catch(() => {});
     setTicketData({ items: [...orderItems], table: tableNumber, orderNum, orderId });
     setShowTicket(true);
     setCartOpen(false);

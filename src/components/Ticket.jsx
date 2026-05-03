@@ -59,21 +59,6 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrd
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur impression");
 
-      // Sauvegarder/mettre à jour la commande sur Vercel
-      const orderToSave = {
-        id: orderId,
-        orderNum,
-        tableNumber,
-        items: order,
-        date: dateStr,
-        receivedAt: Date.now(),
-      };
-      fetch(ORDERS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", order: orderToSave }),
-      }).catch(() => {});
-
       setPrintStatus("ok");
       setPrintMsg(editingOrderId ? "Modifié !" : `${data.tickets} ticket(s)`);
       setTimeout(() => setPrintStatus(null), 2500);
