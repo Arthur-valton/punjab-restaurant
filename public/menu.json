@@ -783,6 +783,12 @@
         "name": "Eau 1l",
         "price": 5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 166,
+        "name": "Soft 3,50",
+        "price": 3.5,
+        "category": "Apéritifs"
       }
     ]
   },
