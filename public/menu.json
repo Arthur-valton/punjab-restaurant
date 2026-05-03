@@ -795,6 +795,12 @@
         "name": "Ice tea",
         "price": 3,
         "category": "Apéritifs"
+      },
+      {
+        "id": 168,
+        "name": "Lassi Maison",
+        "price": 5.5,
+        "category": "Apéritifs"
       }
     ]
   },
