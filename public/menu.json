@@ -669,6 +669,12 @@
         "name": "Côte du Rhône",
         "price": 22,
         "category": "Vin"
+      },
+      {
+        "id": 182,
+        "name": "Syrah",
+        "price": 22,
+        "category": "Vin"
       }
     ]
   },
