@@ -948,6 +948,12 @@
         "name": "Poulet tikka",
         "price": 8,
         "category": "Entrées"
+      },
+      {
+        "id": 186,
+        "name": "Fish tikka",
+        "price": 9,
+        "category": "Entrées"
       }
     ]
   }
