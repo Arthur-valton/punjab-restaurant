@@ -996,6 +996,12 @@
         "name": "Oignon bahji",
         "price": 5,
         "category": "Entrées"
+      },
+      {
+        "id": 194,
+        "name": "Pakora Aubergine",
+        "price": 6,
+        "category": "Entrées"
       }
     ]
   }
