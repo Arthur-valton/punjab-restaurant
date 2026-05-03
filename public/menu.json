@@ -686,6 +686,12 @@
         "name": "Chardonnay",
         "price": 23,
         "category": "Rosé"
+      },
+      {
+        "id": 178,
+        "name": "Sauvignon",
+        "price": 23,
+        "category": "Rosé"
       }
     ]
   },
