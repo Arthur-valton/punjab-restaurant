@@ -960,6 +960,12 @@
         "name": "Gambas tandoori",
         "price": 16.5,
         "category": "Entrées"
+      },
+      {
+        "id": 188,
+        "name": "Punjab mixte 2 personnes",
+        "price": 21,
+        "category": "Entrées"
       }
     ]
   }
