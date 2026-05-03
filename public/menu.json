@@ -662,6 +662,12 @@
         "name": "Côte de Provence 37,5cl",
         "price": 17,
         "category": "Rosé"
+      },
+      {
+        "id": 174,
+        "name": "Côte de Provence",
+        "price": 30,
+        "category": "Rosé"
       }
     ]
   },
