@@ -765,6 +765,12 @@
         "name": "JB COCA",
         "price": 7.9,
         "category": "Apéritifs"
+      },
+      {
+        "id": 163,
+        "name": "Sirop - DIABLO",
+        "price": 3,
+        "category": "Apéritifs"
       }
     ]
   },
