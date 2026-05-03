@@ -966,6 +966,12 @@
         "name": "Punjab mixte 2 personnes",
         "price": 21,
         "category": "Entrées"
+      },
+      {
+        "id": 189,
+        "name": "Raita",
+        "price": 5.5,
+        "category": "Entrées"
       }
     ]
   }
