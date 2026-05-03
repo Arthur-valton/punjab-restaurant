@@ -687,6 +687,12 @@
         "name": "Kir",
         "price": 5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 150,
+        "name": "Ricard",
+        "price": 4.5,
+        "category": "Apéritifs"
       }
     ]
   },
