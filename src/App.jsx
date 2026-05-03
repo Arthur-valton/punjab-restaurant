@@ -190,6 +190,18 @@ function App() {
     }
   }
 
+  function goBackFormula() {
+    const { currentStep, choices } = formulaPicker;
+    if (currentStep === 0) { setFormulaPicker(null); return; }
+    setFormulaPicker({
+      ...formulaPicker,
+      currentStep: currentStep - 1,
+      choices: choices.slice(0, -1),
+      showSummary: false,
+      pendingArticle: null,
+    });
+  }
+
   function confirmFormulaOrder() {
     const { item, choices } = formulaPicker;
     const cartId = `${item.id}-f${Date.now()}`;
@@ -579,7 +591,7 @@ function App() {
                 <button className="formula-picker-confirm" onClick={confirmFormulaOrder}>
                   Ajouter au panier
                 </button>
-                <button className="formula-picker-cancel" onClick={() => setFormulaPicker(null)}>Annuler</button>
+                <button className="formula-picker-cancel" onClick={goBackFormula}>← Modifier</button>
               </>
             ) : (
             /* ── Récap des choix déjà faits (étapes précédentes) ── */
@@ -658,7 +670,9 @@ function App() {
                       : <p className="formula-picker-empty">Aucun article configuré pour cette étape</p>;
                   })()}
                 </div>
-                <button className="formula-picker-cancel" onClick={() => setFormulaPicker(null)}>Annuler</button>
+                <button className="formula-picker-cancel" onClick={formulaPicker.currentStep > 0 ? goBackFormula : () => setFormulaPicker(null)}>
+                  {formulaPicker.currentStep > 0 ? "← Retour" : "Annuler"}
+                </button>
               </>
             )}
             </>
