@@ -753,6 +753,12 @@
         "name": "Johnie Walker",
         "price": 5.9,
         "category": "Apéritifs"
+      },
+      {
+        "id": 161,
+        "name": "Chivas",
+        "price": 7.9,
+        "category": "Apéritifs"
       }
     ]
   },
