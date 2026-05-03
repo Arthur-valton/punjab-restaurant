@@ -1020,6 +1020,12 @@
         "name": "Mixte Pakora",
         "price": 6.5,
         "category": "Entrées"
+      },
+      {
+        "id": 198,
+        "name": "Shahi Mix Pakora 2 pers",
+        "price": 15,
+        "category": "Entrées"
       }
     ]
   }
