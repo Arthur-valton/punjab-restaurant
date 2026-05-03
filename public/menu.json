@@ -789,6 +789,12 @@
         "name": "Soft 3,50",
         "price": 3.5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 167,
+        "name": "Ice tea",
+        "price": 3,
+        "category": "Apéritifs"
       }
     ]
   },
