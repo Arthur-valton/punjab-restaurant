@@ -693,6 +693,12 @@
         "name": "Ricard",
         "price": 4.5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 151,
+        "name": "Cocktail Maison",
+        "price": 6,
+        "category": "Apéritifs"
       }
     ]
   },
