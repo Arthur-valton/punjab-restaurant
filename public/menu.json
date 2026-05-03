@@ -699,6 +699,12 @@
         "name": "Cocktail Maison",
         "price": 6,
         "category": "Apéritifs"
+      },
+      {
+        "id": 152,
+        "name": "Cocktail Maison SA",
+        "price": 5,
+        "category": "Apéritifs"
       }
     ]
   },
