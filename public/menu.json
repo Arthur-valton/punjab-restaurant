@@ -717,6 +717,12 @@
         "name": "Porto",
         "price": 5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 155,
+        "name": "Suze",
+        "price": 5,
+        "category": "Apéritifs"
       }
     ]
   },
