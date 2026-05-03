@@ -807,6 +807,12 @@
         "name": "Lassi nature",
         "price": 4.5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 170,
+        "name": "Café",
+        "price": 2,
+        "category": "Apéritifs"
       }
     ]
   },
