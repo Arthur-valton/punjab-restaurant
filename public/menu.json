@@ -942,6 +942,12 @@
         "name": "Seekh kebab",
         "price": 8,
         "category": "Entrées"
+      },
+      {
+        "id": 185,
+        "name": "Poulet tikka",
+        "price": 8,
+        "category": "Entrées"
       }
     ]
   }
