@@ -663,6 +663,12 @@
         "name": "Côte du Rhône 37,5",
         "price": 13,
         "category": "Vin"
+      },
+      {
+        "id": 181,
+        "name": "Côte du Rhône",
+        "price": 22,
+        "category": "Vin"
       }
     ]
   },
