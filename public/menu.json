@@ -1008,6 +1008,12 @@
         "name": "Aloi pakora",
         "price": 5,
         "category": "Entrées"
+      },
+      {
+        "id": 196,
+        "name": "Samossa",
+        "price": 5.5,
+        "category": "Entrées"
       }
     ]
   }
