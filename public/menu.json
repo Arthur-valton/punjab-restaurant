@@ -747,6 +747,12 @@
         "name": "Bière",
         "price": 4,
         "category": "Apéritifs"
+      },
+      {
+        "id": 160,
+        "name": "Johnie Walker",
+        "price": 5.9,
+        "category": "Apéritifs"
       }
     ]
   },
