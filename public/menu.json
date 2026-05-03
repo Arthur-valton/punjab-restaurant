@@ -978,6 +978,12 @@
         "name": "Raita crevette",
         "price": 7.5,
         "category": "Entrées"
+      },
+      {
+        "id": 191,
+        "name": "Salade crevette ou poulet",
+        "price": 7.5,
+        "category": "Entrées"
       }
     ]
   }
