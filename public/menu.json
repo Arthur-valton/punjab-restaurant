@@ -1002,6 +1002,12 @@
         "name": "Pakora Aubergine",
         "price": 6,
         "category": "Entrées"
+      },
+      {
+        "id": 195,
+        "name": "Aloi pakora",
+        "price": 5,
+        "category": "Entrées"
       }
     ]
   }
