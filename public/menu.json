@@ -825,6 +825,12 @@
         "name": "Tea",
         "price": 3.5,
         "category": "Apéritifs"
+      },
+      {
+        "id": 173,
+        "name": "Infusion",
+        "price": 3,
+        "category": "Apéritifs"
       }
     ]
   },
