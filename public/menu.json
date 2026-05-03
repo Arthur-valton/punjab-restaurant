@@ -759,6 +759,12 @@
         "name": "Chivas",
         "price": 7.9,
         "category": "Apéritifs"
+      },
+      {
+        "id": 162,
+        "name": "JB COCA",
+        "price": 7.9,
+        "category": "Apéritifs"
       }
     ]
   },
