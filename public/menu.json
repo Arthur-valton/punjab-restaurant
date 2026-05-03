@@ -841,7 +841,12 @@
             "articleIds": [
               3
             ],
-            "articles": []
+            "articles": [
+              {
+                "name": "Poulet",
+                "piment": false
+              }
+            ]
           },
           {
             "label": "Plat",
