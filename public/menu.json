@@ -995,7 +995,8 @@
         "id": 190,
         "name": "Raita crevette",
         "price": 7.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Poisson"
       },
       {
         "id": 191,
