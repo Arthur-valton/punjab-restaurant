@@ -1008,7 +1008,8 @@
         "id": 192,
         "name": "Soupe dall",
         "price": 8.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Soupe"
       },
       {
         "id": 193,
