@@ -1040,7 +1040,8 @@
         "id": 197,
         "name": "Mixte Pakora",
         "price": 6.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Végétarien"
       },
       {
         "id": 198,
