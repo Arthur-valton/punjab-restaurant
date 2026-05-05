@@ -1015,7 +1015,8 @@
         "id": 193,
         "name": "Oignon bahji",
         "price": 5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Vegetarien"
       },
       {
         "id": 194,
