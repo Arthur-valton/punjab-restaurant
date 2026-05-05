@@ -968,7 +968,8 @@
         "id": 186,
         "name": "Fish tikka",
         "price": 9,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Poisson"
       },
       {
         "id": 187,
