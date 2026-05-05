@@ -974,7 +974,8 @@
         "id": 187,
         "name": "Gambas tandoori",
         "price": 16.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Poisson"
       },
       {
         "id": 188,
