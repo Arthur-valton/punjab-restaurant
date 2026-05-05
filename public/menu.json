@@ -988,7 +988,8 @@
         "id": 189,
         "name": "Raita",
         "price": 5.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Soupe"
       },
       {
         "id": 190,
