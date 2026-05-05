@@ -961,7 +961,8 @@
         "id": 185,
         "name": "Poulet tikka",
         "price": 8,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Poulet"
       },
       {
         "id": 186,
