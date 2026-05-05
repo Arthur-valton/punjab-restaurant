@@ -388,6 +388,13 @@
         "price": 3,
         "category": "Plats",
         "subcategory": "Naans"
+      },
+      {
+        "id": 200,
+        "name": "Crevette madras",
+        "price": 16,
+        "category": "Plats",
+        "subcategory": "Poisson"
       }
     ]
   },
