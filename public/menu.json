@@ -948,7 +948,8 @@
         "id": 183,
         "name": "Poulet tandoori",
         "price": 7,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "POULET"
       },
       {
         "id": 184,
