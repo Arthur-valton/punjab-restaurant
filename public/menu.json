@@ -1046,7 +1046,8 @@
         "id": 198,
         "name": "Shahi Mix Pakora 2 pers",
         "price": 15,
-        "category": "Entrées"
+        "category": "Entrées",
+        "subcategory": "Végétarien"
       }
     ]
   }
