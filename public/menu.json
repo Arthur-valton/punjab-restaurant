@@ -657,52 +657,6 @@
     ]
   },
   {
-    "category": "Menu Rajasthan",
-    "items": [
-      {
-        "id": 83,
-        "name": "Produit 1",
-        "price": 0,
-        "category": "Menu Rajasthan",
-        "subcategory": "Entrée"
-      },
-      {
-        "id": 84,
-        "name": "Produit 2",
-        "price": 0,
-        "category": "Menu Rajasthan"
-      },
-      {
-        "id": 116,
-        "name": "Test",
-        "price": 6,
-        "category": "Menu Rajasthan",
-        "subcategory": "Plat"
-      },
-      {
-        "id": 146,
-        "name": "Menu Rajasthan",
-        "price": 15.9,
-        "category": "Menu Rajasthan",
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Entrée",
-            "category": "Entrees"
-          },
-          {
-            "label": "Plat",
-            "category": "Plats"
-          },
-          {
-            "label": "Dessert",
-            "category": "Desserts"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "category": "Menu Taj Mahal",
     "items": [
       {
