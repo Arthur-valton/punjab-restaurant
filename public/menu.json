@@ -748,6 +748,13 @@
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
+      },
+      {
+        "id": 201,
+        "name": "Côte de Provence 37,5cl",
+        "price": 17,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
