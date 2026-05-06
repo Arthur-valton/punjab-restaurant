@@ -755,6 +755,13 @@
         "price": 17,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 202,
+        "name": "Côte de Provence",
+        "price": 30,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
