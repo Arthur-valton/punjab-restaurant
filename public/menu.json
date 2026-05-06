@@ -657,41 +657,6 @@
     ]
   },
   {
-    "category": "Menu Taj Mahal",
-    "items": [
-      {
-        "id": 119,
-        "name": "Menu",
-        "price": 29.9,
-        "category": "Menu Taj Mahal"
-      },
-      {
-        "id": 121,
-        "name": "Menu",
-        "price": 24.9,
-        "category": "Menu Taj Mahal"
-      },
-      {
-        "id": 125,
-        "name": "Menu 15€90",
-        "price": 15.9,
-        "category": "Menu Taj Mahal"
-      },
-      {
-        "id": 126,
-        "name": "Menu 17€90",
-        "price": 17.9,
-        "category": "Menu Taj Mahal"
-      },
-      {
-        "id": 149,
-        "name": "Menu 2 pers",
-        "price": 75,
-        "category": "Menu Taj Mahal"
-      }
-    ]
-  },
-  {
     "category": "Vin",
     "items": [
       {
