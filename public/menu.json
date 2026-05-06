@@ -1001,8 +1001,26 @@
                 "piment": false
               }
             ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
+                "piment": false
+              }
+            ]
           }
-        ]
+        ],
+        "piment": false
       }
     ]
   }
