@@ -699,7 +699,10 @@
         "id": 145,
         "name": "Saumur champ 37,5",
         "price": 15,
-        "category": "Vin"
+        "category": "Vin",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 179,
