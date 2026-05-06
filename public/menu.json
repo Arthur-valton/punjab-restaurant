@@ -742,9 +742,12 @@
       },
       {
         "id": 199,
-        "name": "vin verre",
+        "name": "Vin verre",
         "price": 4,
-        "category": "Vin"
+        "category": "Vin",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": false
       }
     ]
   },
