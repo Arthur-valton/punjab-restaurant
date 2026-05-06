@@ -769,6 +769,13 @@
         "price": 25,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 204,
+        "name": "Terre Brune",
+        "price": 30,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
