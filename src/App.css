@@ -2774,6 +2774,63 @@ body {
   font-weight: 600;
 }
 
+/* ── Réorganisation catégories ── */
+.ap-cat-reorder {
+  border-style: solid;
+  border-color: rgba(120,120,128,0.3);
+  font-size: 16px;
+}
+.ap-reorder-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  min-height: 52px;
+  gap: 12px;
+  cursor: grab;
+  transition: background 0.12s;
+  user-select: none;
+}
+.ap-reorder-row:active { cursor: grabbing; }
+.ap-reorder-row.drag-over {
+  background: rgba(0,122,255,0.08);
+  border-left: 3px solid #007aff;
+}
+.ap-reorder-handle {
+  font-size: 18px;
+  color: #c7c7cc;
+  flex-shrink: 0;
+}
+.ap-reorder-name {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text, #111);
+}
+.ap-reorder-arrows {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ap-reorder-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(120,120,128,0.14);
+  font-size: 16px;
+  cursor: pointer;
+  color: #007aff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+.ap-reorder-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.ap-reorder-arrow:not(:disabled):active { background: rgba(0,122,255,0.15); }
+
 /* Mobile — bottom sheet pleine hauteur */
 @media (max-width: 767px) {
   .ap-sheet { max-height: 96vh; border-radius: 20px 20px 0 0; }

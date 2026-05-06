@@ -12,6 +12,9 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
   const [deleteTarget, setDeleteTarget]     = useState(null);
   const [showAddCat, setShowAddCat]         = useState(false);
   const [newCatName, setNewCatName]         = useState("");
+  const [showReorder, setShowReorder]       = useState(false);
+  const [reorderList, setReorderList]       = useState([]);
+  const [dragOverIdx, setDragOverIdx]       = useState(null);
 
   // Form ajout
   const [newName, setNewName]                   = useState("");
@@ -120,6 +123,38 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     setNewCatName(""); setShowAddCat(false);
   }
 
+  function openReorder() {
+    setReorderList(menuData.map(s => s.category));
+    setShowReorder(true);
+  }
+
+  function moveCategory(idx, dir) {
+    const list = [...reorderList];
+    const target = idx + dir;
+    if (target < 0 || target >= list.length) return;
+    [list[idx], list[target]] = [list[target], list[idx]];
+    setReorderList(list);
+  }
+
+  function confirmReorder() {
+    const reordered = reorderList.map(cat => menuData.find(s => s.category === cat)).filter(Boolean);
+    onUpdate(reordered);
+    setShowReorder(false);
+  }
+
+  // Drag & drop handlers
+  function onDragStart(e, idx) { e.dataTransfer.setData("idx", idx); }
+  function onDragOver(e, idx)  { e.preventDefault(); setDragOverIdx(idx); }
+  function onDrop(e, idx) {
+    const from = parseInt(e.dataTransfer.getData("idx"));
+    if (from === idx) { setDragOverIdx(null); return; }
+    const list = [...reorderList];
+    const [moved] = list.splice(from, 1);
+    list.splice(idx, 0, moved);
+    setReorderList(list);
+    setDragOverIdx(null);
+  }
+
   async function savePrintUrl() {
     const val = printUrl.trim();
     localStorage.setItem("punjab_print_url", val);
@@ -207,6 +242,7 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                 </button>
               ))}
               <button className="ap-cat-pill ap-cat-new" onClick={() => setShowAddCat(v => !v)}>+ Cat.</button>
+              <button className="ap-cat-pill ap-cat-reorder" onClick={openReorder} title="Réorganiser">↕</button>
             </div>
 
             {showAddCat && (
@@ -581,6 +617,59 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                 Ajouter au menu
               </button>
               <button className="ap-action-cancel" onClick={() => setShowAddSheet(false)}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════
+          BOTTOM SHEET — RÉORGANISATION
+      ══════════════════════════════ */}
+      {showReorder && (
+        <div className="ap-backdrop" onClick={() => setShowReorder(false)}>
+          <div className="ap-sheet" onClick={e => e.stopPropagation()}>
+            <div className="ap-sheet-handle" />
+            <div className="ap-sheet-title">Ordre des catégories</div>
+
+            <div className="ap-sheet-scroll">
+              <div className="ap-settings-label" style={{ padding: "0 4px 6px" }}>
+                Glissez ou utilisez ↑↓ pour réorganiser
+              </div>
+              <div className="ap-card ap-sheet-card">
+                {reorderList.map((cat, idx) => (
+                  <div key={cat}>
+                    <div
+                      className={`ap-reorder-row ${dragOverIdx === idx ? "drag-over" : ""}`}
+                      draggable
+                      onDragStart={e => onDragStart(e, idx)}
+                      onDragOver={e => onDragOver(e, idx)}
+                      onDrop={e => onDrop(e, idx)}
+                      onDragLeave={() => setDragOverIdx(null)}
+                    >
+                      <span className="ap-reorder-handle">☰</span>
+                      <span className="ap-reorder-name">{cat}</span>
+                      <div className="ap-reorder-arrows">
+                        <button
+                          className="ap-reorder-arrow"
+                          onClick={() => moveCategory(idx, -1)}
+                          disabled={idx === 0}
+                        >↑</button>
+                        <button
+                          className="ap-reorder-arrow"
+                          onClick={() => moveCategory(idx, 1)}
+                          disabled={idx === reorderList.length - 1}
+                        >↓</button>
+                      </div>
+                    </div>
+                    {idx < reorderList.length - 1 && <div className="ap-row-sep" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ap-sheet-actions">
+              <button className="ap-action-primary" onClick={confirmReorder}>Confirmer l'ordre</button>
+              <button className="ap-action-cancel" onClick={() => setShowReorder(false)}>Annuler</button>
             </div>
           </div>
         </div>
