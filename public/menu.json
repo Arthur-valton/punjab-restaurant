@@ -922,7 +922,11 @@
             ],
             "articles": [
               "Boeuf",
-              "Agneau"
+              "Agneau",
+              {
+                "name": "Cochon",
+                "piment": false
+              }
             ]
           },
           {
