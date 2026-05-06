@@ -708,7 +708,10 @@
         "id": 179,
         "name": "Saumur champ 75cl",
         "price": 28,
-        "category": "Vin"
+        "category": "Vin",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 180,
