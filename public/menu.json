@@ -776,6 +776,13 @@
         "price": 30,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 205,
+        "name": "Chardonnay",
+        "price": 23,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
