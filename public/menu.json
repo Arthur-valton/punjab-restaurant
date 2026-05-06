@@ -762,6 +762,13 @@
         "price": 30,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 203,
+        "name": "Armunia",
+        "price": 25,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
