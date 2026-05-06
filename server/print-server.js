@@ -38,6 +38,9 @@ const wss = new WebSocketServer({ server, path: "/kds-ws" });
 const PORT = 3001;
 const PRINTER_PORT = 9100;
 
+// Catégories considérées comme "bar" (pas envoyées à la cuisine ni au KDS)
+const BAR_CATEGORIES = new Set(["Boissons", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"]);
+
 // IP imprimante selon le réseau WiFi ou la plage IP locale
 const PRINTER_IPS = {
   "popina-new-punjab": "192.168.110.21",
@@ -109,8 +112,8 @@ app.put("/order/:id", async (req, res) => {
     const existing = activeOrders.get(orderId);
     if (!existing) return res.status(404).json({ error: "Commande introuvable" });
 
-    const boissons = order.filter((i) => i.category === "Boissons");
-    const cuisine = order.filter((i) => i.category !== "Boissons");
+    const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
+    const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
     const cuisineAll = [...cuisine, ...boissons];
     const common = { tableNumber, orderNum, date };
 
@@ -254,9 +257,14 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   if (!showTotal) {
     for (const item of order) {
       if (item.formulaChoices && item.formulaChoices.length > 0) {
+        // Expansion normale : chaque choix dans sa catégorie
         for (const choice of item.formulaChoices) {
           itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabel(choice.label), qty: item.qty, piment: choice.piment || null });
         }
+      } else if (item.isFormula && item.formulaSteps?.length > 0) {
+        // Formule sans choix : afficher le nom + les étapes attendues
+        const stepLabels = item.formulaSteps.map(s => s.label).join(" / ");
+        itemsToGroup.push({ ...item, name: `${item.name}  [? ${stepLabels}]` });
       } else {
         itemsToGroup.push(item);
       }
@@ -600,7 +608,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
 }
 
 // ----- Helpers catégories (partagés) -----
-const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
+const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
 const CAT_MERGE_SHARED = { "Biryani": "Plats" };
 
 function buildGroups(items) {
@@ -724,8 +732,16 @@ app.post("/print-all", async (req, res) => {
       return res.status(400).json({ error: "Donnees manquantes" });
     }
 
-    const boissons = order.filter((i) => i.category === "Boissons");
-    const cuisine = order.filter((i) => i.category !== "Boissons");
+    // Log des formules pour diagnostic
+    const formulaItems = order.filter(i => i.isFormula);
+    if (formulaItems.length > 0) {
+      formulaItems.forEach(i => {
+        console.log(`Formule "${i.name}" — formulaChoices: ${i.formulaChoices ? JSON.stringify(i.formulaChoices) : "null/vide"}`);
+      });
+    }
+
+    const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
+    const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
     const common = { tableNumber, orderNum, date };
     const tickets = [];
 

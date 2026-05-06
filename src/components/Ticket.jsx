@@ -26,6 +26,11 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrd
   const boissons = order.filter((i) => i.category === "Boissons");
   const cuisine = order.filter((i) => i.category !== "Boissons");
 
+  // Articles formule sans choix : avertissement non-bloquant
+  const missingFormula = order.filter(
+    (i) => i.isFormula && i.formulaSteps?.length > 0 && (!i.formulaChoices || i.formulaChoices.length === 0)
+  );
+
   async function handlePrint() {
     setPrintStatus("printing");
     setPrintMsg("");
@@ -169,16 +174,23 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrd
       </div>
 
       <div className="ticket-nav no-print">
-        <button
-          className={getPrintClass()}
-          onClick={handlePrint}
-          disabled={printStatus === "printing"}
-        >
-          {getPrintLabel()}
-        </button>
-        <button className="btn-new" onClick={onNewOrder}>
-          Nouveau
-        </button>
+        {missingFormula.length > 0 && (
+          <div className="ticket-formula-warning">
+            ⚠️ {missingFormula.map(i => i.name).join(", ")} : détails formule manquants — les choix n'apparaîtront pas sur le ticket cuisine
+          </div>
+        )}
+        <div className="ticket-buttons">
+          <button
+            className={getPrintClass()}
+            onClick={handlePrint}
+            disabled={printStatus === "printing"}
+          >
+            {getPrintLabel()}
+          </button>
+          <button className="btn-new" onClick={onNewOrder}>
+            Nouveau
+          </button>
+        </div>
       </div>
     </div>
   );
