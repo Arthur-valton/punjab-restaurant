@@ -783,6 +783,13 @@
         "price": 23,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 206,
+        "name": "Sauvignon",
+        "price": 23,
+        "category": "Vin",
+        "subcategory": "Rosé"
       }
     ]
   },
