@@ -1003,52 +1003,5 @@
         "category": "Apéritifs"
       }
     ]
-  },
-  {
-    "category": "Menu Test",
-    "items": [
-      {
-        "id": 148,
-        "name": "Menu Midi",
-        "price": 15.7,
-        "category": "Menu Test",
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Entrée",
-            "articleIds": [
-              3
-            ],
-            "articles": [
-              {
-                "name": "Poulet",
-                "piment": false
-              }
-            ]
-          },
-          {
-            "label": "Plat",
-            "articleIds": [
-              20
-            ],
-            "articles": [
-              "Boeuf",
-              "Agneau"
-            ]
-          },
-          {
-            "label": "Dessert",
-            "articleIds": [
-              82
-            ],
-            "articles": [
-              "Kulfi Pistache",
-              "Kulfi Mangue"
-            ]
-          }
-        ],
-        "piment": false
-      }
-    ]
   }
 ]
