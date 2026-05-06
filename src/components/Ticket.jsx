@@ -12,7 +12,7 @@ function getPrintUrl() {
   return "https://print.restaurant-dev.fr";
 }
 
-export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrder, editingOrderId }) {
+export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrder, editingOrderId, onPrintSuccess }) {
   const [printStatus, setPrintStatus] = React.useState(null);
   const [printMsg, setPrintMsg] = React.useState("");
 
@@ -58,6 +58,9 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, onNewOrd
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur impression");
+
+      // Remonter l'orderId TC pour que App.jsx puisse l'utiliser pour la clôture KDS
+      if (data.orderId && onPrintSuccess) onPrintSuccess(data.orderId);
 
       setPrintStatus("ok");
       setPrintMsg(editingOrderId ? "Modifié !" : `${data.tickets} ticket(s)`);

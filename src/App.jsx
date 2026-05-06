@@ -247,7 +247,7 @@ function App() {
         return idx >= 0 ? prev.map((o, i) => (i === idx ? orderData : o)) : [...prev, orderData];
       }))
       .catch(() => {});
-    setTicketData({ items: [...orderItems], table: tableNumber, orderNum, orderId });
+    setTicketData({ items: [...orderItems], table: tableNumber, orderNum, orderId, orderData });
     setShowTicket(true);
     setCartOpen(false);
   }
@@ -271,8 +271,12 @@ function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", order: { id: orderId } }),
     }).catch(() => {});
-    // Supprimer aussi du ThinkCentre si disponible
-    fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}`, { method: "DELETE" }).catch(() => {});
+    // Notifier le ThinkCentre pour que le KDS/service retirent la commande
+    const serverOrder = serverOrders.find((o) => o.id === orderId);
+    const tcId = serverOrder?.tcOrderId;
+    if (tcId) {
+      fetch(`${getPrintUrl()}/order/${encodeURIComponent(tcId)}`, { method: "DELETE" }).catch(() => {});
+    }
     setServerOrders((prev) => prev.filter((o) => o.id !== orderId));
   }
 
@@ -725,6 +729,19 @@ function App() {
           orderId={ticketData.orderId}
           onNewOrder={newOrder}
           editingOrderId={editingOrderId}
+          onPrintSuccess={(tcOrderId) => {
+            const vercelId = ticketData.orderId;
+            // Mettre à jour le state local
+            setServerOrders((prev) =>
+              prev.map((o) => o.id === vercelId ? { ...o, tcOrderId } : o)
+            );
+            // Persister tcOrderId dans Vercel
+            fetch(ORDERS_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "save", order: { ...ticketData.orderData, tcOrderId } }),
+            }).catch(() => {});
+          }}
         />
       )}
     </div>
