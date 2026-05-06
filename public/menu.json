@@ -956,6 +956,54 @@
   },
   {
     "category": "Menu",
-    "items": []
+    "items": [
+      {
+        "id": 207,
+        "name": "Menu Midi [Entrée/Plat/Dessert]",
+        "price": 17.9,
+        "category": "Menu",
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Entrée",
+            "articles": [
+              {
+                "name": "Mix Pakora",
+                "piment": false
+              },
+              {
+                "name": "Poulet Tikka",
+                "piment": false
+              },
+              {
+                "name": "Raita",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Poulet Shahi Korma",
+                "piment": false
+              },
+              {
+                "name": "Poulet Tikka Massala",
+                "piment": false
+              },
+              {
+                "name": "Boeuf Curry",
+                "piment": false
+              },
+              {
+                "name": "Crevette Curry",
+                "piment": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
