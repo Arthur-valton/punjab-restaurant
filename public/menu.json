@@ -765,7 +765,9 @@
         "id": 174,
         "name": "Côte de Provence",
         "price": 30,
-        "category": "Rosé"
+        "category": "Rosé",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 175,
