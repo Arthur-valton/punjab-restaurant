@@ -790,6 +790,12 @@
         "price": 23,
         "category": "Vin",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 208,
+        "name": "Pichet 50cl",
+        "price": 11,
+        "category": "Vin"
       }
     ]
   },
