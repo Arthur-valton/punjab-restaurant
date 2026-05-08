@@ -506,6 +506,12 @@
         "price": 16,
         "category": "Plats",
         "subcategory": "Poisson"
+      },
+      {
+        "id": 212,
+        "name": "Poulet dall",
+        "price": 15.5,
+        "category": "Plats"
       }
     ]
   },
