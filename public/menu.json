@@ -1033,6 +1033,12 @@
         "name": "Menu Rajasthan",
         "price": 24.9,
         "category": "Menu"
+      },
+      {
+        "id": 210,
+        "name": "Menu Taj MAHAL",
+        "price": 29.9,
+        "category": "Menu"
       }
     ]
   }
