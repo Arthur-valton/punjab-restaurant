@@ -983,7 +983,20 @@
         "id": 166,
         "name": "Soft 3,50",
         "price": 3.5,
-        "category": "Apéritifs"
+        "category": "Apéritifs",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": [
+              {
+                "name": "Agrumes",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 167,
