@@ -852,7 +852,24 @@
         "id": 142,
         "name": "Kir",
         "price": 5,
-        "category": "Apéritifs"
+        "category": "Apéritifs",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Supplément",
+            "articles": [
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 150,
