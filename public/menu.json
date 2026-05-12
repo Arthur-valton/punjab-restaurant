@@ -817,7 +817,15 @@
         "id": 130,
         "name": "Kir pétillante",
         "price": 7,
-        "category": "Apéritifs"
+        "category": "Apéritifs",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Supplément",
+            "articles": []
+          }
+        ]
       },
       {
         "id": 142,
