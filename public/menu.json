@@ -995,7 +995,28 @@
         "id": 168,
         "name": "Lassi Maison",
         "price": 5.5,
-        "category": "Apéritifs"
+        "category": "Apéritifs",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": [
+              {
+                "name": "Mangue",
+                "piment": false
+              },
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Coco",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 169,
