@@ -515,6 +515,12 @@
         "subcategory": "Poulet",
         "piment": false,
         "isFormula": false
+      },
+      {
+        "id": 214,
+        "name": "Bœuf curry",
+        "price": 15.5,
+        "category": "Plats"
       }
     ]
   },
@@ -806,12 +812,6 @@
         "id": 208,
         "name": "Pichet 50cl",
         "price": 11,
-        "category": "Vin"
-      },
-      {
-        "id": 214,
-        "name": "Pichet",
-        "price": 6,
         "category": "Vin"
       }
     ]
