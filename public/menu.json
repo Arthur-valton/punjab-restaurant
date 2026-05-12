@@ -520,7 +520,10 @@
         "id": 214,
         "name": "Bœuf curry",
         "price": 15.5,
-        "category": "Plats"
+        "category": "Plats",
+        "subcategory": "Boeuf",
+        "piment": false,
+        "isFormula": false
       }
     ]
   },
