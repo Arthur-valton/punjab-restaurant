@@ -866,6 +866,18 @@
               {
                 "name": "Cassis",
                 "piment": false
+              },
+              {
+                "name": "Mur",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
               }
             ]
           }
