@@ -823,7 +823,28 @@
         "formulaSteps": [
           {
             "label": "Supplément",
-            "articles": []
+            "articles": [
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              },
+              {
+                "name": "Mur",
+                "piment": false
+              }
+            ]
           }
         ]
       },
