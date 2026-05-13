@@ -1075,6 +1075,12 @@
         "name": "Perrier",
         "price": 3,
         "category": "Apéritifs"
+      },
+      {
+        "id": 215,
+        "name": "Digestif",
+        "price": 4,
+        "category": "Apéritifs"
       }
     ]
   },
