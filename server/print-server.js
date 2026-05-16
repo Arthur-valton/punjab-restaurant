@@ -201,7 +201,14 @@ const CMD = {
 
 function sanitize(str) {
   if (!str) return str;
-  return str.replace(/œ/g, "oe").replace(/Œ/g, "Oe").replace(/æ/g, "ae").replace(/Æ/g, "Ae");
+  return str
+    .replace(/œ/g, "oe").replace(/Œ/g, "Oe").replace(/æ/g, "ae").replace(/Æ/g, "Ae")
+    .replace(/[éèëê]/g, "e").replace(/[ÉÈËÊ]/g, "E")
+    .replace(/[àâä]/g, "a").replace(/[ÀÂÄ]/g, "A")
+    .replace(/[ùûü]/g, "u").replace(/[ÙÛÜ]/g, "U")
+    .replace(/[îï]/g, "i").replace(/[ÎÏ]/g, "I")
+    .replace(/[ôö]/g, "o").replace(/[ÔÖ]/g, "O")
+    .replace(/[çÇ]/g, "c");
 }
 
 function line(char = "-", width = WIDTH) {
@@ -315,7 +322,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
             const pimentTxt = choice.piment ? `  ${pimentSymbols[choice.piment]}` : "";
-            buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${pimentTxt}\n`;
+            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${pimentTxt}\n`;
           }
         }
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
@@ -415,7 +422,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       if (item.formulaChoices) {
         for (const choice of item.formulaChoices) {
           buf += CMD.BOLD_ON;
-          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
           buf += CMD.BOLD_OFF;
         }
       }
@@ -426,7 +433,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
         for (const choice of item.formulaChoices) {
-          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}\n`;
+          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}\n`;
         }
       }
     }
@@ -448,7 +455,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       if (item.formulaChoices) {
         const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
-          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
         }
       }
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
@@ -461,7 +468,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
         const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
           buf += CMD.BOLD_ON;
-          buf += `  > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `  > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
           buf += CMD.BOLD_OFF;
         }
       }
