@@ -283,11 +283,11 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
         const stepLabels = item.formulaSteps.map(s => s.label).join(" / ");
         itemsToGroup.push({ ...item, name: `${item.name}  [? ${stepLabels}]` });
       } else {
-        itemsToGroup.push(item);
+        itemsToGroup.push({...item});
       }
     }
   } else {
-    itemsToGroup.push(...order);
+    itemsToGroup.push(...order.map(i => ({...i})));
   }
 
   // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
