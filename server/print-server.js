@@ -281,7 +281,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   for (const item of itemsToGroup) {
     const cat = CAT_MERGE[item.category] || item.category || "Autres";
     if (!seenCats[cat]) seenCats[cat] = [];
-    seenCats[cat].push(item);
+    const existing = seenCats[cat].find(x => x.name === item.name && (x.piment || null) === (item.piment || null));
+    if (existing) existing.qty += item.qty;
+    else seenCats[cat].push(item);
   }
   const sortedCats = [...CAT_ORDER.filter(c => seenCats[c]), ...Object.keys(seenCats).filter(c => !CAT_ORDER.includes(c))];
   const groups = sortedCats.map(cat => ({ cat, items: seenCats[cat] }));
