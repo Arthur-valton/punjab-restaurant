@@ -199,6 +199,11 @@ const CMD = {
   PARTIAL_CUT: GS + "V\x01",
 };
 
+function sanitize(str) {
+  if (!str) return str;
+  return str.replace(/œ/g, "oe").replace(/Œ/g, "Oe").replace(/æ/g, "ae").replace(/Æ/g, "Ae");
+}
+
 function line(char = "-", width = WIDTH) {
   return char.repeat(width) + "\n";
 }
@@ -304,20 +309,21 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
       if (showTotal) {
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
         buf += CMD.BOLD_ON;
-        buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
+        buf += pad(`${item.qty}x ${sanitize(item.name)}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
         if (item.piment) buf += `   ${pimentSymbols[item.piment]}\n`;
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
             const pimentTxt = choice.piment ? `  ${pimentSymbols[choice.piment]}` : "";
-            buf += `   > ${choice.label}: ${choice.itemName}${pimentTxt}\n`;
+            buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${pimentTxt}\n`;
           }
         }
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
         buf += ESC + "J\x06";
       } else {
         buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-        buf += `${item.qty}x ${item.name}\n`;
+        buf += `${item.qty}x ${sanitize(item.name)}
+`;
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         if (item.piment) {
           buf += CMD.BOLD_ON;
@@ -401,7 +407,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
     for (const item of added) {
       buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-      buf += `++ ${item.qty}x ${item.name}\n`;
+      buf += `++ ${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.piment && item.piment > 1) {
         buf += CMD.BOLD_ON + `   ${ps[item.piment]}\n` + CMD.BOLD_OFF;
@@ -409,18 +415,18 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       if (item.formulaChoices) {
         for (const choice of item.formulaChoices) {
           buf += CMD.BOLD_ON;
-          buf += `   > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
           buf += CMD.BOLD_OFF;
         }
       }
     }
     for (const item of removed) {
       buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-      buf += `-- ${item.qty}x ${item.name}\n`;
+      buf += `-- ${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
         for (const choice of item.formulaChoices) {
-          buf += `   > ${choice.label}: ${choice.itemName}\n`;
+          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}\n`;
         }
       }
     }
@@ -437,24 +443,25 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     if (showTotal) {
       const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
       buf += CMD.BOLD_ON;
-      buf += pad(`${item.qty}x ${item.name}`, totalStr, WIDTH);
+      buf += pad(`${item.qty}x ${sanitize(item.name)}`, totalStr, WIDTH);
       buf += CMD.BOLD_OFF;
       if (item.formulaChoices) {
         const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
-          buf += `   > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `   > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
         }
       }
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
     } else {
       buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-      buf += `${item.qty}x ${item.name}\n`;
+      buf += `${item.qty}x ${sanitize(item.name)}
+`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
         const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
           buf += CMD.BOLD_ON;
-          buf += `  > ${choice.label}: ${choice.itemName}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `  > ${choice.label}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
           buf += CMD.BOLD_OFF;
         }
       }
@@ -562,7 +569,8 @@ function formatReadyTicket({ tableNumber, orderNum, items, date }) {
   buf += line("=");
   for (const item of items) {
     buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-    buf += `${item.qty}x ${item.name}\n`;
+    buf += `${item.qty}x ${sanitize(item.name)}
+`;
     buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
     buf += ESC + "J\x0C";
   }
@@ -598,7 +606,8 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
   buf += line("=");
   for (const item of items) {
     buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-    buf += `${item.qty}x ${item.name}\n`;
+    buf += `${item.qty}x ${sanitize(item.name)}
+`;
     buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
     buf += ESC + "J\x0C";
   }
