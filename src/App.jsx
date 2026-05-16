@@ -18,7 +18,7 @@ function getPrintUrl() {
   return "https://print.restaurant-dev.fr";
 }
 
-// Pastel Apple colors par sous-catégorie
+// Pastel Apple colors par sous-catégorie (couleurs manuelles prioritaires)
 const SUBCAT_COLORS = {
   "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
   "Salade / Soupe":  { bg: "rgba(52,199,89,0.10)",   active: "rgba(52,199,89,0.22)",   text: "#1e7a3a", border: "rgba(52,199,89,0.4)"    },
@@ -31,7 +31,28 @@ const SUBCAT_COLORS = {
   "Végétarien":      { bg: "rgba(0,199,190,0.10)",    active: "rgba(0,199,190,0.22)",   text: "#007a74", border: "rgba(0,199,190,0.4)"    },
   "Riz":             { bg: "rgba(255,204,0,0.12)",    active: "rgba(255,204,0,0.25)",   text: "#806000", border: "rgba(255,204,0,0.45)"   },
   "Entrée":          { bg: "rgba(255,45,85,0.08)",    active: "rgba(255,45,85,0.18)",   text: "#c0003a", border: "rgba(255,45,85,0.35)"   },
+  "Biryani":         { bg: "rgba(180,120,60,0.10)",   active: "rgba(180,120,60,0.22)",  text: "#7a4e1a", border: "rgba(180,120,60,0.4)"   },
+  "Desserts":        { bg: "rgba(255,45,85,0.08)",    active: "rgba(255,45,85,0.18)",   text: "#c0003a", border: "rgba(255,45,85,0.35)"   },
+  "Menu Midi":       { bg: "rgba(48,209,88,0.10)",    active: "rgba(48,209,88,0.22)",   text: "#1a6e35", border: "rgba(48,209,88,0.4)"    },
+  "Formules":        { bg: "rgba(48,209,88,0.10)",    active: "rgba(48,209,88,0.22)",   text: "#1a6e35", border: "rgba(48,209,88,0.4)"    },
 };
+
+// Génère automatiquement une couleur pastel déterministe pour toute sous-catégorie inconnue
+function getSubcatColor(subcategory) {
+  if (!subcategory) return null;
+  if (SUBCAT_COLORS[subcategory]) return SUBCAT_COLORS[subcategory];
+  let hash = 0;
+  for (let i = 0; i < subcategory.length; i++) {
+    hash = (subcategory.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+  }
+  const hue = Math.abs(hash) % 360;
+  return {
+    bg:     `hsla(${hue},55%,94%,1)`,
+    active: `hsla(${hue},55%,85%,1)`,
+    text:   `hsl(${hue},50%,32%)`,
+    border: `hsla(${hue},55%,65%,0.7)`,
+  };
+}
 const SAVE_API_URL = "https://punjab-restaurant.vercel.app/api/save-menu";
 
 function getCachedMenu() {
@@ -401,7 +422,7 @@ function App() {
           <div className="subcategory-tabs">
             <button className={`subcategory-tab ${!activeSubcategory ? "active" : ""}`} onClick={() => setActiveSubcategory(null)}>Tous</button>
             {subcategories.map((sub) => {
-              const c = SUBCAT_COLORS[sub];
+              const c = getSubcatColor(sub);
               const isActive = activeSubcategory === sub;
               return (
                 <button
@@ -426,7 +447,7 @@ function App() {
           <div className="menu-grid-items">
             {visibleItems.map((item) => {
               const qty = getItemQty(item.id);
-              const c = item.subcategory ? SUBCAT_COLORS[item.subcategory] : null;
+              const c = getSubcatColor(item.subcategory);
               return (
                 <button
                   key={item.id}
