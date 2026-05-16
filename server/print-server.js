@@ -557,41 +557,6 @@ function saveOrders(map) {
 const activeOrders = loadOrders();
 console.log(`${activeOrders.size} commande(s) en cours chargée(s)`);
 
-// ----- Ticket "PRÊT" -----
-function formatReadyTicket({ tableNumber, orderNum, items, date }) {
-  let buf = "";
-  buf += CMD.INIT;
-  buf += CMD.CENTER;
-  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-  buf += "PUNJAB\n";
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-  buf += "\n";
-  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-  buf += "COMMANDE\n";
-  buf += "PRETE !\n";
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-  buf += CMD.LEFT;
-  buf += line("=");
-  buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
-  buf += `TABLE ${tableNumber}\n`;
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
-  buf += `Commande: #${orderNum}\n`;
-  buf += `Date: ${date}\n`;
-  buf += line("=");
-  for (const item of items) {
-    buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-    buf += `${item.qty}x ${sanitize(item.name)}
-`;
-    buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-    buf += ESC + "J\x0C";
-  }
-  buf += line("=");
-  buf += CMD.CENTER;
-  buf += "Plat(s) pret(s) a servir !\n";
-  buf += CMD.FEED;
-  buf += CMD.PARTIAL_CUT;
-  return buf;
-}
 
 // ----- Ticket partiel "SECTION PRÊTE" -----
 function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
@@ -661,7 +626,9 @@ function buildGroups(items) {
     } else {
       const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
       if (!seen[cat]) seen[cat] = [];
-      seen[cat].push(item);
+      const existing = seen[cat].find(x => normName(x.name) === normName(item.name) && (x.piment || null) === (item.piment || null));
+      if (existing) existing.qty += item.qty;
+      else seen[cat].push(item);
     }
   }
   const sorted = [...CAT_ORDER_SHARED.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER_SHARED.includes(c))];
