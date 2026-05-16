@@ -171,10 +171,16 @@ function App() {
     [activeItems]
   );
 
-  const visibleItems = useMemo(
-    () => activeSubcategory ? activeItems.filter((i) => i.subcategory === activeSubcategory) : activeItems,
-    [activeItems, activeSubcategory]
-  );
+  const visibleItems = useMemo(() => {
+    const items = activeSubcategory
+      ? activeItems.filter((i) => i.subcategory === activeSubcategory)
+      : activeItems;
+    return [...items].sort((a, b) => {
+      const ia = a.subcategory ? subcategories.indexOf(a.subcategory) : 999;
+      const ib = b.subcategory ? subcategories.indexOf(b.subcategory) : 999;
+      return ia - ib;
+    });
+  }, [activeItems, activeSubcategory, subcategories]);
 
   const totalQty = orderItems.reduce((s, i) => s + i.qty, 0);
   const totalPrice = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
