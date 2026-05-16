@@ -1,5 +1,6 @@
 #!/bin/bash
 # Vérifie si le dernier commit GitHub contient "urgent" → mise à jour immédiate
+# v2 — pkill + log
 cd /home/punjab/punjab-restaurant
 
 git fetch origin 2>/dev/null
