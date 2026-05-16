@@ -199,6 +199,10 @@ const CMD = {
   PARTIAL_CUT: GS + "V\x01",
 };
 
+function normName(s) {
+  return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/œ/g, "oe").replace(/Œ/g, "Oe").replace(/æ/g, "ae").replace(/Æ/g, "Ae").toLowerCase();
+}
+
 function sanitize(str) {
   if (!str) return str;
   return str
@@ -293,7 +297,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   for (const item of itemsToGroup) {
     const cat = CAT_MERGE[item.category] || item.category || "Autres";
     if (!seenCats[cat]) seenCats[cat] = [];
-    const existing = seenCats[cat].find(x => x.name === item.name && (x.piment || null) === (item.piment || null));
+    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name) && (x.piment || null) === (item.piment || null));
     if (existing) existing.qty += item.qty;
     else seenCats[cat].push(item);
   }
@@ -650,7 +654,7 @@ function buildGroups(items) {
         const cat = mapFormulaLabelShared(choice.label);
         const merged = CAT_MERGE_SHARED[cat] || cat;
         if (!seen[merged]) seen[merged] = [];
-        const existing = seen[merged].find(x => x.name === choice.itemName && (x.piment || null) === (choice.piment || null));
+        const existing = seen[merged].find(x => normName(x.name) === normName(choice.itemName) && (x.piment || null) === (choice.piment || null));
         if (existing) existing.qty += item.qty;
         else seen[merged].push({ name: choice.itemName, category: merged, qty: item.qty, piment: choice.piment || null });
       }

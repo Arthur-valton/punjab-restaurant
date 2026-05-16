@@ -388,6 +388,9 @@
     const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     return FORMULA_LABEL_MAP[key] || label;
   }
+  function normName(s) {
+    return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0153/g, "oe").replace(/\u0152/g, "Oe").replace(/\u00e6/g, "ae").replace(/\u00c6/g, "Ae").toLowerCase();
+  }
   const STATUS_LABELS = { waiting: "En attente", called: "Demandé…", in_progress: "En cours", done: "Prêt ✓", delivered: "Livré ✓" };
   const BTN_LABELS   = { waiting: "Appeler cuisine", called: "Demandé…", in_progress: "En cours…", done: "✓ Confirmer livraison", delivered: "Livré ✓" };
 
@@ -469,14 +472,14 @@
         for (const choice of i.formulaChoices) {
           const choiceCat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
           if (choiceCat !== cat) continue;
-          const key = choice.itemName + "|" + (choice.piment || 0);
+          const key = normName(choice.itemName) + "|" + (choice.piment || 0);
           if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
           else catItemsMap[key] = { name: choice.itemName, qty: i.qty, piment: choice.piment || null };
         }
       } else {
         const itemCat = CAT_MERGE[i.category] || i.category;
         if (itemCat !== cat) continue;
-        const key = i.name + "|" + (i.piment || 0);
+        const key = normName(i.name) + "|" + (i.piment || 0);
         if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
         else catItemsMap[key] = { name: i.name, qty: i.qty, piment: i.piment || null };
       }

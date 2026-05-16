@@ -457,6 +457,9 @@
     const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     return FORMULA_LABEL_MAP[key] || label;
   }
+  function normName(s) {
+    return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0153/g, "oe").replace(/\u0152/g, "Oe").replace(/\u00e6/g, "ae").replace(/\u00c6/g, "Ae").toLowerCase();
+  }
 
   function groupByCategory(items) {
     const seen = {};
@@ -466,7 +469,7 @@
           const cat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
           if (CAT_EXCLUDE_KDS.includes(cat)) return;
           if (!seen[cat]) seen[cat] = [];
-          const existing = seen[cat].find(x => x.name === choice.itemName && (x.piment || null) === (choice.piment || null));
+          const existing = seen[cat].find(x => normName(x.name) === normName(choice.itemName) && (x.piment || null) === (choice.piment || null));
           if (existing) existing.qty += i.qty;
           else seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null });
         });
@@ -474,7 +477,9 @@
         const cat = CAT_MERGE[i.category] || i.category || "Autres";
         if (CAT_EXCLUDE_KDS.includes(cat)) return;
         if (!seen[cat]) seen[cat] = [];
-        seen[cat].push(i);
+        const existing = seen[cat].find(x => normName(x.name) === normName(i.name) && (x.piment || null) === (i.piment || null));
+        if (existing) existing.qty += i.qty;
+        else seen[cat].push(i);
       }
     });
     const sorted = [...CAT_ORDER.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER.includes(c))];
