@@ -446,13 +446,34 @@
   const CAT_EXCLUDE_KDS = ["Boissons"];
   const CAT_MERGE = { "Biryani": "Plats" };
 
+  const FORMULA_LABEL_MAP = {
+    "entree": "Entrees", "entrees": "Entrees",
+    "plat": "Plats", "plats": "Plats",
+    "dessert": "Desserts", "desserts": "Desserts",
+    "naan": "Naans", "naans": "Naans",
+    "boisson": "Boissons", "boissons": "Boissons",
+  };
+  function mapFormulaLabel(label) {
+    const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return FORMULA_LABEL_MAP[key] || label;
+  }
+
   function groupByCategory(items) {
     const seen = {};
     items.forEach(i => {
-      const cat = CAT_MERGE[i.category] || i.category || "Autres";
-      if (CAT_EXCLUDE_KDS.includes(cat)) return; // Boissons → pas en cuisine
-      if (!seen[cat]) seen[cat] = [];
-      seen[cat].push(i);
+      if (i.formulaChoices && i.formulaChoices.length > 0) {
+        i.formulaChoices.forEach(choice => {
+          const cat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
+          if (CAT_EXCLUDE_KDS.includes(cat)) return;
+          if (!seen[cat]) seen[cat] = [];
+          seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null });
+        });
+      } else {
+        const cat = CAT_MERGE[i.category] || i.category || "Autres";
+        if (CAT_EXCLUDE_KDS.includes(cat)) return;
+        if (!seen[cat]) seen[cat] = [];
+        seen[cat].push(i);
+      }
     });
     const sorted = [...CAT_ORDER.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER.includes(c))];
     return sorted.map(cat => ({ cat, items: seen[cat] }));

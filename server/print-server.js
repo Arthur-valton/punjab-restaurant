@@ -249,7 +249,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     "boisson": "Boissons", "boissons": "Boissons",
   };
   function mapFormulaLabel(label) {
-    const key = label.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     return FORMULA_LABEL_MAP[key] || label;
   }
 
@@ -291,7 +291,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     if (!showTotal && groups.length > 1) {
       buf += CMD.CENTER;
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `${group.cat.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase()}\n`;
+      buf += `${group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}\n`;
       buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
       buf += CMD.LEFT;
       buf += line("-");
@@ -612,12 +612,33 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
 const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
 const CAT_MERGE_SHARED = { "Biryani": "Plats" };
 
+const FORMULA_LABEL_MAP_SHARED = {
+  "entree": "Entrees", "entrees": "Entrees",
+  "plat": "Plats", "plats": "Plats",
+  "dessert": "Desserts", "desserts": "Desserts",
+  "naan": "Naans", "naans": "Naans",
+  "boisson": "Boissons", "boissons": "Boissons",
+};
+function mapFormulaLabelShared(label) {
+  const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return FORMULA_LABEL_MAP_SHARED[key] || label;
+}
+
 function buildGroups(items) {
   const seen = {};
   for (const item of items) {
-    const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
-    if (!seen[cat]) seen[cat] = [];
-    seen[cat].push(item);
+    if (item.formulaChoices && item.formulaChoices.length > 0) {
+      for (const choice of item.formulaChoices) {
+        const cat = mapFormulaLabelShared(choice.label);
+        const merged = CAT_MERGE_SHARED[cat] || cat;
+        if (!seen[merged]) seen[merged] = [];
+        seen[merged].push({ name: choice.itemName, category: merged, qty: item.qty, piment: choice.piment || null });
+      }
+    } else {
+      const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
+      if (!seen[cat]) seen[cat] = [];
+      seen[cat].push(item);
+    }
   }
   const sorted = [...CAT_ORDER_SHARED.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER_SHARED.includes(c))];
   return sorted.map(cat => ({ cat, items: seen[cat] }));
