@@ -632,7 +632,9 @@ function buildGroups(items) {
         const cat = mapFormulaLabelShared(choice.label);
         const merged = CAT_MERGE_SHARED[cat] || cat;
         if (!seen[merged]) seen[merged] = [];
-        seen[merged].push({ name: choice.itemName, category: merged, qty: item.qty, piment: choice.piment || null });
+        const existing = seen[merged].find(x => x.name === choice.itemName && (x.piment || null) === (choice.piment || null));
+        if (existing) existing.qty += item.qty;
+        else seen[merged].push({ name: choice.itemName, category: merged, qty: item.qty, piment: choice.piment || null });
       }
     } else {
       const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";

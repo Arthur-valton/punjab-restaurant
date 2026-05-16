@@ -466,7 +466,9 @@
           const cat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
           if (CAT_EXCLUDE_KDS.includes(cat)) return;
           if (!seen[cat]) seen[cat] = [];
-          seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null });
+          const existing = seen[cat].find(x => x.name === choice.itemName && (x.piment || null) === (choice.piment || null));
+          if (existing) existing.qty += i.qty;
+          else seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null });
         });
       } else {
         const cat = CAT_MERGE[i.category] || i.category || "Autres";

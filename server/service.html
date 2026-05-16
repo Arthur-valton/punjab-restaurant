@@ -375,7 +375,19 @@
 
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
   const CAT_LABELS = { Entrees: "Entrées", Plats: "Plats", Naans: "Naans", Desserts: "Desserts", Boissons: "Boissons", "Menu Midi": "Menu Midi" };
-  const CAT_MERGE = { "Biryani": "Plats" };
+  const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
+
+  const FORMULA_LABEL_MAP = {
+    "entree": "Entrees", "entrees": "Entrees",
+    "plat": "Plats", "plats": "Plats",
+    "dessert": "Desserts", "desserts": "Desserts",
+    "naan": "Naans", "naans": "Naans",
+    "boisson": "Boissons", "boissons": "Boissons",
+  };
+  function mapFormulaLabel(label) {
+    const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return FORMULA_LABEL_MAP[key] || label;
+  }
   const STATUS_LABELS = { waiting: "En attente", called: "Demandé…", in_progress: "En cours", done: "Prêt ✓", delivered: "Livré ✓" };
   const BTN_LABELS   = { waiting: "Appeler cuisine", called: "Demandé…", in_progress: "En cours…", done: "✓ Confirmer livraison", delivered: "Livré ✓" };
 
@@ -450,8 +462,26 @@
     const oid      = order.id;
     const noKitchen = CAT_NO_KITCHEN.includes(cat);
 
-    // Éléments de la catégorie
-    const catItems = (order.items || []).filter(i => (CAT_MERGE[i.category] || i.category) === cat);
+    // Éléments de la catégorie (avec expansion des formules + agrégation)
+    const catItemsMap = {};
+    for (const i of (order.items || [])) {
+      if (i.formulaChoices && i.formulaChoices.length > 0) {
+        for (const choice of i.formulaChoices) {
+          const choiceCat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
+          if (choiceCat !== cat) continue;
+          const key = choice.itemName + "|" + (choice.piment || 0);
+          if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
+          else catItemsMap[key] = { name: choice.itemName, qty: i.qty, piment: choice.piment || null };
+        }
+      } else {
+        const itemCat = CAT_MERGE[i.category] || i.category;
+        if (itemCat !== cat) continue;
+        const key = i.name + "|" + (i.piment || 0);
+        if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
+        else catItemsMap[key] = { name: i.name, qty: i.qty, piment: i.piment || null };
+      }
+    }
+    const catItems = Object.values(catItemsMap);
     const itemsHtml = catItems.map(i =>
       `<div class="item-row"><span class="item-qty">${i.qty}×</span><span class="item-name">${i.name}</span></div>`
     ).join("");
