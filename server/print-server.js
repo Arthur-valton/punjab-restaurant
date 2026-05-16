@@ -44,6 +44,7 @@ const BAR_CATEGORIES = new Set(["Boissons", "Vin", "Rosé", "Rose", "Apéritifs"
 // IP imprimante selon le réseau WiFi ou la plage IP locale
 const PRINTER_IPS = {
   "popina-new-punjab": "192.168.110.21",
+  "Livebox-1720":      "192.168.1.29",
   "Internet":          "192.168.1.29",
 };
 const IP_RANGE_PRINTER = {
