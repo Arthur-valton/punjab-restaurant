@@ -276,7 +276,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
 
   // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
-  const CAT_MERGE = { "Biryani": "Plats" };
+  const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
   const seenCats = {};
   for (const item of itemsToGroup) {
     const cat = CAT_MERGE[item.category] || item.category || "Autres";
@@ -610,7 +610,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
 
 // ----- Helpers catégories (partagés) -----
 const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
-const CAT_MERGE_SHARED = { "Biryani": "Plats" };
+const CAT_MERGE_SHARED = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
 
 const FORMULA_LABEL_MAP_SHARED = {
   "entree": "Entrees", "entrees": "Entrees",
