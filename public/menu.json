@@ -185,9 +185,11 @@
       {
         "id": 26,
         "name": "Poulet Bengan",
-        "price": 15.5,
+        "price": 16.5,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 27,
