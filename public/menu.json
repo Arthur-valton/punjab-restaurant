@@ -246,9 +246,11 @@
       {
         "id": 33,
         "name": "Agneau Sagwala",
-        "price": 16.5,
+        "price": 17.5,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 34,
