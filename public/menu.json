@@ -178,9 +178,11 @@
       {
         "id": 25,
         "name": "Poulet Madras",
-        "price": 14.5,
+        "price": 15,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 26,
