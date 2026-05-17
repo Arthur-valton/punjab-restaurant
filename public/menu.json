@@ -228,9 +228,11 @@
       {
         "id": 31,
         "name": "Agneau Mirchi",
-        "price": 15.5,
+        "price": 16.5,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 32,
