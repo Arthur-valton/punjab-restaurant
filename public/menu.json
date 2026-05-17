@@ -152,9 +152,11 @@
       {
         "id": 22,
         "name": "Butter Chicken",
-        "price": 16.5,
+        "price": 16,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 23,
