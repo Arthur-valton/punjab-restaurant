@@ -296,9 +296,11 @@
       {
         "id": 39,
         "name": "Boeuf Mirchi",
-        "price": 15.5,
+        "price": 16,
         "category": "Plats",
-        "subcategory": "Boeuf"
+        "subcategory": "Boeuf",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 40,
