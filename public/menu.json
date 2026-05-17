@@ -354,9 +354,11 @@
       {
         "id": 47,
         "name": "Poisson Massala",
-        "price": 17,
+        "price": 18,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 48,
