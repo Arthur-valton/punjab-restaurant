@@ -237,9 +237,11 @@
       {
         "id": 32,
         "name": "Agneau Madras",
-        "price": 16,
+        "price": 17,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 33,
