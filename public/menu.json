@@ -219,9 +219,11 @@
       {
         "id": 30,
         "name": "Agneau Vindaloo",
-        "price": 16.5,
+        "price": 17,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 31,
