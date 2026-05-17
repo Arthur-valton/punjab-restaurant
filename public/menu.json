@@ -555,7 +555,9 @@
         "id": 216,
         "name": "Boeuf vindallo",
         "price": 16,
-        "category": "Plats"
+        "category": "Plats",
+        "piment": false,
+        "isFormula": false
       }
     ]
   },
