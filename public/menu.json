@@ -264,9 +264,11 @@
       {
         "id": 35,
         "name": "Agneau Curry",
-        "price": 15,
+        "price": 16,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 36,
