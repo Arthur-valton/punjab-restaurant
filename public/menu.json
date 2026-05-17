@@ -210,9 +210,11 @@
       {
         "id": 29,
         "name": "Agneau Champignons",
-        "price": 17,
+        "price": 17.5,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 30,
