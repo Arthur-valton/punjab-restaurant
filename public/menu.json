@@ -255,9 +255,11 @@
       {
         "id": 34,
         "name": "Agneau Bengan",
-        "price": 16.5,
+        "price": 18,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 35,
