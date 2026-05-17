@@ -547,7 +547,7 @@
         "name": "Bœuf curry",
         "price": 15.5,
         "category": "Plats",
-        "subcategory": "Boeuf curry ou boeuf vindallo",
+        "subcategory": "Boeuf",
         "piment": false,
         "isFormula": false
       },
