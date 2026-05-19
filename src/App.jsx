@@ -146,8 +146,11 @@ function App() {
     }
   }
 
-  function openNumpad() {
+  const [numpadOnConfirm, setNumpadOnConfirm] = useState(null);
+
+  function openNumpad(onConfirm) {
     setNumpadValue(tableNumber);
+    setNumpadOnConfirm(onConfirm ? () => onConfirm : null);
     setShowNumpad(true);
   }
 
@@ -165,6 +168,7 @@ function App() {
   function confirmNumpad() {
     setTableNumber(numpadValue);
     setShowNumpad(false);
+    if (numpadOnConfirm) { numpadOnConfirm(numpadValue); setNumpadOnConfirm(null); }
   }
 
   const activeItems = useMemo(
@@ -276,7 +280,10 @@ function App() {
     setOrderType(type);
     setShowOrderTypeModal(false);
     if (type === "surplace") {
-      if (!tableNumber) { openNumpad(); return; }
+      if (!tableNumber) {
+        openNumpad((table) => submitOrder(undefined, table));
+        return;
+      }
       submitOrder();
     } else {
       const num = generateEmporterNum();
@@ -285,9 +292,9 @@ function App() {
     }
   }
 
-  function submitOrder(overrideEmporterNum) {
+  function submitOrder(overrideEmporterNum, overrideTable) {
     const num = overrideEmporterNum || emporterNum;
-    const effectiveTable = orderType === "emporter" ? num : tableNumber;
+    const effectiveTable = orderType === "emporter" ? num : (overrideTable || tableNumber);
     const orderNum = Math.floor(Math.random() * 9000) + 1000;
     const orderId = editingOrderId || `order-${orderNum}-${Date.now()}`;
     const orderData = {
