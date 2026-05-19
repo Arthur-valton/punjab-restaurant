@@ -440,7 +440,7 @@ function App() {
           </div>
           <div className="cart-bottom">
             <button className="btn-validate-big" onClick={validateOrder}>
-              <span className="btn-validate-label">Valider</span>
+              <span className="btn-validate-label">Commander</span>
               <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
             </button>
           </div>
