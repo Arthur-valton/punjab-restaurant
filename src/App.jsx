@@ -856,13 +856,42 @@ function App() {
                 value={clientPhone}
                 onChange={e => setClientPhone(e.target.value)}
               />
-              <input
-                className="emporter-input emporter-input-time"
-                type="time"
-                placeholder="Heure de retrait"
-                value={clientPickupTime}
-                onChange={e => setClientPickupTime(e.target.value)}
-              />
+              {/* Sélecteur heure tactile */}
+              {(() => {
+                const ph = clientPickupTime ? Number(clientPickupTime.split(":")[0]) : null;
+                const pm = clientPickupTime ? Number(clientPickupTime.split(":")[1]) : null;
+                const HOURS = [10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+                const MINS  = [0,5,10,15,20,25,30,35,40,45,50,55];
+                return (
+                  <div className="time-picker">
+                    <div className="time-picker-header">
+                      <span className="time-picker-label">⏰ Heure de retrait</span>
+                      <span className="time-picker-display">{clientPickupTime || "--:--"}</span>
+                      {clientPickupTime && (
+                        <button className="time-picker-clear" onClick={() => setClientPickupTime("")}>✕</button>
+                      )}
+                    </div>
+                    <div className="time-picker-section-label">Heure</div>
+                    <div className="time-picker-row">
+                      {HOURS.map(h => (
+                        <button key={h} type="button"
+                          className={`time-picker-btn${ph === h ? " selected" : ""}`}
+                          onClick={() => setClientPickupTime(`${String(h).padStart(2,"0")}:${pm !== null ? String(pm).padStart(2,"0") : "00"}`)}
+                        >{String(h).padStart(2,"0")}</button>
+                      ))}
+                    </div>
+                    <div className="time-picker-section-label">Minutes</div>
+                    <div className="time-picker-row">
+                      {MINS.map(m => (
+                        <button key={m} type="button"
+                          className={`time-picker-btn${pm === m ? " selected" : ""}`}
+                          onClick={() => setClientPickupTime(`${ph !== null ? String(ph).padStart(2,"0") : "10"}:${String(m).padStart(2,"0")}`)}
+                        >{String(m).padStart(2,"0")}</button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="emporter-modal-actions">
               <button className="emporter-btn-cancel" onClick={() => setShowEmporterModal(false)}>Annuler</button>
