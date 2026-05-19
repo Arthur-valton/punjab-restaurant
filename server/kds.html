@@ -749,6 +749,7 @@
           <div class="emporter-num">#${order.emporterNum || order.tableNumber}</div>
           ${order.clientName ? `<div class="emporter-client">${order.clientName}</div>` : ""}
           ${order.clientPhone ? `<div class="emporter-phone">${order.clientPhone}</div>` : ""}
+          ${order.clientPickupTime ? `<div class="emporter-phone" style="color:var(--orange);font-weight:700;">⏰ ${order.clientPickupTime}</div>` : ""}
         </div>`
       : `<div class="table-info">
           <div class="table-label">TABLE</div>

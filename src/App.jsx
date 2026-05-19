@@ -106,6 +106,7 @@ function App() {
   const [emporterNum, setEmporterNum] = useState(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [clientPickupTime, setClientPickupTime] = useState("");
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [showEmporterModal, setShowEmporterModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState(() => getCachedMenu()[0].category);
@@ -306,6 +307,7 @@ function App() {
         emporterNum: num,
         ...(clientName ? { clientName } : {}),
         ...(clientPhone ? { clientPhone } : {}),
+        ...(clientPickupTime ? { clientPickupTime } : {}),
       } : {}),
       items: [...orderItems],
       receivedAt: Date.now(),
@@ -330,6 +332,7 @@ function App() {
       emporterNum: num,
       clientName,
       clientPhone,
+      clientPickupTime,
     });
     setShowTicket(true);
     setCartOpen(false);
@@ -343,6 +346,7 @@ function App() {
     setEmporterNum(null);
     setClientName("");
     setClientPhone("");
+    setClientPickupTime("");
     setShowOrderTypeModal(false);
     setShowEmporterModal(false);
     setShowTicket(false);
@@ -852,6 +856,13 @@ function App() {
                 value={clientPhone}
                 onChange={e => setClientPhone(e.target.value)}
               />
+              <input
+                className="emporter-input emporter-input-time"
+                type="time"
+                placeholder="Heure de retrait"
+                value={clientPickupTime}
+                onChange={e => setClientPickupTime(e.target.value)}
+              />
             </div>
             <div className="emporter-modal-actions">
               <button className="emporter-btn-cancel" onClick={() => setShowEmporterModal(false)}>Annuler</button>
@@ -872,6 +883,7 @@ function App() {
           emporterNum={ticketData.emporterNum}
           clientName={ticketData.clientName}
           clientPhone={ticketData.clientPhone}
+          clientPickupTime={ticketData.clientPickupTime}
           onNewOrder={newOrder}
           editingOrderId={editingOrderId}
           onPrintSuccess={(tcOrderId) => {

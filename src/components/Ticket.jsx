@@ -12,7 +12,7 @@ function getPrintUrl() {
   return "https://print.restaurant-dev.fr";
 }
 
-export default function Ticket({ order, tableNumber, orderNum, orderId, orderType, emporterNum, clientName, clientPhone, onNewOrder, editingOrderId, onPrintSuccess }) {
+export default function Ticket({ order, tableNumber, orderNum, orderId, orderType, emporterNum, clientName, clientPhone, clientPickupTime, onNewOrder, editingOrderId, onPrintSuccess }) {
   const [printStatus, setPrintStatus] = React.useState(null);
   const [printMsg, setPrintMsg] = React.useState("");
 
@@ -36,7 +36,7 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
     setPrintMsg("");
     try {
       const base = getPrintUrl();
-      const body = { order, tableNumber, orderNum, date: dateStr, orderId, orderType, emporterNum, clientName, clientPhone };
+      const body = { order, tableNumber, orderNum, date: dateStr, orderId, orderType, emporterNum, clientName, clientPhone, clientPickupTime };
 
       let res;
       if (editingOrderId) {
@@ -114,6 +114,7 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
           }
           {clientName && <p><strong>Nom:</strong> {clientName}</p>}
           {clientPhone && <p><strong>Tél:</strong> {clientPhone}</p>}
+          {clientPickupTime && <p><strong>Retrait:</strong> {clientPickupTime}</p>}
           <p><strong>Date:</strong> {dateStr}</p>
         </div>
 

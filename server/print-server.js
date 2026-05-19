@@ -224,7 +224,7 @@ function pad(left, right, width = WIDTH, fill = " ") {
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone }) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime }) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -256,6 +256,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
     if (clientName) buf += CMD.BOLD_ON + `${sanitize(clientName)}\n` + CMD.BOLD_OFF;
     if (clientPhone) buf += `Tel: ${clientPhone}\n`;
+    if (clientPickupTime) { buf += CMD.BOLD_ON; buf += `Retrait: ${clientPickupTime}\n`; buf += CMD.BOLD_OFF; }
   } else {
     buf += CMD.BOLD_ON + CMD.QUAD;
     buf += `TABLE ${tableNumber}\n`;
@@ -775,7 +776,7 @@ wss.on("connection", (ws) => {
 app.post("/print-all", async (req, res) => {
   try {
     const { order, tableNumber, orderNum, date, orderId: clientOrderId,
-            orderType, emporterNum, clientName, clientPhone } = req.body;
+            orderType, emporterNum, clientName, clientPhone, clientPickupTime } = req.body;
 
     const isEmporter = orderType === "emporter";
     const effectiveTable = isEmporter ? emporterNum : tableNumber;
@@ -794,7 +795,7 @@ app.post("/print-all", async (req, res) => {
 
     const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
     const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
-    const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone };
+    const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone, clientPickupTime };
     const tickets = [];
 
     const cuisineAll = [...cuisine, ...boissons];
@@ -819,7 +820,7 @@ app.post("/print-all", async (req, res) => {
     const orderData = {
       id: orderId, orderNum, tableNumber: effectiveTable, date,
       items: cuisineAll, receivedAt: Date.now(), catStatus,
-      orderType, emporterNum, clientName, clientPhone,
+      orderType, emporterNum, clientName, clientPhone, clientPickupTime,
     };
     activeOrders.set(orderId, orderData);
     saveOrders(activeOrders);
