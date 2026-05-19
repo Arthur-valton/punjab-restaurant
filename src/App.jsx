@@ -791,9 +791,18 @@ function App() {
               <p className="orders-panel-empty">Aucune commande active</p>
             ) : (
               serverOrders.map((o) => (
-                <div key={o.id} className="orders-panel-item">
+                <div key={o.id} className={`orders-panel-item${o.orderType === "emporter" ? " orders-panel-item--emporter" : ""}`}>
                   <div className="orders-panel-meta">
-                    <strong>Table {o.tableNumber}</strong>
+                    {o.orderType === "emporter" ? (
+                      <div className="orders-panel-meta-emporter">
+                        <span className="orders-panel-emporter-badge">À EMPORTER</span>
+                        <strong className="orders-panel-emporter-num">#{o.emporterNum}</strong>
+                        {o.clientName && <span className="orders-panel-emporter-info">{o.clientName}</span>}
+                        {o.clientPickupTime && <span className="orders-panel-emporter-time">⏰ {o.clientPickupTime}</span>}
+                      </div>
+                    ) : (
+                      <strong>Table {o.tableNumber}</strong>
+                    )}
                     <span className="orders-panel-num">#{o.orderNum}</span>
                   </div>
                   <div className="orders-panel-items">

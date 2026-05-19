@@ -1490,6 +1490,10 @@ body {
   padding: 14px 20px;
   border-bottom: 1px solid #f0f0f0;
 }
+.orders-panel-item--emporter {
+  border-left: 4px solid #ff9f0a;
+  background: rgba(255,159,10,0.04);
+}
 .orders-panel-meta {
   display: flex;
   align-items: center;
@@ -1497,7 +1501,43 @@ body {
   margin-bottom: 8px;
 }
 .orders-panel-meta strong { font-size: 1rem; }
-.orders-panel-num { font-size: 0.85rem; color: #888; }
+.orders-panel-num { font-size: 0.85rem; color: #888; margin-left: auto; }
+
+/* Emporter meta dans le panel commandes */
+.orders-panel-meta-emporter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+.orders-panel-emporter-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #ff9f0a;
+  text-transform: uppercase;
+  background: rgba(255,159,10,0.12);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.orders-panel-emporter-num {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #222;
+}
+.orders-panel-emporter-info {
+  font-size: 0.85rem;
+  color: #555;
+}
+.orders-panel-emporter-time {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ff9f0a;
+  background: rgba(255,159,10,0.1);
+  border-radius: 5px;
+  padding: 2px 8px;
+}
 .orders-panel-items {
   display: flex;
   flex-wrap: wrap;
