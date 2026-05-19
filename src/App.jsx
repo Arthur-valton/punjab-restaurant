@@ -106,6 +106,7 @@ function App() {
   const [emporterNum, setEmporterNum] = useState(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [showEmporterModal, setShowEmporterModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState(() => getCachedMenu()[0].category);
   const [cartOpen, setCartOpen] = useState(false);
@@ -267,7 +268,14 @@ function App() {
   }
 
   function validateOrder() {
-    if (orderType === "surplace") {
+    setShowOrderTypeModal(true);
+    setCartOpen(false);
+  }
+
+  function chooseOrderType(type) {
+    setOrderType(type);
+    setShowOrderTypeModal(false);
+    if (type === "surplace") {
       if (!tableNumber) { openNumpad(); return; }
       submitOrder();
     } else {
@@ -328,6 +336,7 @@ function App() {
     setEmporterNum(null);
     setClientName("");
     setClientPhone("");
+    setShowOrderTypeModal(false);
     setShowEmporterModal(false);
     setShowTicket(false);
     setTicketData(null);
@@ -424,9 +433,7 @@ function App() {
           </div>
           <div className="cart-bottom">
             <button className="btn-validate-big" onClick={validateOrder}>
-              <span className="btn-validate-label">
-                {orderType === "emporter" ? "À emporter" : (tableNumber ? "Valider" : "Entrez la table")}
-              </span>
+              <span className="btn-validate-label">Valider</span>
               <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
             </button>
           </div>
@@ -454,18 +461,10 @@ function App() {
               <span className="orders-btn-label">En cours</span>
               {serverOrders.length > 0 && <span className="orders-btn-count">{serverOrders.length}</span>}
             </button>
-            <button
-              className={`order-type-toggle ${orderType === "emporter" ? "emporter-active" : ""}`}
-              onClick={() => setOrderType(t => t === "surplace" ? "emporter" : "surplace")}
-            >
-              {orderType === "surplace" ? "Sur place" : "À emporter"}
+            <button className="table-btn" onClick={openNumpad}>
+              <span className="table-btn-label">Table</span>
+              <span className="table-btn-value">{tableNumber || "--"}</span>
             </button>
-            {orderType === "surplace" && (
-              <button className="table-btn" onClick={openNumpad}>
-                <span className="table-btn-label">Table</span>
-                <span className="table-btn-value">{tableNumber || "--"}</span>
-              </button>
-            )}
           </div>
         </header>
 
@@ -800,6 +799,25 @@ function App() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal choix Sur place / À emporter */}
+      {showOrderTypeModal && (
+        <div className="emporter-modal-overlay" onClick={() => setShowOrderTypeModal(false)}>
+          <div className="emporter-modal" onClick={e => e.stopPropagation()}>
+            <div className="order-type-modal-title">Type de commande</div>
+            <div className="order-type-modal-choices">
+              <button className="order-type-choice surplace" onClick={() => chooseOrderType("surplace")}>
+                <span className="order-type-choice-icon">🍽️</span>
+                <span className="order-type-choice-label">Sur place</span>
+              </button>
+              <button className="order-type-choice emporter" onClick={() => chooseOrderType("emporter")}>
+                <span className="order-type-choice-icon">🛍️</span>
+                <span className="order-type-choice-label">À emporter</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
