@@ -224,7 +224,7 @@ function pad(left, right, width = WIDTH, fill = " ") {
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone }) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -247,11 +247,20 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
   buf += CMD.CENTER;
-  buf += CMD.BOLD_ON;
-  buf += CMD.QUAD;
-  buf += `TABLE ${tableNumber}\n`;
-  buf += CMD.DOUBLE_OFF;
-  buf += CMD.BOLD_OFF;
+  if (orderType === "emporter") {
+    buf += CMD.BOLD_ON + CMD.QUAD;
+    buf += `A EMPORTER\n`;
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    buf += CMD.BOLD_ON + CMD.DOUBLE_ON;
+    buf += `#${emporterNum}\n`;
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    if (clientName) buf += CMD.BOLD_ON + `${sanitize(clientName)}\n` + CMD.BOLD_OFF;
+    if (clientPhone) buf += `Tel: ${clientPhone}\n`;
+  } else {
+    buf += CMD.BOLD_ON + CMD.QUAD;
+    buf += `TABLE ${tableNumber}\n`;
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  }
   buf += CMD.LEFT;
   buf += `Date: ${date}\n`;
   buf += line("=");
@@ -290,6 +299,25 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     itemsToGroup.push(...order.map(i => ({...i})));
   }
 
+  const pimentSymbols = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
+
+  // À EMPORTER cuisine : impression à plat, sans séparation de catégorie
+  if (orderType === "emporter" && !showTotal) {
+    for (const item of itemsToGroup) {
+      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += `${item.qty}x ${sanitize(item.name)}\n`;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+      if (item.piment) buf += CMD.BOLD_ON + `  ${pimentSymbols[item.piment]}\n` + CMD.BOLD_OFF;
+      buf += ESC + "J\x0C";
+    }
+    buf += line("=");
+    buf += CMD.CENTER;
+    buf += `${order.reduce((s,i)=>s+i.qty,0)} article(s)\n`;
+    buf += CMD.FEED;
+    buf += CMD.PARTIAL_CUT;
+    return buf;
+  }
+
   // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
@@ -316,7 +344,6 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal }) 
     }
 
     for (const item of group.items) {
-      const pimentSymbols = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
       if (showTotal) {
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
         buf += CMD.BOLD_ON;
@@ -559,7 +586,7 @@ console.log(`${activeOrders.size} commande(s) en cours chargée(s)`);
 
 
 // ----- Ticket partiel "SECTION PRÊTE" -----
-function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
+function formatPartialReadyTicket({ tableNumber, orderNum, catName, items, orderType, emporterNum }) {
   const date = new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
   let buf = "";
   buf += CMD.INIT;
@@ -569,13 +596,17 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items }) {
   buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   buf += "\n";
   buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-  buf += `${catName.toUpperCase()}\n`;
+  buf += orderType === "emporter" ? "A EMPORTER\n" : `${catName.toUpperCase()}\n`;
   buf += "PRET !\n";
   buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   buf += CMD.LEFT;
   buf += line("=");
   buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
-  buf += `TABLE ${tableNumber}\n`;
+  if (orderType === "emporter") {
+    buf += `#${emporterNum || tableNumber}\n`;
+  } else {
+    buf += `TABLE ${tableNumber}\n`;
+  }
   buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
   buf += `Commande: #${orderNum}\n`;
   buf += `Date: ${date}\n`;
@@ -700,7 +731,11 @@ wss.on("connection", (ws) => {
           broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "done", readyAt: order.catReadyAt[msg.catName] });
         }
         try {
-          await sendToPrinter(formatPartialReadyTicket(msg));
+          await sendToPrinter(formatPartialReadyTicket({
+            ...msg,
+            orderType: order?.orderType,
+            emporterNum: order?.emporterNum,
+          }));
           console.log(`Ticket ${msg.catName} PRÊT — Table ${msg.tableNumber} #${msg.orderNum}`);
         } catch (err) {
           console.error("Erreur impression ticket partiel:", err.message);
@@ -739,9 +774,13 @@ wss.on("connection", (ws) => {
 // ----- Route POST /print-all -----
 app.post("/print-all", async (req, res) => {
   try {
-    const { order, tableNumber, orderNum, date, orderId: clientOrderId } = req.body;
+    const { order, tableNumber, orderNum, date, orderId: clientOrderId,
+            orderType, emporterNum, clientName, clientPhone } = req.body;
 
-    if (!order || !tableNumber || !orderNum) {
+    const isEmporter = orderType === "emporter";
+    const effectiveTable = isEmporter ? emporterNum : tableNumber;
+
+    if (!order || !effectiveTable || !orderNum) {
       return res.status(400).json({ error: "Donnees manquantes" });
     }
 
@@ -755,24 +794,33 @@ app.post("/print-all", async (req, res) => {
 
     const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
     const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
-    const common = { tableNumber, orderNum, date };
+    const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone };
     const tickets = [];
 
     const cuisineAll = [...cuisine, ...boissons];
     if (cuisineAll.length > 0) {
-      tickets.push(formatTicket({ title: "CUISINE", order: cuisineAll, showTotal: false, ...common }));
+      tickets.push(formatTicket({ title: isEmporter ? "CUISINE - A EMPORTER" : "CUISINE", order: cuisineAll, showTotal: false, ...common }));
     }
-    tickets.push(formatTicket({ title: "SERVICE", order, showTotal: true, ...common }));
+    tickets.push(formatTicket({ title: isEmporter ? "SERVICE - A EMPORTER" : "SERVICE", order, showTotal: true, ...common }));
 
-    console.log(`Impression Table ${tableNumber} #${orderNum} : ${tickets.length} ticket(s)`);
+    console.log(`Impression ${isEmporter ? `Emporter #${emporterNum}` : `Table ${effectiveTable}`} #${orderNum} : ${tickets.length} ticket(s)`);
     await sendToPrinter(tickets.join(""));
 
     // Broadcast au KDS + stockage en mémoire
     const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
-    const groups = buildGroups(cuisineAll);
-    const catStatus = {};
-    groups.forEach(g => { catStatus[g.cat] = "waiting"; });
-    const orderData = { id: orderId, orderNum, tableNumber, date, items: cuisineAll, receivedAt: Date.now(), catStatus };
+    let catStatus;
+    if (isEmporter) {
+      catStatus = { "A emporter": "waiting" };
+    } else {
+      const groups = buildGroups(cuisineAll);
+      catStatus = {};
+      groups.forEach(g => { catStatus[g.cat] = "waiting"; });
+    }
+    const orderData = {
+      id: orderId, orderNum, tableNumber: effectiveTable, date,
+      items: cuisineAll, receivedAt: Date.now(), catStatus,
+      orderType, emporterNum, clientName, clientPhone,
+    };
     activeOrders.set(orderId, orderData);
     saveOrders(activeOrders);
     broadcast({ type: "new_order", order: orderData });

@@ -102,6 +102,11 @@ function App() {
   }, []);
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
+  const [orderType, setOrderType] = useState("surplace"); // "surplace" | "emporter"
+  const [emporterNum, setEmporterNum] = useState(null);
+  const [clientName, setClientName] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [showEmporterModal, setShowEmporterModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState(() => getCachedMenu()[0].category);
   const [cartOpen, setCartOpen] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
@@ -249,21 +254,47 @@ function App() {
     return orderItems.filter((i) => i.id === id).reduce((s, i) => s + i.qty, 0);
   }
 
-  function validateOrder() {
-    if (!tableNumber) {
-      openNumpad();
-      return;
+  function generateEmporterNum() {
+    const day = new Date().getDate();
+    let maxN = 0;
+    for (const o of serverOrders) {
+      if (o.orderType === "emporter" && o.emporterNum) {
+        const parts = String(o.emporterNum).split("-").map(Number);
+        if (parts.length === 2 && parts[0] === day && parts[1] > maxN) maxN = parts[1];
+      }
     }
+    return `${day}-${maxN + 1}`;
+  }
+
+  function validateOrder() {
+    if (orderType === "surplace") {
+      if (!tableNumber) { openNumpad(); return; }
+      submitOrder();
+    } else {
+      const num = generateEmporterNum();
+      setEmporterNum(num);
+      setShowEmporterModal(true);
+    }
+  }
+
+  function submitOrder(overrideEmporterNum) {
+    const num = overrideEmporterNum || emporterNum;
+    const effectiveTable = orderType === "emporter" ? num : tableNumber;
     const orderNum = Math.floor(Math.random() * 9000) + 1000;
     const orderId = editingOrderId || `order-${orderNum}-${Date.now()}`;
     const orderData = {
       id: orderId,
       orderNum,
-      tableNumber,
+      tableNumber: effectiveTable,
+      orderType,
+      ...(orderType === "emporter" ? {
+        emporterNum: num,
+        ...(clientName ? { clientName } : {}),
+        ...(clientPhone ? { clientPhone } : {}),
+      } : {}),
       items: [...orderItems],
       receivedAt: Date.now(),
     };
-    // Sauvegarder immédiatement sur Vercel (indépendant de l'impression)
     fetch(ORDERS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -274,14 +305,30 @@ function App() {
         return idx >= 0 ? prev.map((o, i) => (i === idx ? orderData : o)) : [...prev, orderData];
       }))
       .catch(() => {});
-    setTicketData({ items: [...orderItems], table: tableNumber, orderNum, orderId, orderData });
+    setTicketData({
+      items: [...orderItems],
+      table: effectiveTable,
+      orderNum,
+      orderId,
+      orderData,
+      orderType,
+      emporterNum: num,
+      clientName,
+      clientPhone,
+    });
     setShowTicket(true);
     setCartOpen(false);
+    setShowEmporterModal(false);
   }
 
   function newOrder() {
     setOrderItems([]);
     setTableNumber("");
+    setOrderType("surplace");
+    setEmporterNum(null);
+    setClientName("");
+    setClientPhone("");
+    setShowEmporterModal(false);
     setShowTicket(false);
     setTicketData(null);
     setEditingOrderId(null);
@@ -377,7 +424,9 @@ function App() {
           </div>
           <div className="cart-bottom">
             <button className="btn-validate-big" onClick={validateOrder}>
-              <span className="btn-validate-label">{tableNumber ? "Valider" : "Entrez la table"}</span>
+              <span className="btn-validate-label">
+                {orderType === "emporter" ? "À emporter" : (tableNumber ? "Valider" : "Entrez la table")}
+              </span>
               <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
             </button>
           </div>
@@ -405,10 +454,18 @@ function App() {
               <span className="orders-btn-label">En cours</span>
               {serverOrders.length > 0 && <span className="orders-btn-count">{serverOrders.length}</span>}
             </button>
-            <button className="table-btn" onClick={openNumpad}>
-              <span className="table-btn-label">Table</span>
-              <span className="table-btn-value">{tableNumber || "--"}</span>
+            <button
+              className={`order-type-toggle ${orderType === "emporter" ? "emporter-active" : ""}`}
+              onClick={() => setOrderType(t => t === "surplace" ? "emporter" : "surplace")}
+            >
+              {orderType === "surplace" ? "Sur place" : "À emporter"}
             </button>
+            {orderType === "surplace" && (
+              <button className="table-btn" onClick={openNumpad}>
+                <span className="table-btn-label">Table</span>
+                <span className="table-btn-value">{tableNumber || "--"}</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -747,6 +804,38 @@ function App() {
         </div>
       )}
 
+      {/* Modal À emporter */}
+      {showEmporterModal && (
+        <div className="emporter-modal-overlay" onClick={() => setShowEmporterModal(false)}>
+          <div className="emporter-modal" onClick={e => e.stopPropagation()}>
+            <div className="emporter-modal-header">
+              <span className="emporter-modal-label">À EMPORTER</span>
+              <span className="emporter-modal-num">#{emporterNum}</span>
+            </div>
+            <div className="emporter-modal-fields">
+              <input
+                className="emporter-input"
+                type="text"
+                placeholder="Nom (optionnel)"
+                value={clientName}
+                onChange={e => setClientName(e.target.value)}
+              />
+              <input
+                className="emporter-input"
+                type="tel"
+                placeholder="Téléphone (optionnel)"
+                value={clientPhone}
+                onChange={e => setClientPhone(e.target.value)}
+              />
+            </div>
+            <div className="emporter-modal-actions">
+              <button className="emporter-btn-cancel" onClick={() => setShowEmporterModal(false)}>Annuler</button>
+              <button className="emporter-btn-confirm" onClick={() => submitOrder(emporterNum)}>Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Ticket overlay */}
       {showTicket && ticketData && (
         <Ticket
@@ -754,6 +843,10 @@ function App() {
           tableNumber={ticketData.table}
           orderNum={ticketData.orderNum}
           orderId={ticketData.orderId}
+          orderType={ticketData.orderType}
+          emporterNum={ticketData.emporterNum}
+          clientName={ticketData.clientName}
+          clientPhone={ticketData.clientPhone}
           onNewOrder={newOrder}
           editingOrderId={editingOrderId}
           onPrintSuccess={(tcOrderId) => {

@@ -768,6 +768,117 @@ body {
   text-align: center;
 }
 
+/* ---- TOGGLE SUR PLACE / À EMPORTER ---- */
+.order-type-toggle {
+  height: 38px;
+  padding: 0 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.order-type-toggle.emporter-active {
+  background: rgba(255,159,10,0.25);
+  border-color: rgba(255,159,10,0.7);
+  color: #ff9f0a;
+}
+
+/* ---- MODAL À EMPORTER ---- */
+.emporter-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.emporter-modal {
+  background: #1c1c1e;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.emporter-modal-header {
+  background: rgba(255,159,10,0.15);
+  border-bottom: 1px solid rgba(255,159,10,0.3);
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.emporter-modal-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ff9f0a;
+  text-transform: uppercase;
+}
+.emporter-modal-num {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #ff9f0a;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.emporter-modal-fields {
+  padding: 16px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.emporter-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.emporter-input:focus { border-color: #ff9f0a; }
+.emporter-input::placeholder { color: rgba(255,255,255,0.3); }
+.emporter-modal-actions {
+  padding: 12px 16px 16px;
+  display: flex;
+  gap: 10px;
+}
+.emporter-btn-cancel {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.emporter-btn-confirm {
+  flex: 2;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: #ff9f0a;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 /* ---- PIMENT ---- */
 .cart-piment { margin-left: 6px; font-size: 1rem; display: inline; }
 .cart-piment--none { font-size: 0.75rem; opacity: 0.6; font-style: italic; }

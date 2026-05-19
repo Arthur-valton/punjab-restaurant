@@ -357,6 +357,53 @@
       line-height: 1.3;
       color: var(--label);
     }
+
+    /* ── À EMPORTER ── */
+    .emporter-card-header {
+      background: rgba(255,159,10,0.12);
+      border-bottom: 1px solid rgba(255,159,10,0.35) !important;
+    }
+    .emporter-label {
+      font-size: 0.58rem;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+    .emporter-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--orange);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .emporter-client {
+      font-size: 0.75rem;
+      color: var(--label2);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .emporter-phone {
+      font-size: 0.68rem;
+      color: var(--label3);
+      margin-top: 1px;
+    }
+    .emporter-pret-btn {
+      margin: 8px 10px 10px;
+      background: rgba(255,159,10,0.18);
+      border: 1px solid rgba(255,159,10,0.4);
+      color: var(--orange);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+    }
+    .order-card.emporter-card {
+      box-shadow: 0 0 0 1.5px rgba(255,159,10,0.5), 0 8px 32px rgba(255,159,10,0.15);
+    }
   </style>
 </head>
 <body>
@@ -631,25 +678,94 @@
     }));
   }
 
+  function renderEmporterContent(orderId, items, catStatus) {
+    const status = (catStatus || {})["A emporter"] || "waiting";
+    const isDone = status === "done" || status === "delivered";
+    const itemsHtml = items.map(i =>
+      `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}${i.piment > 1 ? " " + "🌶️".repeat(i.piment) : ""}</span></div>`
+    ).join("");
+    if (isDone) {
+      return `<div class="category-section done" id="cat-${orderId}-A_emporter" style="opacity:0.22;pointer-events:none;filter:grayscale(60%);">
+        <div class="category-header"><span class="category-label" style="color:var(--green)">TOUT PRÊT ✓</span></div>
+        <div class="category-items">${itemsHtml}</div>
+      </div>`;
+    }
+    return `<div class="category-section" id="cat-${orderId}-A_emporter">
+      <div class="category-items">${itemsHtml}</div>
+      <div class="emporter-pret-btn" onclick="markEmporterReady('${orderId}')">✓ PRÊT À EMPORTER</div>
+    </div>`;
+  }
+
+  function markEmporterReady(orderId) {
+    const entry = orders.get(orderId);
+    if (!entry) return;
+    const catKey = "A emporter";
+    const section = document.getElementById(`cat-${orderId}-A_emporter`);
+    if (!section || section.classList.contains("done")) return;
+    section.classList.add("done");
+    section.onclick = null;
+    ws.send(JSON.stringify({
+      type: "cat_ready",
+      orderId,
+      tableNumber: entry.order.tableNumber,
+      orderNum: entry.order.orderNum,
+      catName: catKey,
+      items: entry.groups[0]?.items || [],
+      orderType: entry.order.orderType,
+      emporterNum: entry.order.emporterNum,
+    }));
+  }
+
   function addOrder(order) {
     if (orders.has(order.id)) return; // déjà affiché, pas de doublon
-    const groups = groupByCategory(order.items);
+    const isEmporter = order.orderType === "emporter";
+    let groups;
+    if (isEmporter) {
+      // Aplatir tous les items pour l'affichage
+      const flat = {};
+      for (const i of order.items) {
+        if (i.formulaChoices && i.formulaChoices.length > 0) {
+          for (const c of i.formulaChoices) {
+            const k = c.itemName;
+            if (flat[k]) flat[k].qty += i.qty;
+            else flat[k] = { name: c.itemName, qty: i.qty, piment: c.piment || null };
+          }
+        } else {
+          const k = i.name;
+          if (flat[k]) flat[k].qty += i.qty;
+          else flat[k] = { name: i.name, qty: i.qty, piment: i.piment || null };
+        }
+      }
+      groups = [{ cat: "A emporter", items: Object.values(flat) }];
+    } else {
+      groups = groupByCategory(order.items);
+    }
     const card = document.createElement("div");
-    card.className = "order-card fresh";
+    card.className = `order-card fresh${isEmporter ? " emporter-card" : ""}`;
     card.id = `order-${order.id}`;
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="table-info">
+    const headerInfo = isEmporter
+      ? `<div class="table-info">
+          <div class="emporter-label">À EMPORTER</div>
+          <div class="emporter-num">#${order.emporterNum || order.tableNumber}</div>
+          ${order.clientName ? `<div class="emporter-client">${order.clientName}</div>` : ""}
+          ${order.clientPhone ? `<div class="emporter-phone">${order.clientPhone}</div>` : ""}
+        </div>`
+      : `<div class="table-info">
           <div class="table-label">TABLE</div>
           <div class="table-num">${order.tableNumber}</div>
-        </div>
+        </div>`;
+    card.innerHTML = `
+      <div class="card-header${isEmporter ? " emporter-card-header" : ""}">
+        ${headerInfo}
         <div class="order-meta">
           <div class="order-num">#${order.orderNum}</div>
           <div class="timer fresh" id="timer-${order.id}">0s</div>
         </div>
       </div>
       <div class="card-items">
-        ${renderCategories(order.id, groups, order.catStatus)}
+        ${isEmporter
+          ? renderEmporterContent(order.id, groups[0].items, order.catStatus)
+          : renderCategories(order.id, groups, order.catStatus)}
       </div>
     `;
 

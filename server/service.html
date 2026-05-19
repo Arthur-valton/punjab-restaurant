@@ -316,6 +316,40 @@
       transition: all 0.15s;
     }
     .btn-delete:hover { background: rgba(255,59,48,0.18); color: var(--red); }
+
+    /* ── À EMPORTER ── */
+    .emporter-card-header { background: rgba(255,159,10,0.10); border-bottom: 1px solid rgba(255,159,10,0.3) !important; }
+    .emporter-label { font-size: 0.58rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+    .emporter-num { font-size: 1.8rem; font-weight: 800; color: var(--orange); letter-spacing: -1px; line-height: 1; }
+    .emporter-client { font-size: 0.75rem; color: var(--label2); font-weight: 600; margin-top: 2px; }
+    .emporter-phone { font-size: 0.68rem; color: var(--label3); margin-top: 1px; }
+    .order-card.emporter-card { border: 1px solid rgba(255,159,10,0.35); }
+    .emporter-all-items { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .emporter-recupere-btn {
+      margin: 4px 12px 12px;
+      background: rgba(52,199,89,0.12);
+      border: 1px solid rgba(52,199,89,0.4);
+      color: var(--green);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      font-family: inherit;
+      width: calc(100% - 24px);
+    }
+    .emporter-pret-badge {
+      display: inline-block;
+      background: rgba(52,199,89,0.18);
+      color: var(--green);
+      border-radius: 100px;
+      padding: 3px 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
   </style>
 </head>
 <body>
@@ -537,23 +571,68 @@
     return sorted.map(cat => buildCatSection(order, cat, catStatus[cat] || "waiting")).join("");
   }
 
+  function buildEmporterItems(order) {
+    const flat = {};
+    for (const i of (order.items || [])) {
+      if (i.formulaChoices && i.formulaChoices.length > 0) {
+        for (const c of i.formulaChoices) {
+          if (flat[c.itemName]) flat[c.itemName].qty += i.qty;
+          else flat[c.itemName] = { name: c.itemName, qty: i.qty };
+        }
+      } else {
+        if (flat[i.name]) flat[i.name].qty += i.qty;
+        else flat[i.name] = { name: i.name, qty: i.qty };
+      }
+    }
+    return Object.values(flat);
+  }
+
+  function buildEmporterSection(order) {
+    const status = (order.catStatus || {})["A emporter"] || "waiting";
+    const isDone = status === "done" || status === "delivered";
+    const items = buildEmporterItems(order);
+    const itemsHtml = items.map(i =>
+      `<div class="item-row"><span class="item-qty">${i.qty}×</span><span class="item-name">${i.name}</span></div>`
+    ).join("");
+    if (isDone) {
+      return `<div class="emporter-all-items">${itemsHtml}</div>
+        <div style="padding:0 12px 12px;"><span class="emporter-pret-badge">✓ PRÊT — À REMETTRE AU CLIENT</span></div>
+        <button class="emporter-recupere-btn" onclick="markEmporterRecupere('${order.id}')">Remis au client ✓</button>`;
+    }
+    return `<div class="emporter-all-items">${itemsHtml}</div>
+      <div style="padding:8px 12px;color:rgba(235,235,245,0.3);font-size:0.75rem;">En attente cuisine…</div>`;
+  }
+
+  function markEmporterRecupere(orderId) {
+    markDelivered(orderId, "A emporter");
+  }
+
   function addOrder(order) {
     if (orders.has(order.id)) return;
+    const isEmporter = order.orderType === "emporter";
     const card = document.createElement("div");
-    card.className = "order-card";
+    card.className = `order-card${isEmporter ? " emporter-card" : ""}`;
     card.id = `order-${order.id}`;
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="table-info">
+    const headerInfo = isEmporter
+      ? `<div class="table-info">
+          <div class="emporter-label">À EMPORTER</div>
+          <div class="emporter-num">#${order.emporterNum || order.tableNumber}</div>
+          ${order.clientName ? `<div class="emporter-client">${order.clientName}</div>` : ""}
+          ${order.clientPhone ? `<div class="emporter-phone">${order.clientPhone}</div>` : ""}
+        </div>`
+      : `<div class="table-info">
           <div class="table-label">Table</div>
           <div class="table-num">${order.tableNumber}</div>
-        </div>
+        </div>`;
+    card.innerHTML = `
+      <div class="card-header${isEmporter ? " emporter-card-header" : ""}">
+        ${headerInfo}
         <div class="order-meta">
           <div class="order-num">#${order.orderNum}</div>
         </div>
       </div>
       <div class="card-body" id="body-${order.id}">
-        ${buildCatRows(order)}
+        ${isEmporter ? buildEmporterSection(order) : buildCatRows(order)}
         <button class="btn-delete" onclick="deleteOrder('${order.id}')">Supprimer la commande</button>
       </div>
     `;
@@ -621,6 +700,21 @@
     if (status === "delivered") {
       if (entry._catReadyTimes) delete entry._catReadyTimes[catName];
       if (entry._catStartTimes) delete entry._catStartTimes[catName];
+    }
+
+    // Commande À EMPORTER : rafraîchir le bloc entier
+    if (catName === "A emporter") {
+      const body = document.getElementById(`body-${orderId}`);
+      if (body) {
+        const deleteBtn = body.querySelector(".btn-delete");
+        const newSection = buildEmporterSection(order);
+        // Retirer tout sauf le bouton supprimer
+        while (body.firstChild && body.firstChild !== deleteBtn) body.removeChild(body.firstChild);
+        const tmp = document.createElement("div");
+        tmp.innerHTML = newSection;
+        body.insertBefore(tmp, deleteBtn);
+      }
+      return;
     }
 
     const rowId = `cat-row-${orderId}-${catName.replace(/\s/g,'_')}`;

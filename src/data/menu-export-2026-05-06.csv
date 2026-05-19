@@ -1,0 +1,100 @@
+ID,Nom,Prix,Categorie,Sous-categorie
+1,Poulet Tandoori,7.00,Entrees,Grillades
+2,Seekh Kebab,8.00,Entrees,Grillades
+3,Poulet Tikka,8.00,Entrees,Grillades
+4,Poisson Tikka,9.00,Entrees,Grillades
+5,Gambas Tandoori,15.00,Entrees,Grillades
+6,Punjab Mixte Assortiment 2p,21.00,Entrees,Grillades
+7,Raita,5.50,Entrees,Salade / Soupe
+8,Raita Crevettes,7.50,Entrees,Salade / Soupe
+9,Salade Crevette ou Poulet,7.50,Entrees,Salade / Soupe
+10,Soupe Dall,8.50,Entrees,Salade / Soupe
+11,Oignons Bahji,5.00,Entrees,Beignets
+12,Pakora Aubergine,5.50,Entrees,Beignets
+13,Aloo Pakora,5.00,Entrees,Beignets
+14,Samoussa Legumes,5.50,Entrees,Beignets
+15,Mixte Pakora,6.50,Entrees,Beignets
+16,Shahi Mix Pakora 2p,15.00,Entrees,Beignets
+100,Nan Nature,3.00,Entrees,Naans
+101,Nan Fromage,3.50,Entrees,Naans
+102,Nan Ail,3.50,Entrees,Naans
+103,Chili Nan,3.50,Entrees,Naans
+104,Nan Punjab,4.00,Entrees,Naans
+105,Masala Kulcha,4.00,Entrees,Naans
+106,Nan Fromage & Ail,4.50,Entrees,Naans
+107,Chappati,3.00,Entrees,Naans
+17,Poulet Curry,14.00,Plats,Poulet
+18,Poulet Sagwala,15.00,Plats,Poulet
+19,Poulet Jalfreji,15.50,Plats,Poulet
+20,Poulet Vindaloo,14.50,Plats,Poulet
+21,Poulet Mirchi,15.00,Plats,Poulet
+22,Butter Chicken,15.50,Plats,Poulet
+23,Poulet Tikka Massala,15.50,Plats,Poulet
+24,Poulet Shahi Korma,15.50,Plats,Poulet
+25,Poulet Madras,14.50,Plats,Poulet
+26,Poulet Bengan,15.50,Plats,Poulet
+27,Agneau Karahi,17.00,Plats,Agneau
+28,Agneau Shahi Korma,16.50,Plats,Agneau
+29,Agneau Champignons,16.50,Plats,Agneau
+30,Agneau Vindaloo,16.00,Plats,Agneau
+31,Agneau Mirchi,15.50,Plats,Agneau
+32,Agneau Madras,16.00,Plats,Agneau
+33,Agneau Sagwala,16.50,Plats,Agneau
+34,Agneau Bengan,16.50,Plats,Agneau
+35,Agneau Curry,15.00,Plats,Agneau
+36,Boeuf Sabji,15.50,Plats,Boeuf
+37,Boeuf Shahi Korma,15.00,Plats,Boeuf
+38,Boeuf Massala,15.00,Plats,Boeuf
+39,Boeuf Mirchi,15.00,Plats,Boeuf
+40,Crevettes Curry,16.00,Plats,Poisson
+41,Crevettes Massala,17.00,Plats,Poisson
+42,Crevettes Shahi Korma,17.00,Plats,Poisson
+43,Crevettes Sagh,17.00,Plats,Poisson
+44,Poisson Curry,16.50,Plats,Poisson
+45,Poisson Shahi Korma,17.00,Plats,Poisson
+46,Poissons Madras,16.50,Plats,Poisson
+47,Poisson Massala,17.00,Plats,Poisson
+48,Gambas Curry,19.00,Plats,Poisson
+49,Gambas Baingan,21.50,Plats,Poisson
+50,Gambas Massala,21.50,Plats,Poisson
+51,Coquilles Saint-Jacques,19.00,Plats,Poisson
+52,Legumes Shahi Korma,13.00,Plats,Vegetarien
+53,Baingan Bharta,13.00,Plats,Vegetarien
+54,Aloo Palak,13.00,Plats,Vegetarien
+55,Palak Panner,13.00,Plats,Vegetarien
+56,Mattar Panner,13.00,Plats,Vegetarien
+57,Dal Punjabi,13.00,Plats,Vegetarien
+58,Legumes Mix,13.00,Plats,Vegetarien
+59,Bombay Aloo,13.00,Plats,Vegetarien
+60,Champignons Massala,13.00,Plats,Vegetarien
+61,Riz Basmati,3.00,Plats,Riz
+62,Mattar Pulao,4.00,Plats,Riz
+63,Kashmir,4.00,Plats,Riz
+108,Nan Nature,3.00,Plats,Naans
+109,Nan Fromage,3.50,Plats,Naans
+110,Nan Ail,3.50,Plats,Naans
+111,Chili Nan,3.50,Plats,Naans
+112,Nan Punjab,4.00,Plats,Naans
+113,Masala Kulcha,4.00,Plats,Naans
+114,Nan Fromage & Ail,4.50,Plats,Naans
+115,Chappati,3.00,Plats,Naans
+64,Biryani Punjab,17.50,Biryani,
+65,Biryani Poulet,14.00,Biryani,
+66,Biryani Agneau,16.00,Biryani,
+67,Biryani Crevette,16.00,Biryani,
+68,Biryani Legume,12.00,Biryani,
+69,Biryani Poulet Tikka,16.00,Biryani,
+70,Nan Nature,3.00,Naans,
+71,Nan Fromage,3.50,Naans,
+72,Nan Ail,3.50,Naans,
+73,Chili Nan,3.50,Naans,
+74,Nan Punjab,4.00,Naans,
+75,Masala Kulcha,4.00,Naans,
+76,Nan Fromage & Ail,4.50,Naans,
+77,Chappati,3.00,Naans,
+78,Halwa,5.00,Desserts,
+79,Kulfi,5.00,Desserts,
+80,Kheer,5.00,Desserts,
+81,Gulab Jamun,5.00,Desserts,
+82,Sorbet 2 Boules,5.00,Desserts,
+83,Poulet Shahi Korma Midi,12.90,Menu Midi,
