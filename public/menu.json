@@ -110,7 +110,9 @@
         "name": "Shahi Mix Pakora 2 pers",
         "price": 15,
         "category": "Entrées",
-        "subcategory": "Végétarien"
+        "subcategory": "Vegetarien",
+        "piment": false,
+        "isFormula": false
       }
     ]
   },
