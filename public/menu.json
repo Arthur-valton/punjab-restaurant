@@ -859,6 +859,12 @@
         "name": "Pichet 50cl",
         "price": 11,
         "category": "Vin"
+      },
+      {
+        "id": 219,
+        "name": "Pichet 25",
+        "price": 6,
+        "category": "Vin"
       }
     ]
   },
