@@ -871,6 +871,12 @@
         "name": "Long duc ville de ange",
         "price": 25,
         "category": "Vin"
+      },
+      {
+        "id": 222,
+        "name": "Vin mousseux",
+        "price": 35,
+        "category": "Vin"
       }
     ]
   },
