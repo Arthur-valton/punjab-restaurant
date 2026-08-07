@@ -1055,13 +1055,7 @@
         "price": 3.5,
         "category": "Apéritifs",
         "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Boisson",
-            "articles": []
-          }
-        ]
+        "isFormula": false
       },
       {
         "id": 167,
