@@ -1059,12 +1059,7 @@
         "formulaSteps": [
           {
             "label": "Boisson",
-            "articles": [
-              {
-                "name": "Agrumes",
-                "piment": false
-              }
-            ]
+            "articles": []
           }
         ]
       },
