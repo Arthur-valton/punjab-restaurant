@@ -7,67 +7,77 @@
         "name": "Poulet tandoori",
         "price": 7,
         "category": "Entrées",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 184,
         "name": "Seekh kebab",
         "price": 8,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 185,
         "name": "Poulet tikka",
         "price": 8,
         "category": "Entrées",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 186,
         "name": "Fish tikka",
         "price": 9,
         "category": "Entrées",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 187,
         "name": "Gambas tandoori",
         "price": 16.5,
         "category": "Entrées",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 188,
         "name": "Punjab mixte 2 personnes",
         "price": 21,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 189,
         "name": "Raita",
         "price": 5.5,
         "category": "Entrées",
-        "subcategory": "Soupe"
+        "subcategory": "Soupe",
+        "piment": true
       },
       {
         "id": 190,
         "name": "Raita crevette",
         "price": 7.5,
         "category": "Entrées",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 191,
         "name": "Salade crevette ou poulet",
         "price": 7.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 192,
         "name": "Soupe dall",
         "price": 8.5,
         "category": "Entrées",
-        "subcategory": "Soupe"
+        "subcategory": "Soupe",
+        "piment": true
       },
       {
         "id": 193,
@@ -75,26 +85,29 @@
         "price": 5,
         "category": "Entrées",
         "subcategory": "Vegetarien",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
         "id": 194,
         "name": "Pakora Aubergine",
         "price": 6,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 195,
         "name": "Aloi pakora",
         "price": 5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 196,
         "name": "Samossa",
         "price": 5.5,
-        "category": "Entrées"
+        "category": "Entrées",
+        "piment": true
       },
       {
         "id": 197,
@@ -102,7 +115,7 @@
         "price": 6.5,
         "category": "Entrées",
         "subcategory": "Vegetarien",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -111,7 +124,7 @@
         "price": 15,
         "category": "Entrées",
         "subcategory": "Vegetarien",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       }
     ]
@@ -606,40 +619,44 @@
         "name": "Biryani Punjab",
         "price": 18,
         "category": "Biryani",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
         "id": 65,
         "name": "Biryani Poulet",
         "price": 14,
-        "category": "Biryani"
+        "category": "Biryani",
+        "piment": true
       },
       {
         "id": 66,
         "name": "Biryani Agneau",
         "price": 16,
-        "category": "Biryani"
+        "category": "Biryani",
+        "piment": true
       },
       {
         "id": 67,
         "name": "Biryani Crevette",
         "price": 16,
-        "category": "Biryani"
+        "category": "Biryani",
+        "piment": true
       },
       {
         "id": 68,
         "name": "Biryani Legume",
         "price": 13,
         "category": "Biryani",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
         "id": 69,
         "name": "Biryani Poulet Tikka",
         "price": 16,
-        "category": "Biryani"
+        "category": "Biryani",
+        "piment": true
       }
     ]
   },
