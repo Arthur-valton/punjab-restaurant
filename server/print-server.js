@@ -369,8 +369,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   const groups = sortedCats.map(cat => ({ cat, items: seenCats[cat] }));
 
   for (const group of groups) {
-    // Séparateur de catégorie — ticket cuisine uniquement
-    if (!showTotal && groups.length > 1) {
+    // Bande noire de categorie — tickets de production (cuisine / desserts / bar)
+    if (!showTotal) {
       buf += CMD.CENTER;
       const catLabel = group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
       const catPadded = catLabel.padStart(Math.floor((WIDTH_DOUBLE + catLabel.length) / 2)).padEnd(WIDTH_DOUBLE);
@@ -417,7 +417,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
       }
     }
 
-    if (!showTotal && groups.length > 1) {
+    if (!showTotal) {
       buf += line("-");
     }
   }
