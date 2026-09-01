@@ -720,13 +720,13 @@
     ]
   },
   {
-    "category": "Vin",
+    "category": "Boissons",
     "items": [
       {
         "id": 123,
         "name": "Chinon 75cl",
         "price": 25,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -735,7 +735,7 @@
         "id": 138,
         "name": "Chinon 37,5",
         "price": 14,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -744,7 +744,7 @@
         "id": 143,
         "name": "St Nicolas de bourg 37,5",
         "price": 17,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -753,7 +753,7 @@
         "id": 144,
         "name": "St Nicolas de bourg 75cl",
         "price": 31,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -762,7 +762,7 @@
         "id": 145,
         "name": "Saumur champ 37,5",
         "price": 15,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -771,7 +771,7 @@
         "id": 179,
         "name": "Saumur champ 75cl",
         "price": 28,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -780,7 +780,7 @@
         "id": 180,
         "name": "Côte du Rhône 37,5",
         "price": 13,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -789,7 +789,7 @@
         "id": 181,
         "name": "Côte du Rhône",
         "price": 22,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -798,7 +798,7 @@
         "id": 182,
         "name": "Syrah",
         "price": 22,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -807,7 +807,7 @@
         "id": 199,
         "name": "Vin verre",
         "price": 4,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -816,67 +816,67 @@
         "id": 201,
         "name": "Côte de Provence 37,5cl",
         "price": 17,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 202,
         "name": "Côte de Provence",
         "price": 30,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 203,
         "name": "Armunia",
         "price": 25,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 204,
         "name": "Terre Brune",
         "price": 30,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 205,
         "name": "Chardonnay",
         "price": 23,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 206,
         "name": "Sauvignon",
         "price": 23,
-        "category": "Vin",
+        "category": "Boissons",
         "subcategory": "Rosé"
       },
       {
         "id": 208,
         "name": "Pichet 50cl",
         "price": 11,
-        "category": "Vin"
+        "category": "Boissons"
       },
       {
         "id": 219,
         "name": "Pichet 25",
         "price": 6,
-        "category": "Vin"
+        "category": "Boissons"
       },
       {
         "id": 220,
         "name": "Long duc ville de ange",
         "price": 25,
-        "category": "Vin"
+        "category": "Boissons"
       },
       {
         "id": 222,
         "name": "Vin mousseux",
         "price": 35,
-        "category": "Vin"
+        "category": "Boissons"
       }
     ]
   },
@@ -1239,9 +1239,5 @@
         "category": "Menu"
       }
     ]
-  },
-  {
-    "category": "Boissons",
-    "items": []
   }
 ]
