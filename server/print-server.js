@@ -348,7 +348,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
       buf += catPadded + "\n";
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
       buf += CMD.LEFT;
-      buf += ESC + "J\x28";
+      buf += "\n";
     }
 
     for (const item of group.items) {
