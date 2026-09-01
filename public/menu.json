@@ -892,7 +892,7 @@
       },
       {
         "id": 248,
-        "name": "Coupe de glace 2 boules",
+        "name": "Coupe de glace",
         "price": 5,
         "category": "Desserts",
         "piment": false,
@@ -1890,7 +1890,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               },
               {
@@ -1903,7 +1903,7 @@
             "label": "Boule 1",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -1968,7 +1968,7 @@
             "label": "Boule 2",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2109,7 +2109,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -2118,7 +2118,7 @@
             "label": "Boule 1",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2183,7 +2183,7 @@
             "label": "Boule 2",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2317,7 +2317,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -2326,7 +2326,7 @@
             "label": "Boule 1",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2391,7 +2391,7 @@
             "label": "Boule 2",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2576,7 +2576,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -2585,7 +2585,7 @@
             "label": "Boule 1",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2650,7 +2650,7 @@
             "label": "Boule 2",
             "siEtape": "Dessert",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -2977,7 +2977,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -2986,7 +2986,7 @@
             "label": "Boule 1 pers. 1",
             "siEtape": "Dessert pers. 1",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -3051,7 +3051,7 @@
             "label": "Boule 2 pers. 1",
             "siEtape": "Dessert pers. 1",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -3128,7 +3128,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace 2 boules",
+                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -3137,7 +3137,7 @@
             "label": "Boule 1 pers. 2",
             "siEtape": "Dessert pers. 2",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
@@ -3202,7 +3202,7 @@
             "label": "Boule 2 pers. 2",
             "siEtape": "Dessert pers. 2",
             "pourChoix": [
-              "Coupe de glace 2 boules"
+              "Coupe de glace"
             ],
             "articles": [
               {
