@@ -252,16 +252,38 @@ function App() {
     });
   }
 
-  function pickFormulaItem(articleName, piment = null) {
+  // Ajoute une formule au panier. Deux sélections identiques se regroupent
+  // sur une seule ligne, comme un article normal.
+  function addFormula(item, choices) {
+    const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
+    const cartId = `${item.id}-f${sig}`;
+    // Un choix peut porter son propre tarif : il remplace celui du produit
+    const prix = choices.find((c) => c.prix != null)?.prix;
+    setOrderItems((prev) => {
+      const existing = prev.find((i) => i.cartId === cartId);
+      if (existing) return prev.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
+      return [...prev, { ...item, cartId, qty: 1, formulaChoices: choices,
+                         ...(prix != null ? { price: prix } : {}) }];
+    });
+    setFormulaPicker(null);
+  }
+
+  function pickFormulaItem(articleName, piment = null, prix = null) {
     const { item, currentStep, choices } = formulaPicker;
     const step = item.formulaSteps[currentStep];
     const choice = { label: step.label, itemName: articleName };
     if (step.remplaceNom) choice.remplaceNom = true;
+    if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
     if (currentStep + 1 >= item.formulaSteps.length) {
-      // Dernière étape → afficher le récap avant d'ajouter
-      setFormulaPicker({ item, currentStep, choices: newChoices, showSummary: true });
+      // Une seule étape (parfum, supplément) → ajout direct : le récapitulatif
+      // ne sert que pour un menu à plusieurs étapes.
+      if (item.formulaSteps.length === 1) {
+        addFormula(item, newChoices);
+      } else {
+        setFormulaPicker({ item, currentStep, choices: newChoices, showSummary: true });
+      }
     } else {
       setFormulaPicker({ item, currentStep: currentStep + 1, choices: newChoices });
     }
@@ -280,10 +302,7 @@ function App() {
   }
 
   function confirmFormulaOrder() {
-    const { item, choices } = formulaPicker;
-    const cartId = `${item.id}-f${Date.now()}`;
-    setOrderItems((prev) => [...prev, { ...item, cartId, qty: 1, formulaChoices: choices }]);
-    setFormulaPicker(null);
+    addFormula(formulaPicker.item, formulaPicker.choices);
   }
 
   function updateQty(cartId, qty) {
@@ -755,9 +774,9 @@ function App() {
                       key={level}
                       className="formula-picker-item-btn"
                       onClick={() => {
-                        const { pendingArticle, ...rest } = formulaPicker;
+                        const { pendingArticle, pendingPrix, ...rest } = formulaPicker;
                         setFormulaPicker(rest); // efface pendingArticle avant pick
-                        pickFormulaItem(pendingArticle, level);
+                        pickFormulaItem(pendingArticle, level, pendingPrix ?? null);
                       }}
                     >
                       <span style={{ marginRight: 8 }}>{emoji}</span>{label}
@@ -780,19 +799,21 @@ function App() {
                       ? articles.map((article, ai) => {
                           const name = typeof article === "string" ? article : article.name;
                           const hasPiment = typeof article !== "string" && article.piment;
+                          const prix = typeof article !== "string" && article.price != null ? Number(article.price) : null;
                           return (
                             <button
                               key={ai}
                               className="formula-picker-item-btn"
                               onClick={() => {
                                 if (hasPiment) {
-                                  setFormulaPicker({ ...formulaPicker, pendingArticle: name });
+                                  setFormulaPicker({ ...formulaPicker, pendingArticle: name, pendingPrix: prix });
                                 } else {
-                                  pickFormulaItem(name);
+                                  pickFormulaItem(name, null, prix);
                                 }
                               }}
                             >
                               {name}{hasPiment && <span style={{ marginLeft: 6, opacity: 0.6 }}>🌶️</span>}
+                              {prix != null && <span className="formula-picker-price">{prix.toFixed(2)} €</span>}
                             </button>
                           );
                         })

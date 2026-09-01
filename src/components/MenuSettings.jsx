@@ -197,6 +197,20 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     );
     setEditingItem({ ...editingItem, formulaSteps: steps });
   }
+  function editArticlePrice(i, ai, val) {
+    const steps = (editingItem.formulaSteps || []).map((s, si) =>
+      si === i
+        ? { ...s, articles: s.articles.map((a, k) => {
+              if (k !== ai) return a;
+              const base = typeof a === "string" ? { name: a } : { ...a };
+              if (val === "") delete base.price;
+              else base.price = parseFloat(val);
+              return base;
+            }) }
+        : s
+    );
+    setEditingItem({ ...editingItem, formulaSteps: steps });
+  }
   function editToggleRemplaceNom(i) {
     const steps = (editingItem.formulaSteps || []).map((s, si) =>
       si === i ? { ...s, remplaceNom: !s.remplaceNom } : s
@@ -477,6 +491,11 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                           return (
                             <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
                               {name}
+                              <input
+                                className="formula-chip-price"
+                                type="number" step="0.5" min="0" placeholder="€"
+                                value={typeof a === "string" || a.price == null ? "" : a.price}
+                                onChange={e => editArticlePrice(i, ai, e.target.value)} />
                               <button className={`formula-chip-piment ${hasPiment ? "active" : ""}`} onClick={() => editTogglePiment(i, ai)}>🌶️</button>
                               <button onClick={() => editRemoveArticle(i, ai)}>✕</button>
                             </span>
@@ -583,7 +602,9 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                         <span className="ap-row-label">Le choix remplace le nom</span>
                         <button
                           className={`ap-toggle ${step.remplaceNom ? "on" : ""}`}
-                          onClick={() => editToggleRemplaceNom(i)}>
+                          onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
+                            si === i ? { ...s, remplaceNom: !s.remplaceNom } : s
+                          ))}>
                           <span className="ap-toggle-thumb" />
                         </button>
                       </div>
@@ -595,6 +616,19 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                           return (
                             <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
                               {name}
+                              <input
+                                className="formula-chip-price"
+                                type="number" step="0.5" min="0" placeholder="€"
+                                value={typeof a === "string" || a.price == null ? "" : a.price}
+                                onChange={e => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
+                                  si === i ? { ...s, articles: s.articles.map((x, xi) => {
+                                    if (xi !== ai) return x;
+                                    const base = typeof x === "string" ? { name: x } : { ...x };
+                                    if (e.target.value === "") delete base.price;
+                                    else base.price = parseFloat(e.target.value);
+                                    return base;
+                                  }) } : s
+                                ))} />
                               <button className={`formula-chip-piment ${hasPiment ? "active" : ""}`}
                                 onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
                                   si === i ? { ...s, articles: s.articles.map((x, xi) => xi === ai ? { ...x, piment: !x.piment } : x) } : s

@@ -3134,3 +3134,26 @@ body {
   .ap-sheet { max-height: 96vh; border-radius: 20px 20px 0 0; }
   .ap-action-sheet { width: calc(100% - 16px); }
 }
+
+/* Prix optionnel par choix de formule */
+.formula-chip-price {
+  width: 52px;
+  margin: 0 4px;
+  padding: 2px 4px;
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-family: inherit;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.formula-chip-price::-webkit-outer-spin-button,
+.formula-chip-price::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.formula-picker-price {
+  float: right;
+  font-weight: 700;
+  color: var(--accent-green);
+}
