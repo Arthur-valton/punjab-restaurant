@@ -426,14 +426,24 @@ function App() {
 
   function generateEmporterNum() {
     const day = new Date().getDate();
+    const prefixe = String(day);
     let maxN = 0;
     for (const o of serverOrders) {
-      if (o.orderType === "emporter" && o.emporterNum) {
-        const parts = String(o.emporterNum).split("-").map(Number);
-        if (parts.length === 2 && parts[0] === day && parts[1] > maxN) maxN = parts[1];
+      if (o.orderType !== "emporter" || !o.emporterNum) continue;
+      const num = String(o.emporterNum);
+      // On accepte encore l'ancien format JJ-N : des commandes emises avant
+      // le changement peuvent etre en cours, et le compteur doit en tenir compte.
+      let reste = null;
+      if (num.includes("-")) {
+        const [j, n] = num.split("-");
+        if (j === prefixe) reste = n;
+      } else if (num.startsWith(prefixe)) {
+        reste = num.slice(prefixe.length);
       }
+      const n = reste === null || reste === "" ? NaN : Number(reste);
+      if (!Number.isNaN(n) && n > maxN) maxN = n;
     }
-    return `${day}-${maxN + 1}`;
+    return `${day}${maxN + 1}`;
   }
 
   function validateOrder() {
