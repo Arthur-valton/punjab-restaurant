@@ -344,15 +344,13 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
       buf += CMD.CENTER;
       const catLabel = group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
       const catPadded = catLabel.padStart(Math.floor((WIDTH_DOUBLE + catLabel.length) / 2)).padEnd(WIDTH_DOUBLE);
-      buf += CMD.REVERSE_ON;
-      buf += " ".repeat(WIDTH) + "\n";
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += CMD.REVERSE_ON + CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += " ".repeat(WIDTH_DOUBLE) + "\n";
       buf += catPadded + "\n";
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      buf += " ".repeat(WIDTH) + "\n";
-      buf += CMD.REVERSE_OFF;
+      buf += " ".repeat(WIDTH_DOUBLE) + "\n";
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
       buf += CMD.LEFT;
-      buf += ESC + "J\x08";
+      buf += ESC + "J\x14";
     }
 
     for (const item of group.items) {
