@@ -855,14 +855,85 @@
         "name": "Jus de fruit Pago",
         "price": 3.5,
         "category": "Boissons",
-        "subcategory": "Jus & Soda"
+        "subcategory": "Jus & Soda",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Pago orange",
+                "piment": false
+              },
+              {
+                "name": "Pago mangue",
+                "piment": false
+              },
+              {
+                "name": "Pago ananas",
+                "piment": false
+              },
+              {
+                "name": "Pago fraise",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 167,
-        "name": "Ice tea",
+        "name": "Soda",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Jus & Soda"
+        "subcategory": "Jus & Soda",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Coca",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Coca zéro",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Coca cherry",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Schweppes agrumes",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Schweppes tonic",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Orangina",
+                "piment": false,
+                "price": 3.5
+              },
+              {
+                "name": "Ice tea",
+                "piment": false,
+                "price": 3
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 168,
@@ -1187,27 +1258,6 @@
         "price": 7,
         "category": "Boissons",
         "subcategory": "Apéritifs"
-      },
-      {
-        "id": 225,
-        "name": "Coca",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Jus & Soda"
-      },
-      {
-        "id": 226,
-        "name": "Schweppes",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Jus & Soda"
-      },
-      {
-        "id": 227,
-        "name": "Orangina",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Jus & Soda"
       },
       {
         "id": 228,
