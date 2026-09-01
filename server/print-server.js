@@ -270,11 +270,12 @@ function pad(left, right, width = WIDTH, fill = " ") {
 
 // Bloc d'identification de la commande : TABLE n, ou infos emporter.
 // Partage par le ticket de commande et le ticket de modification.
-function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime }) {
+function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime, withNumber = true }) {
   let b = CMD.CENTER;
   if (orderType === "emporter") {
     b += CMD.BOLD_ON + CMD.QUAD + "A EMPORTER\n" + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-    b += CMD.BOLD_ON + CMD.DOUBLE_ON + `#${emporterNum}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    // Sur les tickets de production le numero figure deja dans le titre
+    if (withNumber) b += CMD.BOLD_ON + CMD.DOUBLE_ON + `#${emporterNum}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
     // Nom et telephone sur une seule ligne
     const contact = [clientName, clientPhone].filter(Boolean).map(sanitize).join(" - ");
     if (contact) b += CMD.BOLD_ON + contact + "\n" + CMD.BOLD_OFF;
@@ -319,7 +320,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   buf += line("=");
   // Le numero figure deja dans le titre des tickets de production
   if (showTotal) buf += `Commande: #${orderNum}\n`;
-  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
+  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime, withNumber: showTotal });
   buf += CMD.LEFT;
   buf += `Date: ${date}\n`;
   buf += line("=");
@@ -496,7 +497,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   buf += CMD.LEFT;
   buf += line("=");
   if (showTotal) buf += `Commande: #${orderNum}\n`;
-  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
+  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime, withNumber: showTotal });
   buf += `Date: ${date}\n`;
   buf += line("=");
 
