@@ -2112,7 +2112,24 @@
         "isFormula": true,
         "formulaSteps": [
           {
-            "label": "Boisson",
+            "label": "Boisson pers. 1",
+            "articles": [
+              {
+                "name": "Coca",
+                "piment": false
+              },
+              {
+                "name": "Jus de fruits",
+                "piment": false
+              },
+              {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boisson pers. 2",
             "articles": [
               {
                 "name": "Coca",
@@ -2146,7 +2163,7 @@
             ]
           },
           {
-            "label": "Naan",
+            "label": "Naan pers. 1",
             "articles": [
               {
                 "name": "Naan Nature",
@@ -2163,7 +2180,24 @@
             ]
           },
           {
-            "label": "Plat",
+            "label": "Naan pers. 2",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat pers. 1",
             "articles": [
               {
                 "name": "Butter Chicken",
@@ -2188,7 +2222,53 @@
             ]
           },
           {
-            "label": "Dessert",
+            "label": "Plat pers. 2",
+            "articles": [
+              {
+                "name": "Butter Chicken",
+                "piment": true
+              },
+              {
+                "name": "Gambas Malai / Masala",
+                "piment": true
+              },
+              {
+                "name": "Agneau Curry",
+                "piment": true
+              },
+              {
+                "name": "Boeuf Vindaloo",
+                "piment": true
+              },
+              {
+                "name": "Poulet Tikka Massala",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert pers. 1",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Gulab Jamun",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Dessert pers. 2",
             "articles": [
               {
                 "name": "Halwa",
