@@ -452,9 +452,34 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += `${nbArticles} article(s)\n`;
   }
 
+  // Bon de reduction : addition des commandes a emporter uniquement.
+  // Pas de decoupe entre l'addition et le bon, juste une separation nette.
+  if (showTotal && orderType === "emporter") buf += couponBlock();
+
   buf += CMD.FEED;
   buf += CMD.PARTIAL_CUT;
   return buf;
+}
+
+// Bon de reduction 10% valable 30 jours, imprime a la suite de l'addition
+function couponBlock() {
+  const end = new Date();
+  end.setDate(end.getDate() + 30);
+  const endStr = end.toLocaleDateString("fr-FR");
+
+  let b = "";
+  b += ESC + "d\x02";                     // un peu d'air pour detacher a la main
+  b += line("*");
+  b += CMD.CENTER;
+  b += CMD.BOLD_ON + "BON DE REDUCTION\n" + CMD.BOLD_OFF;
+  b += CMD.BOLD_ON + CMD.QUAD + "-10%\n" + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  b += "sur votre prochaine commande\n";
+  b += CMD.BOLD_ON + "Valable sur place ou a emporter\n" + CMD.BOLD_OFF;
+  b += CMD.BOLD_ON + CMD.DOUBLE_ON + `Jusqu'au ${endStr}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  b += "A presenter avant le paiement\n";
+  b += CMD.LEFT;
+  b += line("*");
+  return b;
 }
 
 function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime }) {
