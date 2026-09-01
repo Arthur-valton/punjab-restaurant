@@ -673,64 +673,55 @@
         "id": 239,
         "name": "Halwa",
         "price": 5,
-        "category": "Desserts",
-        "subcategory": "Spécialités"
+        "category": "Desserts"
       },
       {
         "id": 240,
         "name": "Kheer",
         "price": 5,
-        "category": "Desserts",
-        "subcategory": "Spécialités"
+        "category": "Desserts"
       },
       {
         "id": 241,
         "name": "Kulfi mangue",
         "price": 6,
-        "category": "Desserts",
-        "subcategory": "Spécialités"
+        "category": "Desserts"
       },
       {
         "id": 242,
         "name": "Kulfi pistache",
         "price": 6,
-        "category": "Desserts",
-        "subcategory": "Spécialités"
+        "category": "Desserts"
       },
       {
         "id": 243,
         "name": "Colonel",
         "price": 7.9,
-        "category": "Desserts",
-        "subcategory": "Givrés"
+        "category": "Desserts"
       },
       {
         "id": 244,
         "name": "Iceberg",
         "price": 7.9,
-        "category": "Desserts",
-        "subcategory": "Givrés"
+        "category": "Desserts"
       },
       {
         "id": 245,
         "name": "Coupe exotique",
         "price": 6.9,
-        "category": "Desserts",
-        "subcategory": "Coupes glacées"
+        "category": "Desserts"
       },
       {
         "id": 246,
         "name": "Coupe fruits rouges",
         "price": 6.9,
-        "category": "Desserts",
-        "subcategory": "Coupes glacées"
+        "category": "Desserts"
       },
       {
         "id": 247,
         "name": "Coupe chantilly",
         "price": 6.9,
         "category": "Desserts",
-        "subcategory": "Coupes glacées",
         "piment": false,
         "isFormula": true,
         "formulaSteps": [
@@ -759,7 +750,6 @@
         "name": "Coupe de glace 2 boules",
         "price": 5,
         "category": "Desserts",
-        "subcategory": "Coupes glacées",
         "piment": false,
         "isFormula": true,
         "formulaSteps": [
@@ -891,15 +881,13 @@
         "id": 249,
         "name": "Café gourmand",
         "price": 9.9,
-        "category": "Desserts",
-        "subcategory": "Gourmand"
+        "category": "Desserts"
       },
       {
         "id": 250,
         "name": "Thé gourmand",
         "price": 9.9,
-        "category": "Desserts",
-        "subcategory": "Gourmand"
+        "category": "Desserts"
       }
     ]
   },
