@@ -812,6 +812,7 @@ app.post("/print-all", async (req, res) => {
 
     // Broadcast au KDS + stockage en mémoire
     const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
+    const cuisineAll = [...cuisine, ...boissons];
     let catStatus;
     if (isEmporter) {
       catStatus = { "A emporter": "waiting" };
