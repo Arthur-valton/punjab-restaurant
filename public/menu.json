@@ -2166,6 +2166,19 @@
                 "piment": false
               },
               {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Kir",
+            "siEtape": "Apéritif",
+            "pourChoix": [
+              "Kir"
+            ],
+            "articles": [
+              {
                 "name": "Kir Vin blanc 15cl",
                 "piment": false
               },
@@ -2177,7 +2190,8 @@
                 "name": "Kir indien 15cl",
                 "piment": false
               }
-            ]
+            ],
+            "remplaceParent": true
           },
           {
             "label": "Naan",
@@ -2327,6 +2341,23 @@
                 "piment": false
               },
               {
+                "name": "Jus de fruits",
+                "piment": false
+              },
+              {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Jus pers. 1",
+            "siEtape": "Boisson pers. 1",
+            "pourChoix": [
+              "Jus de fruits"
+            ],
+            "articles": [
+              {
                 "name": "Jus orange",
                 "piment": false
               },
@@ -2341,7 +2372,17 @@
               {
                 "name": "Jus fraise",
                 "piment": false
-              },
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
+            "label": "Kir pers. 1",
+            "siEtape": "Boisson pers. 1",
+            "pourChoix": [
+              "Kir"
+            ],
+            "articles": [
               {
                 "name": "Kir Vin blanc 15cl",
                 "piment": false
@@ -2354,7 +2395,8 @@
                 "name": "Kir indien 15cl",
                 "piment": false
               }
-            ]
+            ],
+            "remplaceParent": true
           },
           {
             "label": "Boisson pers. 2",
@@ -2364,6 +2406,23 @@
                 "piment": false
               },
               {
+                "name": "Jus de fruits",
+                "piment": false
+              },
+              {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Jus pers. 2",
+            "siEtape": "Boisson pers. 2",
+            "pourChoix": [
+              "Jus de fruits"
+            ],
+            "articles": [
+              {
                 "name": "Jus orange",
                 "piment": false
               },
@@ -2378,7 +2437,17 @@
               {
                 "name": "Jus fraise",
                 "piment": false
-              },
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
+            "label": "Kir pers. 2",
+            "siEtape": "Boisson pers. 2",
+            "pourChoix": [
+              "Kir"
+            ],
+            "articles": [
               {
                 "name": "Kir Vin blanc 15cl",
                 "piment": false
@@ -2391,7 +2460,8 @@
                 "name": "Kir indien 15cl",
                 "piment": false
               }
-            ]
+            ],
+            "remplaceParent": true
           },
           {
             "label": "Pichet à vin",
