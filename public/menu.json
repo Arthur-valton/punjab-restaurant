@@ -939,7 +939,32 @@
         "name": "Sirop / Diabolo",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Sirop"
+        "subcategory": "Sirop",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "articles": [
+              {
+                "name": "Fraise",
+                "piment": false
+              },
+              {
+                "name": "Menthe",
+                "piment": false
+              },
+              {
+                "name": "Kiwi banane",
+                "piment": false
+              },
+              {
+                "name": "Grenadine",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 164,
@@ -952,6 +977,13 @@
         "id": 165,
         "name": "Evian 1L",
         "price": 5,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 213,
+        "name": "Perrier",
+        "price": 3,
         "category": "Boissons",
         "subcategory": "Eaux"
       },
