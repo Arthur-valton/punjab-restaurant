@@ -915,12 +915,21 @@
                 "name": "Kir royal 15cl",
                 "piment": false,
                 "price": 7
+              },
+              {
+                "name": "Kir indien 15cl",
+                "piment": false,
+                "price": 7
               }
             ]
           },
           {
             "label": "Supplément",
             "articles": [
+              {
+                "name": "Sans",
+                "piment": false
+              },
               {
                 "name": "Cassis",
                 "piment": false
@@ -1421,13 +1430,6 @@
             ]
           }
         ]
-      },
-      {
-        "id": 224,
-        "name": "Kir indien 15cl",
-        "price": 7,
-        "category": "Boissons",
-        "subcategory": "Apéritifs"
       },
       {
         "id": 228,
