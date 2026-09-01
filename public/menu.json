@@ -1759,6 +1759,13 @@
         "price": 35,
         "category": "Boissons",
         "subcategory": "Vin"
+      },
+      {
+        "id": 253,
+        "name": "Saumur Champ",
+        "price": 28,
+        "category": "Boissons",
+        "subcategory": "Vin"
       }
     ]
   },
