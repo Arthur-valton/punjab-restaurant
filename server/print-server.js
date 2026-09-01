@@ -243,12 +243,9 @@ function pimentMark(level) {
   return PIMENT_MARKS[level] || "";
 }
 
-// Ligne d'article avec le marqueur piment aligne a droite quand il rentre,
-// sinon simplement accole (l'imprimante passera a la ligne).
-function itemLine(label, mark, width) {
-  if (!mark) return label + "\n";
-  const space = width - label.length - mark.length;
-  return space >= 1 ? label + " ".repeat(space) + mark + "\n" : label + " " + mark + "\n";
+// Ligne d'article : le marqueur piment suit directement le nom du plat
+function itemLine(label, mark) {
+  return mark ? `${label} ${mark}\n` : `${label}\n`;
 }
 
 function line(char = "-", width = WIDTH) {
@@ -356,7 +353,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   if (orderType === "emporter" && !showTotal) {
     for (const item of itemsToGroup) {
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       buf += ESC + "J\x0C";
     }
@@ -419,7 +416,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
         buf += ESC + "J\x06";
       } else {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         buf += ESC + "J\x0C";
       }
@@ -509,7 +506,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += CMD.CENTER + CMD.BOLD_ON + ">>> AJOUTS <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
       for (const item of added) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
@@ -525,7 +522,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += CMD.CENTER + CMD.BOLD_ON + ">>> ANNULES <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
       for (const item of removed) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
@@ -559,7 +556,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
     } else {
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, mark, WIDTH_DOUBLE);
+      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, mark);
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
         for (const choice of item.formulaChoices) {
