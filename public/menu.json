@@ -1009,17 +1009,30 @@
       },
       {
         "id": 164,
-        "name": "Evian 50cl",
+        "name": "Evian",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Eaux"
-      },
-      {
-        "id": 165,
-        "name": "Evian 1L",
-        "price": 5,
-        "category": "Boissons",
-        "subcategory": "Eaux"
+        "subcategory": "Eaux",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Evian 50cl",
+                "piment": false,
+                "price": 3
+              },
+              {
+                "name": "Evian 1L",
+                "piment": false,
+                "price": 5
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 213,
@@ -1169,17 +1182,30 @@
       },
       {
         "id": 228,
-        "name": "S.Pellegrino 50cl",
+        "name": "S.Pellegrino",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Eaux"
-      },
-      {
-        "id": 229,
-        "name": "S.Pellegrino 1L",
-        "price": 5,
-        "category": "Boissons",
-        "subcategory": "Eaux"
+        "subcategory": "Eaux",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "S.Pellegrino 50cl",
+                "piment": false,
+                "price": 3
+              },
+              {
+                "name": "S.Pellegrino 1L",
+                "piment": false,
+                "price": 5
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 123,
