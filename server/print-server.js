@@ -119,16 +119,28 @@ app.put("/order/:id", async (req, res) => {
     const common = { tableNumber, orderNum, date };
 
     const oldItems = existing.items || [];
-    const tickets = [];
-    if (cuisine.length > 0) {
-      tickets.push(formatModifTicket({ title: "CUISINE (MODIF)", oldItems, newItems: cuisine, showTotal: false, ...common }));
-    }
-    if (boissons.length > 0) {
-      tickets.push(formatModifTicket({ title: "BAR (MODIF)", oldItems, newItems: boissons, showTotal: false, ...common }));
-    }
+
+    // Chaque ticket compare l'ancien et le nouveau SUR SON PERIMETRE,
+    // sinon les articles des autres tickets ressortent en "supprimes".
+    const isBar = (i) => BAR_CATEGORIES.has(i.category);
+    const isDessert = (i) => (CAT_MERGE_SHARED[i.category] || i.category) === "Desserts";
+    const scopes = [
+      { title: "CUISINE (MODIF)",  keep: (i) => !isBar(i) && !isDessert(i) },
+      { title: "DESSERTS (MODIF)", keep: (i) => !isBar(i) && isDessert(i) },
+      { title: "BAR (MODIF)",      keep: isBar },
+    ];
+
+    const tickets = scopes.map(({ title, keep }) => formatModifTicket({
+      title,
+      oldItems: oldItems.filter(keep),
+      newItems: order.filter(keep),
+      showTotal: false,
+      ...common,
+    }));
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
-    if (tickets.length > 0) await sendToPrinter(tickets.join(""));
+    const printable = tickets.filter(Boolean);
+    if (printable.length > 0) await sendToPrinter(printable.join(""));
 
     const groups = buildGroups(cuisineAll);
     const catStatus = {};
@@ -234,7 +246,7 @@ function pad(left, right, width = WIDTH, fill = " ") {
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime }) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter }) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -294,7 +306,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   }
 
   // Pour ticket cuisine : éclater les formules en articles par étape dans leurs vraies catégories
-  const itemsToGroup = [];
+  let itemsToGroup = [];
   if (!showTotal) {
     for (const item of order) {
       if (item.formulaChoices && item.formulaChoices.length > 0) {
@@ -316,6 +328,18 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
 
   const pimentSymbols = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
 
+  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
+  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+  const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
+  const mergedCat = (item) => CAT_MERGE[item.category] || item.category || "Autres";
+
+  // Filtre de catégorie appliqué APRES eclatement des formules
+  // (permet de sortir le dessert d'un menu sur le ticket desserts)
+  if (catFilter) itemsToGroup = itemsToGroup.filter((i) => catFilter(mergedCat(i)));
+  if (itemsToGroup.length === 0) return "";
+
+  const nbArticles = itemsToGroup.reduce((s, i) => s + i.qty, 0);
+
   // À EMPORTER cuisine : impression à plat, sans séparation de catégorie
   if (orderType === "emporter" && !showTotal) {
     for (const item of itemsToGroup) {
@@ -327,18 +351,15 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     }
     buf += line("=");
     buf += CMD.CENTER;
-    buf += `${order.reduce((s,i)=>s+i.qty,0)} article(s)\n`;
+    buf += `${nbArticles} article(s)\n`;
     buf += CMD.FEED;
     buf += CMD.PARTIAL_CUT;
     return buf;
   }
 
-  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
-  const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
   const seenCats = {};
   for (const item of itemsToGroup) {
-    const cat = CAT_MERGE[item.category] || item.category || "Autres";
+    const cat = mergedCat(item);
     if (!seenCats[cat]) seenCats[cat] = [];
     const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name) && (x.piment || null) === (item.piment || null));
     if (existing) existing.qty += item.qty;
@@ -414,9 +435,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += CMD.CENTER;
     buf += "Merci de votre visite !\n";
   } else {
-    const totalQty = order.reduce((s, i) => s + i.qty, 0);
     buf += CMD.CENTER;
-    buf += `${totalQty} article(s)\n`;
+    buf += `${nbArticles} article(s)\n`;
   }
 
   buf += CMD.FEED;
@@ -440,6 +460,9 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     if (delta > 0) added.push({ ...item, qty: delta });
     else if (delta < 0) removed.push({ ...item, qty: -delta });
   }
+
+  // Rien a montrer sur ce perimetre (ex : commande sans dessert) -> pas de ticket
+  if (newItems.length === 0 && added.length === 0 && removed.length === 0) return "";
 
   let buf = "";
   buf += CMD.INIT;
@@ -827,15 +850,28 @@ app.post("/print-all", async (req, res) => {
     const tickets = [];
 
     if (cuisine.length > 0) {
-      tickets.push(formatTicket({ title: isEmporter ? "CUISINE - A EMPORTER" : "CUISINE", order: cuisine, showTotal: false, ...common }));
+      // Ticket cuisine sans les desserts + ticket desserts separe.
+      // Le filtre s'applique apres eclatement des formules : le dessert d'un
+      // menu part donc bien sur le ticket DESSERTS.
+      tickets.push(formatTicket({
+        title: isEmporter ? "CUISINE - A EMPORTER" : "CUISINE",
+        order: cuisine, showTotal: false, catFilter: (c) => c !== "Desserts", ...common,
+      }));
+      tickets.push(formatTicket({
+        title: isEmporter ? "DESSERTS - A EMPORTER" : "DESSERTS",
+        order: cuisine, showTotal: false, catFilter: (c) => c === "Desserts", ...common,
+      }));
     }
     if (boissons.length > 0) {
       tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: false, ...common }));
     }
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
-    console.log(`Impression ${isEmporter ? `Emporter #${emporterNum}` : `Table ${effectiveTable}`} #${orderNum} : ${tickets.length} ticket(s)`);
-    if (tickets.length > 0) await sendToPrinter(tickets.join(""));
+    // formatTicket renvoie "" si le filtre ne laisse aucun article
+    const printable = tickets.filter(Boolean);
+
+    console.log(`Impression ${isEmporter ? `Emporter #${emporterNum}` : `Table ${effectiveTable}`} #${orderNum} : ${printable.length} ticket(s)`);
+    if (printable.length > 0) await sendToPrinter(printable.join(""));
 
     // Broadcast au KDS + stockage en mémoire
     const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
@@ -857,7 +893,7 @@ app.post("/print-all", async (req, res) => {
     saveOrders(activeOrders);
     broadcast({ type: "new_order", order: orderData });
 
-    res.json({ success: true, message: `${tickets.length} ticket(s) imprime(s)`, tickets: tickets.length, orderId });
+    res.json({ success: true, message: `${printable.length} ticket(s) imprime(s)`, tickets: printable.length, orderId });
   } catch (err) {
     console.error("Erreur impression:", err.message);
     res.status(500).json({ error: err.message });
