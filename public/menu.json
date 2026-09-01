@@ -927,10 +927,6 @@
             "label": "Supplément",
             "articles": [
               {
-                "name": "Sans",
-                "piment": false
-              },
-              {
                 "name": "Cassis",
                 "piment": false
               },
@@ -945,11 +941,11 @@
               {
                 "name": "Framboise",
                 "piment": false
-              },
-              {
-                "name": "Rose",
-                "piment": false
               }
+            ],
+            "pourChoix": [
+              "Kir Vin blanc",
+              "Kir royal 15cl"
             ]
           }
         ],
