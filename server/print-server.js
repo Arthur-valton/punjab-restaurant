@@ -233,21 +233,25 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
-  buf += CMD.DOUBLE_ON;
-  buf += CMD.BOLD_ON;
-  buf += "PUNJAB\n";
-  buf += CMD.DOUBLE_OFF;
-  buf += CMD.BOLD_OFF;
   if (showTotal) {
+    // Ticket client : en-tete complet
+    buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+    buf += "PUNJAB\n";
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
     buf += "3 RUE RENE D'ANJOU\n";
     buf += "53200 CHATEAU-GONTIER-SUR-MAYENNE\n";
     buf += "SIRET: 94372706500014\n";
     buf += "APE: 5610A - TVA: FR12943727065\n";
+    buf += "\n";
+    buf += CMD.BOLD_ON;
+    buf += `*** ${title} ***\n`;
+    buf += CMD.BOLD_OFF;
+  } else {
+    // Ticket production : titre seul en gros
+    buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+    buf += `${title}\n`;
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
-  buf += "\n";
-  buf += CMD.BOLD_ON;
-  buf += `*** ${title} ***\n`;
-  buf += CMD.BOLD_OFF;
   buf += CMD.LEFT;
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
@@ -435,13 +439,19 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
-  buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-  buf += "PUNJAB\n";
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-  buf += "\n";
-  buf += CMD.BOLD_ON;
-  buf += `*** ${title} ***\n`;
-  buf += CMD.BOLD_OFF;
+  if (showTotal) {
+    buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+    buf += "PUNJAB\n";
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    buf += "\n";
+    buf += CMD.BOLD_ON;
+    buf += `*** ${title} ***\n`;
+    buf += CMD.BOLD_OFF;
+  } else {
+    buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+    buf += `${title}\n`;
+    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  }
   buf += CMD.LEFT;
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
