@@ -44,7 +44,13 @@ function estFormuleMenu(item) {
 // le Kir indien n'a pas de supplément, l'étape est donc sautée pour lui.
 function etapeApplicable(step, choices) {
   if (!step.pourChoix || step.pourChoix.length === 0) return true;
-  return choices.some((c) => step.pourChoix.includes(c.itemName));
+  // « siEtape » cible une étape précise. Indispensable sur un menu à
+  // plusieurs convives : sans cela le choix du convive 2 déclencherait
+  // aussi la sous-étape du convive 1.
+  const pertinents = step.siEtape
+    ? choices.filter((c) => c.label === step.siEtape)
+    : choices;
+  return pertinents.some((c) => step.pourChoix.includes(c.itemName));
 }
 function etapesApplicables(item, choices) {
   return (item.formulaSteps || []).filter((st) => etapeApplicable(st, choices));

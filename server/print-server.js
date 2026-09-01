@@ -740,12 +740,19 @@ const FORMULA_LABEL_MAP_SHARED = {
   "boisson": "Boissons", "boissons": "Boissons",
   "aperitif": "Boissons", "aperitifs": "Boissons",
   "pichet": "Boissons", "pichet a vin": "Boissons",
+  // Les boules d'une coupe partent au poste desserts
+  "boule": "Desserts", "boules": "Desserts",
 };
 function mapFormulaLabelShared(label) {
   let key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   // Menus pour plusieurs convives : « Plat pers. 1 » vise le meme poste que
-  // « Plat ». On retire le suffixe de convive avant de router.
-  key = key.replace(/\s*(pers\.?|personne)?\s*\d+\s*$/, "").trim();
+  // « Plat ». On retire les suffixes de rang et de convive avant de router —
+  // en boucle, car « Boule 1 pers. 1 » en cumule deux.
+  let avant;
+  do {
+    avant = key;
+    key = key.replace(/\s*(pers\.?|personne)?\s*\d+\s*$/, "").trim();
+  } while (key !== avant);
   return FORMULA_LABEL_MAP_SHARED[key] || label;
 }
 
