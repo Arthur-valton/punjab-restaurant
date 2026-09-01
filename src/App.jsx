@@ -437,8 +437,15 @@ function App() {
   }
 
   function validateOrder() {
-    setShowOrderTypeModal(true);
     setCartOpen(false);
+    // En modification on ne repose pas la question du type : la commande
+    // existe deja, son numero et sa table sont fixes.
+    if (editingOrderId) {
+      if (orderType === "emporter") setShowEmporterModal(true);  // numero conserve
+      else submitOrder();
+      return;
+    }
+    setShowOrderTypeModal(true);
   }
 
   function chooseOrderType(type) {
@@ -552,6 +559,13 @@ function App() {
     }));
     setOrderItems(items);
     setTableNumber(serverOrder.tableNumber);
+    // Une commande a emporter garde son identite : sans ca la validation
+    // redemandait le type et regenerait un numero du jour.
+    setOrderType(serverOrder.orderType === "emporter" ? "emporter" : "surplace");
+    setEmporterNum(serverOrder.emporterNum || null);
+    setClientName(serverOrder.clientName || "");
+    setClientPhone(serverOrder.clientPhone || "");
+    setClientPickupTime(serverOrder.clientPickupTime || "");
     setEditingOrderId(serverOrder.id);
     setShowOrders(false);
   }
