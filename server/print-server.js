@@ -325,15 +325,19 @@ function line(char = "-", width = WIDTH) {
 
 // Bande noire pleine largeur : fond inverse, texte blanc centre en double
 // taille. Interligne reduit pour eviter la rayure blanche entre les lignes.
-function bandeNoire(texte) {
+const WIDTH_QUAD = 12;
+function bandeNoire(texte, taille = "double") {
+  const quad = taille === "quad";
+  const large = quad ? WIDTH_QUAD : WIDTH_DOUBLE;
   const t = texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-  const centre = t.padStart(Math.floor((WIDTH_DOUBLE + t.length) / 2)).padEnd(WIDTH_DOUBLE);
+  const centre = t.padStart(Math.floor((large + t.length) / 2)).padEnd(large);
+  const epaisseur = quad ? "\x18" : "\x0C";   // marge haute/basse, 24 ou 12 points
   let b = CMD.CENTER + CMD.REVERSE_ON;
-  b += ESC + "3\x0C";
+  b += ESC + "3" + epaisseur;
   b += " ".repeat(WIDTH) + "\n";
   b += ESC + "2";
-  b += CMD.DOUBLE_ON + CMD.BOLD_ON + centre + "\n" + CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-  b += ESC + "3\x0C";
+  b += (quad ? CMD.QUAD : CMD.DOUBLE_ON) + CMD.BOLD_ON + centre + "\n" + CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+  b += ESC + "3" + epaisseur;
   b += " ".repeat(WIDTH) + "\n";
   b += ESC + "2" + CMD.REVERSE_OFF + CMD.LEFT;
   b += "\n";
@@ -564,6 +568,9 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
 
   let buf = "";
   buf += CMD.INIT;
+  // Un ticket de modification arrive au milieu d'un service deja lance :
+  // il doit se distinguer immediatement d'une commande neuve.
+  if (!showTotal) buf += bandeNoire("Attention", "quad");
   buf += CMD.CENTER;
   if (showTotal) {
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
