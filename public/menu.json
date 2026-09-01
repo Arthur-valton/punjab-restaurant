@@ -1069,7 +1069,14 @@
       },
       {
         "id": 171,
-        "name": "Café allongé / crème",
+        "name": "Café allongé",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 238,
+        "name": "Café crème",
         "price": 3,
         "category": "Boissons",
         "subcategory": "Café/Thé"
