@@ -33,12 +33,11 @@ function pimentMark(level) {
 // là le récapitulatif est utile. Une formule de déclinaison (type, format,
 // parfum, supplément) doit s'ajouter dès le dernier choix, même si elle
 // compte deux étapes.
-const LABELS_POSTE = ["entree", "entrees", "plat", "plats", "dessert", "desserts", "naan", "naans"];
 function estFormuleMenu(item) {
-  const steps = item.formulaSteps || [];
-  if (steps.length < 2) return false;
-  const norm = (t) => (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return steps.every((st) => LABELS_POSTE.includes(norm(st.label)));
+  // A partir de trois etapes on est sur un menu : le recapitulatif vaut la
+  // peine avant d'envoyer. En dessous (type + supplement, deux boules...),
+  // c'est une declinaison qui part directement au panier.
+  return (item.formulaSteps || []).length >= 3;
 }
 
 // Une étape peut ne concerner que certains choix précédents (« pourChoix ») :
@@ -551,7 +550,7 @@ function App() {
                   <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                 </div>
                 {choixVisibles(item).map((choice, ci) => (
-                  <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
+                  <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
                 ))}
               </div>
             ))}
@@ -689,7 +688,7 @@ function App() {
                       <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                     </div>
                     {choixVisibles(item).map((choice, ci) => (
-                      <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
+                      <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
                     ))}
                   </div>
                 ))}

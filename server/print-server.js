@@ -736,7 +736,10 @@ const FORMULA_LABEL_MAP_SHARED = {
   "plat": "Plats", "plats": "Plats",
   "dessert": "Desserts", "desserts": "Desserts",
   "naan": "Naans", "naans": "Naans",
+  // Tout ce qui se sert au bar part sur le ticket BAR
   "boisson": "Boissons", "boissons": "Boissons",
+  "aperitif": "Boissons", "aperitifs": "Boissons",
+  "pichet": "Boissons", "pichet a vin": "Boissons",
 };
 function mapFormulaLabelShared(label) {
   const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
