@@ -301,7 +301,9 @@ function App() {
   function addItem(item, piment = null) {
     // Formula item → open multi-step picker
     if (item.isFormula && item.formulaSteps?.length > 0) {
-      setFormulaPicker({ item, currentStep: 0, choices: [], parcours: [] });
+      const { idx, choices, parcours } = avancer(item, [], [], -1);
+      if (idx === -1) addFormula(item, choices);          // tout etait automatique
+      else setFormulaPicker({ item, currentStep: idx, choices, parcours });
       return;
     }
     if (item.piment && piment === null) {
@@ -314,6 +316,32 @@ function App() {
       if (existing) return prev.map((i) => i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { ...item, cartId, qty: 1, ...(piment ? { piment } : {}) }];
     });
+  }
+
+  // Avance jusqu'a la prochaine etape qui demande vraiment un choix.
+  // Une etape a option unique (le plateau du menu degustation) se resout
+  // toute seule : elle doit figurer sur le ticket sans couter un tap.
+  function avancer(item, choices, parcours, apres) {
+    let idx = prochaineEtape(item, choices, apres);
+    while (idx !== -1) {
+      const st = item.formulaSteps[idx];
+      const arts = st.articles || [];
+      if (arts.length !== 1) break;
+      const seul = arts[0];
+      const nom = typeof seul === "string" ? seul : seul.name;
+      if (typeof seul === "object" && seul.piment) break;   // il faut demander le piment
+      const c = { label: st.label, itemName: nom };
+      if (st.remplaceNom) c.remplaceNom = true;
+      if (st.siEtape) {
+        if (st.remplaceParent) c.remplaceParent = st.siEtape;
+        else c.sousChoixDe = st.siEtape;
+      }
+      if (typeof seul === "object" && seul.price != null) c.prix = Number(seul.price);
+      choices = [...choices, c];
+      parcours = [...parcours, idx];
+      idx = prochaineEtape(item, choices, idx);
+    }
+    return { idx, choices, parcours };
   }
 
   // Ajoute une formule au panier. Deux sélections identiques se regroupent
@@ -346,9 +374,10 @@ function App() {
     }
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
-    const newChoices = [...choices, choice];
-    const parcours = [...(formulaPicker.parcours || []), currentStep];
-    const suivante = prochaineEtape(item, newChoices, currentStep);
+    let newChoices = [...choices, choice];
+    const base = [...(formulaPicker.parcours || []), currentStep];
+    const { idx: suivante, choices: apresAuto, parcours } = avancer(item, newChoices, base, currentStep);
+    newChoices = apresAuto;
     if (suivante === -1) {
       // Déclinaison → ajout direct. Le récapitulatif ne s'affiche que pour un
       // menu enchaînant plusieurs postes de production.
