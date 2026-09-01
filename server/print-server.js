@@ -323,6 +323,23 @@ function line(char = "-", width = WIDTH) {
   return char.repeat(width) + "\n";
 }
 
+// Bande noire pleine largeur : fond inverse, texte blanc centre en double
+// taille. Interligne reduit pour eviter la rayure blanche entre les lignes.
+function bandeNoire(texte) {
+  const t = texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  const centre = t.padStart(Math.floor((WIDTH_DOUBLE + t.length) / 2)).padEnd(WIDTH_DOUBLE);
+  let b = CMD.CENTER + CMD.REVERSE_ON;
+  b += ESC + "3\x0C";
+  b += " ".repeat(WIDTH) + "\n";
+  b += ESC + "2";
+  b += CMD.DOUBLE_ON + CMD.BOLD_ON + centre + "\n" + CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+  b += ESC + "3\x0C";
+  b += " ".repeat(WIDTH) + "\n";
+  b += ESC + "2" + CMD.REVERSE_OFF + CMD.LEFT;
+  b += "\n";
+  return b;
+}
+
 function pad(left, right, width = WIDTH, fill = " ") {
   const space = width - left.length - right.length;
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
@@ -452,24 +469,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
 
   for (const group of groups) {
     // Bande noire de categorie — tickets de production (cuisine / desserts / bar)
-    if (!showTotal) {
-      buf += CMD.CENTER;
-      const catLabel = group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-      const catPadded = catLabel.padStart(Math.floor((WIDTH_DOUBLE + catLabel.length) / 2)).padEnd(WIDTH_DOUBLE);
-      buf += CMD.REVERSE_ON;
-      buf += ESC + "3\x0C";              // interligne 12 pts : bande fine sans blanc
-      buf += " ".repeat(WIDTH) + "\n";
-      buf += ESC + "2";                  // interligne par defaut pour le titre
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += catPadded + "\n";
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      buf += ESC + "3\x0C";
-      buf += " ".repeat(WIDTH) + "\n";
-      buf += ESC + "2";
-      buf += CMD.REVERSE_OFF;
-      buf += CMD.LEFT;
-      buf += "\n";
-    }
+    if (!showTotal) buf += bandeNoire(group.cat);
 
     for (const item of group.items) {
       if (showTotal) {
@@ -588,14 +588,11 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
 
   // ── Section MODIFICATIONS ──
   if (added.length > 0 || removed.length > 0) {
-    buf += CMD.CENTER + CMD.DOUBLE_ON + CMD.BOLD_ON;
-    buf += "MODIFICATIONS\n";
-    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
-    buf += line("-");
+    buf += bandeNoire("Modifications");
     // Sous-titres AJOUTS / ANNULES plutot que des prefixes ++ et --,
     // qui se confondraient avec les marqueurs de piment.
     if (added.length > 0) {
-      buf += CMD.CENTER + CMD.BOLD_ON + ">>> AJOUTS <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
+      buf += bandeNoire("Ajouts");
       for (const item of added) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
         buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
@@ -604,7 +601,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       }
     }
     if (removed.length > 0) {
-      buf += CMD.CENTER + CMD.BOLD_ON + ">>> ANNULES <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
+      buf += bandeNoire("Annules");
       for (const item of removed) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
         buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
@@ -616,10 +613,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   }
 
   // ── Section COMMANDE COMPLÈTE ──
-  buf += CMD.CENTER + CMD.DOUBLE_ON + CMD.BOLD_ON;
-  buf += "COMMANDE COMPLETE\n";
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
-  buf += line("-");
+  buf += bandeNoire("Commande complete");
 
   for (const item of newItems) {
     const mark = pimentMark(item.piment);
