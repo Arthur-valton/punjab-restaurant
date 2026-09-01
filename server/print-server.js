@@ -359,9 +359,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     itemsToGroup.push(...order.map(i => ({...i})));
   }
 
-  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats).
-  // Les boissons ferment le ticket — utile sur le ticket emporter unique.
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi",
+  // Ordre de production en cuisine : naans, entrees, plats, desserts
+  // (Biryani fusionné dans Plats). Les boissons ferment le ticket.
+  const CAT_ORDER = ["Naans", "Entrees", "Plats", "Desserts", "Menu Midi",
                      "Boissons", "Apéritifs", "Aperitifs", "Vin", "Rosé", "Rose", "Bières", "Bieres", "Bar"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
   const mergedCat = (item) => CAT_MERGE[item.category] || item.category || "Autres";
@@ -722,7 +722,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items, order
 }
 
 // ----- Helpers catégories (partagés) -----
-const CAT_ORDER_SHARED = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
+const CAT_ORDER_SHARED = ["Naans", "Entrees", "Plats", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
 const CAT_MERGE_SHARED = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
 
 const FORMULA_LABEL_MAP_SHARED = {
