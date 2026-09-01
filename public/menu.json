@@ -1767,7 +1767,7 @@
     "items": [
       {
         "id": 207,
-        "name": "Menu Midi [Entrée/Plat/Dessert]",
+        "name": "Menu Midi",
         "price": 17.9,
         "category": "Menu",
         "isFormula": true,
@@ -1807,6 +1807,10 @@
               {
                 "name": "Crevette Curry",
                 "piment": true
+              },
+              {
+                "name": "Palak Paneer",
+                "piment": true
               }
             ]
           },
@@ -1818,7 +1822,7 @@
                 "piment": false
               },
               {
-                "name": "Coupe de glace",
+                "name": "Coupe de glace 2 boules",
                 "piment": false
               },
               {
@@ -1831,28 +1835,380 @@
         "piment": false
       },
       {
+        "id": 211,
+        "name": "Menu Entrée + Plat",
+        "price": 15.9,
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Entrée",
+            "articles": [
+              {
+                "name": "Poulet Tandoori",
+                "piment": false
+              },
+              {
+                "name": "Aloo Pakora",
+                "piment": false
+              },
+              {
+                "name": "Raita",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Crevette Korma",
+                "piment": true
+              },
+              {
+                "name": "Poulet Tikka Massala",
+                "piment": true
+              },
+              {
+                "name": "Palak Paneer",
+                "piment": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 252,
+        "name": "Menu Plat + Dessert",
+        "price": 15.9,
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Crevette Korma",
+                "piment": true
+              },
+              {
+                "name": "Poulet Tikka Massala",
+                "piment": true
+              },
+              {
+                "name": "Palak Paneer",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          }
+        ]
+      },
+      {
         "id": 209,
         "name": "Menu Rajasthan",
         "price": 24.9,
-        "category": "Menu"
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Entrée",
+            "articles": [
+              {
+                "name": "Poulet Tandoori",
+                "piment": false
+              },
+              {
+                "name": "Aloo Pakora",
+                "piment": false
+              },
+              {
+                "name": "Raita",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Crevette Shahi Korma",
+                "piment": true
+              },
+              {
+                "name": "Poulet Madras",
+                "piment": true
+              },
+              {
+                "name": "Palak Paneer",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 210,
-        "name": "Menu Taj MAHAL",
+        "name": "Menu Taj Mahal",
         "price": 29.9,
-        "category": "Menu"
-      },
-      {
-        "id": 211,
-        "name": "Menu",
-        "price": 15.9,
-        "category": "Menu"
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Apéritif",
+            "articles": [
+              {
+                "name": "Cocktail Maison",
+                "piment": false
+              },
+              {
+                "name": "Whisky JB",
+                "piment": false
+              },
+              {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Entrée",
+            "articles": [
+              {
+                "name": "Poulet Tikka",
+                "piment": false
+              },
+              {
+                "name": "Poisson Tikka",
+                "piment": false
+              },
+              {
+                "name": "Soupe Dall",
+                "piment": false
+              },
+              {
+                "name": "Mix Pakora",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Poisson Curry",
+                "piment": true
+              },
+              {
+                "name": "Poulet Shahi Korma",
+                "piment": true
+              },
+              {
+                "name": "Agneau Karahi",
+                "piment": true
+              },
+              {
+                "name": "Boeuf Vindaloo",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Gulab Jamun",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 218,
-        "name": "Menu",
+        "name": "Menu Punjab Dégustation (2 pers)",
         "price": 75,
-        "category": "Menu"
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": [
+              {
+                "name": "Coca",
+                "piment": false
+              },
+              {
+                "name": "Jus de fruits",
+                "piment": false
+              },
+              {
+                "name": "Kir",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Pichet à vin",
+            "articles": [
+              {
+                "name": "Pichet rouge",
+                "piment": false
+              },
+              {
+                "name": "Pichet rosé",
+                "piment": false
+              },
+              {
+                "name": "Pichet blanc",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Butter Chicken",
+                "piment": true
+              },
+              {
+                "name": "Gambas Malai / Masala",
+                "piment": true
+              },
+              {
+                "name": "Agneau Curry",
+                "piment": true
+              },
+              {
+                "name": "Boeuf Vindaloo",
+                "piment": true
+              },
+              {
+                "name": "Poulet Tikka Massala",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Gulab Jamun",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 221,
