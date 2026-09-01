@@ -29,6 +29,18 @@ function pimentMark(level) {
   return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
 }
 
+// Un vrai menu enchaîne des postes de production (entrée, plat, dessert) :
+// là le récapitulatif est utile. Une formule de déclinaison (type, format,
+// parfum, supplément) doit s'ajouter dès le dernier choix, même si elle
+// compte deux étapes.
+const LABELS_POSTE = ["entree", "entrees", "plat", "plats", "dessert", "desserts", "naan", "naans"];
+function estFormuleMenu(item) {
+  const steps = item.formulaSteps || [];
+  if (steps.length < 2) return false;
+  const norm = (t) => (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return steps.every((st) => LABELS_POSTE.includes(norm(st.label)));
+}
+
 // Quand les choix d'une formule portent des tarifs différents, le prix du
 // produit n'est qu'un tarif d'appel : on affiche « dès X € » plutôt qu'un
 // montant qui serait faux pour la moitié des choix.
@@ -289,9 +301,9 @@ function App() {
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
     if (currentStep + 1 >= item.formulaSteps.length) {
-      // Une seule étape (parfum, supplément) → ajout direct : le récapitulatif
-      // ne sert que pour un menu à plusieurs étapes.
-      if (item.formulaSteps.length === 1) {
+      // Déclinaison → ajout direct. Le récapitulatif ne s'affiche que pour un
+      // menu enchaînant plusieurs postes de production.
+      if (!estFormuleMenu(item)) {
         addFormula(item, newChoices);
       } else {
         setFormulaPicker({ item, currentStep, choices: newChoices, showSummary: true });
@@ -820,9 +832,13 @@ function App() {
                           // multi-étapes on n'affiche rien : le prix couvre le menu
                           // entier, pas chaque entrée ou plat pris isolément.
                           const prixArticle = typeof article !== "string" && article.price != null ? Number(article.price) : null;
+                          // Repli sur le prix du produit uniquement pour l'étape qui
+                          // définit l'article. Un supplément n'a pas de tarif propre.
+                          const etapeCourante = formulaPicker.item.formulaSteps[formulaPicker.currentStep];
                           const prix = prixArticle != null
                             ? prixArticle
-                            : (formulaPicker.item.formulaSteps.length === 1 ? formulaPicker.item.price : null);
+                            : (etapeCourante?.remplaceNom && !estFormuleMenu(formulaPicker.item)
+                                ? formulaPicker.item.price : null);
                           return (
                             <button
                               key={ai}
