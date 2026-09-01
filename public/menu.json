@@ -2255,6 +2255,23 @@
         "isFormula": true,
         "formulaSteps": [
           {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Entrée",
             "articles": [
               {
@@ -2285,23 +2302,6 @@
               {
                 "name": "Palak Paneer",
                 "piment": true
-              }
-            ]
-          },
-          {
-            "label": "Naan",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
               }
             ]
           },
@@ -2502,6 +2502,23 @@
             "remplaceParent": true
           },
           {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Entrée",
             "articles": [
               {
@@ -2540,23 +2557,6 @@
               {
                 "name": "Boeuf Vindaloo",
                 "piment": true
-              }
-            ]
-          },
-          {
-            "label": "Naan",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
               }
             ]
           },
@@ -2869,6 +2869,40 @@
             ]
           },
           {
+            "label": "Naan pers. 1",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Naan pers. 2",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Entrée",
             "articles": [
               {
@@ -2924,40 +2958,6 @@
               {
                 "name": "Poulet Tikka Massala",
                 "piment": true
-              }
-            ]
-          },
-          {
-            "label": "Naan pers. 1",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
-              }
-            ]
-          },
-          {
-            "label": "Naan pers. 2",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
               }
             ]
           },
