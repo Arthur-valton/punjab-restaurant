@@ -1227,75 +1227,111 @@
       },
       {
         "id": 123,
-        "name": "Chinon 75cl",
-        "price": 25,
-        "category": "Boissons",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 138,
-        "name": "Chinon 37,5",
+        "name": "Chinon",
         "price": 14,
         "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
-        "isFormula": false
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Chinon 37,5",
+                "piment": false,
+                "price": 14
+              },
+              {
+                "name": "Chinon 75cl",
+                "piment": false,
+                "price": 25
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 143,
-        "name": "St Nicolas de bourg 37,5",
+        "name": "St Nicolas de bourg",
         "price": 17,
         "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 144,
-        "name": "St Nicolas de bourg 75cl",
-        "price": 31,
-        "category": "Boissons",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "St Nicolas de bourg 37,5",
+                "piment": false,
+                "price": 17
+              },
+              {
+                "name": "St Nicolas de bourg 75cl",
+                "piment": false,
+                "price": 31
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 145,
-        "name": "Saumur champ 37,5",
+        "name": "Saumur champ",
         "price": 15,
         "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 179,
-        "name": "Saumur champ 75cl",
-        "price": 28,
-        "category": "Boissons",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Saumur champ 37,5",
+                "piment": false,
+                "price": 15
+              },
+              {
+                "name": "Saumur champ 75cl",
+                "piment": false,
+                "price": 28
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 180,
-        "name": "Côte du Rhône 37,5",
+        "name": "Côte du Rhône",
         "price": 13,
         "category": "Boissons",
         "subcategory": "Rouge",
         "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 181,
-        "name": "Côte du Rhône",
-        "price": 22,
-        "category": "Boissons",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Côte du Rhône 37,5",
+                "piment": false,
+                "price": 13
+              },
+              {
+                "name": "Côte du Rhône",
+                "piment": false,
+                "price": 22
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 182,
@@ -1317,17 +1353,30 @@
       },
       {
         "id": 201,
-        "name": "Côte de Provence 37,5cl",
+        "name": "Côte de Provence",
         "price": 17,
         "category": "Boissons",
-        "subcategory": "Rosé"
-      },
-      {
-        "id": 202,
-        "name": "Côte de Provence",
-        "price": 30,
-        "category": "Boissons",
-        "subcategory": "Rosé"
+        "subcategory": "Rosé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Côte de Provence 37,5cl",
+                "piment": false,
+                "price": 17
+              },
+              {
+                "name": "Côte de Provence",
+                "piment": false,
+                "price": 30
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 203,
@@ -1359,17 +1408,30 @@
       },
       {
         "id": 208,
-        "name": "Pichet 50cl",
-        "price": 11,
-        "category": "Boissons",
-        "subcategory": "Vin"
-      },
-      {
-        "id": 219,
-        "name": "Pichet 25",
+        "name": "Pichet",
         "price": 6,
         "category": "Boissons",
-        "subcategory": "Vin"
+        "subcategory": "Vin",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Pichet 25",
+                "piment": false,
+                "price": 6
+              },
+              {
+                "name": "Pichet 50cl",
+                "piment": false,
+                "price": 11
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 220,
