@@ -123,7 +123,15 @@ app.put("/order/:id", async (req, res) => {
     if (cuisineAll.length > 0) {
       tickets.push(formatModifTicket({ title: "CUISINE (MODIF)", oldItems, newItems: cuisineAll, showTotal: false, ...common }));
     }
-    tickets.push(formatModifTicket({ title: "SERVICE (MODIF)", oldItems, newItems: order, showTotal: true, ...common }));
+    if (cuisine.length > 0) {
+      tickets.push(formatModifTicket({ title: "SERVICE (MODIF)", oldItems, newItems: cuisine, showTotal: true, ...common }));
+    }
+    if (boissons.length > 0) {
+      tickets.push(formatModifTicket({ title: "BAR (MODIF)", oldItems, newItems: boissons, showTotal: true, ...common }));
+    }
+    if (cuisine.length === 0 && boissons.length === 0) {
+      tickets.push(formatModifTicket({ title: "SERVICE (MODIF)", oldItems, newItems: order, showTotal: true, ...common }));
+    }
 
     await sendToPrinter(tickets.join(""));
 
@@ -802,7 +810,15 @@ app.post("/print-all", async (req, res) => {
     if (cuisineAll.length > 0) {
       tickets.push(formatTicket({ title: isEmporter ? "CUISINE - A EMPORTER" : "CUISINE", order: cuisineAll, showTotal: false, ...common }));
     }
-    tickets.push(formatTicket({ title: isEmporter ? "SERVICE - A EMPORTER" : "SERVICE", order, showTotal: true, ...common }));
+    if (cuisine.length > 0) {
+      tickets.push(formatTicket({ title: isEmporter ? "SERVICE - A EMPORTER" : "SERVICE", order: cuisine, showTotal: true, ...common }));
+    }
+    if (boissons.length > 0) {
+      tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: true, ...common }));
+    }
+    if (cuisine.length === 0 && boissons.length === 0) {
+      tickets.push(formatTicket({ title: isEmporter ? "SERVICE - A EMPORTER" : "SERVICE", order, showTotal: true, ...common }));
+    }
 
     console.log(`Impression ${isEmporter ? `Emporter #${emporterNum}` : `Table ${effectiveTable}`} #${orderNum} : ${tickets.length} ticket(s)`);
     await sendToPrinter(tickets.join(""));
