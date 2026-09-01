@@ -124,7 +124,8 @@
         "name": "Poulet Curry",
         "price": 14,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 18,
@@ -132,7 +133,7 @@
         "price": 16,
         "category": "Plats",
         "subcategory": "Poulet",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -148,14 +149,16 @@
         "name": "Poulet Vindaloo",
         "price": 14.5,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 21,
         "name": "Poulet Mirchi",
         "price": 15,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 22,
@@ -163,7 +166,7 @@
         "price": 16,
         "category": "Plats",
         "subcategory": "Poulet",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -179,7 +182,8 @@
         "name": "Poulet Shahi Korma",
         "price": 16.5,
         "category": "Plats",
-        "subcategory": "Poulet"
+        "subcategory": "Poulet",
+        "piment": true
       },
       {
         "id": 25,
@@ -187,7 +191,7 @@
         "price": 15,
         "category": "Plats",
         "subcategory": "Poulet",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -196,7 +200,7 @@
         "price": 16.5,
         "category": "Plats",
         "subcategory": "Poulet",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -204,14 +208,16 @@
         "name": "Agneau Karahi",
         "price": 18,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": true
       },
       {
         "id": 28,
         "name": "Agneau Shahi Korma",
         "price": 17,
         "category": "Plats",
-        "subcategory": "Agneau"
+        "subcategory": "Agneau",
+        "piment": true
       },
       {
         "id": 29,
@@ -219,7 +225,7 @@
         "price": 17.5,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -228,7 +234,7 @@
         "price": 17,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -237,7 +243,7 @@
         "price": 16.5,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -246,7 +252,7 @@
         "price": 17,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -255,7 +261,7 @@
         "price": 17.5,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -264,7 +270,7 @@
         "price": 18,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -273,7 +279,7 @@
         "price": 16,
         "category": "Plats",
         "subcategory": "Agneau",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -281,14 +287,16 @@
         "name": "Boeuf Sabji",
         "price": 16,
         "category": "Plats",
-        "subcategory": "Boeuf"
+        "subcategory": "Boeuf",
+        "piment": true
       },
       {
         "id": 37,
         "name": "Boeuf Shahi Korma",
         "price": 16,
         "category": "Plats",
-        "subcategory": "Boeuf"
+        "subcategory": "Boeuf",
+        "piment": true
       },
       {
         "id": 38,
@@ -296,7 +304,7 @@
         "price": 16.5,
         "category": "Plats",
         "subcategory": "Boeuf",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -305,7 +313,7 @@
         "price": 16,
         "category": "Plats",
         "subcategory": "Boeuf",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -313,49 +321,56 @@
         "name": "Crevettes Curry",
         "price": 16,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 41,
         "name": "Crevettes Massala",
         "price": 17,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 42,
         "name": "Crevettes Shahi Korma",
         "price": 17,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 43,
         "name": "Crevettes Sagh",
         "price": 17,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 44,
         "name": "Poisson Curry",
         "price": 16.5,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 45,
         "name": "Poisson Shahi Korma",
         "price": 17,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 46,
         "name": "Poissons Madras",
         "price": 16.5,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 47,
@@ -363,7 +378,7 @@
         "price": 18,
         "category": "Plats",
         "subcategory": "Poisson",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -371,91 +386,104 @@
         "name": "Gambas Curry",
         "price": 19,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 49,
         "name": "Gambas Baingan",
         "price": 21.5,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 50,
         "name": "Gambas Massala - Malai",
         "price": 21.5,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 51,
         "name": "Coquilles Saint-Jacques",
         "price": 19,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 52,
         "name": "Legumes Shahi Korma",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 53,
         "name": "Baingan Bharta",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 54,
         "name": "Aloo Palak",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 55,
         "name": "Palak Panner",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 56,
         "name": "Mattar Panner",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 57,
         "name": "Dal Punjabi",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 58,
         "name": "Legumes Mix",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 59,
         "name": "Bombay Aloo",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 60,
         "name": "Champignons Massala",
         "price": 13,
         "category": "Plats",
-        "subcategory": "Végétarien"
+        "subcategory": "Végétarien",
+        "piment": true
       },
       {
         "id": 61,
@@ -539,7 +567,8 @@
         "name": "Crevette madras",
         "price": 16,
         "category": "Plats",
-        "subcategory": "Poisson"
+        "subcategory": "Poisson",
+        "piment": true
       },
       {
         "id": 212,
@@ -547,7 +576,7 @@
         "price": 15.5,
         "category": "Plats",
         "subcategory": "Poulet",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -556,7 +585,7 @@
         "price": 15.5,
         "category": "Plats",
         "subcategory": "Boeuf",
-        "piment": false,
+        "piment": true,
         "isFormula": false
       },
       {
@@ -564,7 +593,8 @@
         "name": "Bœuf vindallo",
         "price": 16,
         "category": "Plats",
-        "subcategory": "Boeuf"
+        "subcategory": "Boeuf",
+        "piment": true
       }
     ]
   },
