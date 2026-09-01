@@ -724,57 +724,37 @@
     "items": [
       {
         "id": 142,
-        "name": "Kir au vin blanc 15cl",
+        "name": "Kir",
         "price": 5,
         "category": "Boissons",
         "piment": false,
         "isFormula": true,
         "formulaSteps": [
           {
-            "label": "Supplément",
+            "label": "Type",
+            "remplaceNom": true,
             "articles": [
               {
-                "name": "Rose",
-                "piment": false
+                "name": "Kir au vin blanc 15cl",
+                "piment": false,
+                "price": 5
               },
               {
-                "name": "Cassis",
-                "piment": false
-              },
-              {
-                "name": "Mur",
-                "piment": false
-              },
-              {
-                "name": "Pêche",
-                "piment": false
-              },
-              {
-                "name": "Framboise",
-                "piment": false
+                "name": "Kir royal 15cl",
+                "piment": false,
+                "price": 7
               }
             ]
-          }
-        ],
-        "subcategory": "Apéritifs"
-      },
-      {
-        "id": 130,
-        "name": "Kir royal 15cl",
-        "price": 7,
-        "category": "Boissons",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
+          },
           {
             "label": "Supplément",
             "articles": [
               {
-                "name": "Rose",
+                "name": "Cassis",
                 "piment": false
               },
               {
-                "name": "Cassis",
+                "name": "Mûre",
                 "piment": false
               },
               {
@@ -786,7 +766,7 @@
                 "piment": false
               },
               {
-                "name": "Mur",
+                "name": "Rose",
                 "piment": false
               }
             ]
@@ -817,10 +797,28 @@
       },
       {
         "id": 153,
-        "name": "Martini 6cl blanc/rouge",
+        "name": "Martini 6cl",
         "price": 5,
         "category": "Boissons",
-        "subcategory": "Apéritifs"
+        "subcategory": "Apéritifs",
+        "isFormula": true,
+        "piment": false,
+        "formulaSteps": [
+          {
+            "label": "Type",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Martini blanc",
+                "piment": false
+              },
+              {
+                "name": "Martini rouge",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 154,
