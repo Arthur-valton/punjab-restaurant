@@ -326,6 +326,55 @@ function line(char = "-", width = WIDTH) {
 // Bande noire pleine largeur : fond inverse, texte blanc centre en double
 // taille. Interligne reduit pour eviter la rayure blanche entre les lignes.
 const WIDTH_QUAD = 12;
+
+// ---- Pictogramme d'alerte, imprime en mode raster (GS v 0) ----
+// Triangle evide avec point d'exclamation, dessine puis encode en bitmap.
+function grilleAttention(W, H) {
+  const g = Array.from({ length: H }, () => new Array(W).fill(0));
+  const dansTriangle = (x, y, ax, ay, bx, by, cx, cy) => {
+    const d = (px,py,qx,qy,rx,ry) => (px-rx)*(qy-ry) - (qx-rx)*(py-ry);
+    const d1 = d(x,y,ax,ay,bx,by), d2 = d(x,y,bx,by,cx,cy), d3 = d(x,y,cx,cy,ax,ay);
+    return !((d1<0||d2<0||d3<0) && (d1>0||d2>0||d3>0));
+  };
+  const b = Math.round(H * 0.118);                       // epaisseur du trait
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const dehors = dansTriangle(x, y, W/2, 2, 2, H-2, W-2, H-2);
+    const dedans = dansTriangle(x, y, W/2, 2 + b*1.9, 2 + b*1.5, H-2-b, W-2-b*1.5, H-2-b);
+    if (dehors && !dedans) g[y][x] = 1;
+  }
+  const cx = Math.round(W/2), demi = Math.round(W * 0.05);
+  for (let y = Math.round(H*0.40); y <= Math.round(H*0.68); y++)
+    for (let x = cx-demi; x <= cx+demi; x++) g[y][x] = 1;
+  const py = Math.round(H*0.80), r = Math.round(W * 0.056);
+  for (let y = py-r; y <= py+r; y++) for (let x = cx-r; x <= cx+r; x++)
+    if ((x-cx)**2 + (y-py)**2 <= r*r) g[y][x] = 1;
+  return g;
+}
+
+// GS v 0 : m=0, largeur en octets (xL xH), hauteur en lignes (yL yH), puis les
+// octets, bit de poids fort a gauche.
+function imageRaster(grille) {
+  const H = grille.length, W = grille[0].length;
+  if (W % 8 !== 0) throw new Error("largeur d'image non multiple de 8");
+  const oct = W / 8;
+  let data = "";
+  for (let y = 0; y < H; y++) {
+    for (let o = 0; o < oct; o++) {
+      let v = 0;
+      for (let bit = 0; bit < 8; bit++) if (grille[y][o*8 + bit]) v |= 0x80 >> bit;
+      data += String.fromCharCode(v);
+    }
+  }
+  return GS + "v0" + String.fromCharCode(0)
+       + String.fromCharCode(oct & 0xFF, (oct >> 8) & 0xFF)
+       + String.fromCharCode(H & 0xFF, (H >> 8) & 0xFF)
+       + data;
+}
+
+function logoAttention() {
+  return CMD.CENTER + imageRaster(grilleAttention(160, 136)) + "\n" + CMD.LEFT;
+}
+
 function bandeNoire(texte, taille = "double") {
   const quad = taille === "quad";
   const large = quad ? WIDTH_QUAD : WIDTH_DOUBLE;
@@ -570,7 +619,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   buf += CMD.INIT;
   // Un ticket de modification arrive au milieu d'un service deja lance :
   // il doit se distinguer immediatement d'une commande neuve.
-  if (!showTotal) buf += bandeNoire("Attention", "quad");
+  if (!showTotal) buf += logoAttention() + bandeNoire("Attention", "quad");
   buf += CMD.CENTER;
   if (showTotal) {
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
