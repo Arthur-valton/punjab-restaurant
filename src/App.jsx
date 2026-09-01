@@ -536,12 +536,32 @@ function App() {
     setEditingOrderId(null);
   }
 
-  async function reprintBill(orderId, remise) {
-    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}/reprint-bill`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(remise ? { remise } : {}),
-    });
+  async function reprintBill(cmd, remise) {
+    // On transmet la commande : le serveur d'impression l'oublie des que la
+    // cuisine a termine, alors que l'addition se demande apres.
+    const corps = {
+      order: cmd.items,
+      tableNumber: cmd.tableNumber,
+      orderNum: cmd.orderNum,
+      date: cmd.date || new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }),
+      orderType: cmd.orderType,
+      emporterNum: cmd.emporterNum,
+      clientName: cmd.clientName,
+      clientPhone: cmd.clientPhone,
+      clientPickupTime: cmd.clientPickupTime,
+      ...(remise ? { remise } : {}),
+    };
+    try {
+      const res = await fetch(`${getPrintUrl()}/order/${encodeURIComponent(cmd.id)}/reprint-bill`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corps),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      // Sans ce retour, l'addition ne sortait pas et personne ne le savait.
+      alert("L'addition n'a pas pu s'imprimer : " + err.message);
+    }
   }
 
   async function closeTable(orderId) {
@@ -1176,7 +1196,7 @@ function App() {
               <div className="emporter-modal-actions">
                 <button className="emporter-btn-cancel" onClick={() => setRemisePour(null)}>Annuler</button>
                 <button className="emporter-btn-confirm" onClick={() => {
-                  reprintBill(cmd.id, montant > 0 ? { type: remisePour.type, valeur: v } : null);
+                  reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null);
                   setRemisePour(null);
                 }}>Imprimer</button>
               </div>

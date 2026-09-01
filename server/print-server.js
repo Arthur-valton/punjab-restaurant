@@ -165,8 +165,22 @@ app.put("/order/:id", async (req, res) => {
 app.post("/order/:id/reprint-bill", async (req, res) => {
   try {
     const orderId = decodeURIComponent(req.params.id);
-    const order = activeOrders.get(orderId);
-    if (!order) return res.status(404).json({ error: "Commande introuvable" });
+    const b = req.body || {};
+    // La caisse envoie la commande avec sa demande : le serveur d'impression
+    // l'a souvent deja oubliee, puisqu'il la retire des que la cuisine a tout
+    // marque pret — c'est justement le moment ou l'on reclame l'addition.
+    const order = b.order ? {
+      items: b.order,
+      tableNumber: b.tableNumber,
+      orderNum: b.orderNum,
+      date: b.date,
+      orderType: b.orderType,
+      emporterNum: b.emporterNum,
+      clientName: b.clientName,
+      clientPhone: b.clientPhone,
+      clientPickupTime: b.clientPickupTime,
+    } : activeOrders.get(orderId);
+    if (!order || !order.items) return res.status(404).json({ error: "Commande introuvable" });
     const ticket = formatTicket({
       title: "ADDITION",
       order: order.items,
@@ -179,11 +193,11 @@ app.post("/order/:id/reprint-bill", async (req, res) => {
       clientName: order.clientName,
       clientPhone: order.clientPhone,
       clientPickupTime: order.clientPickupTime,
-      remise: req.body && req.body.remise,
+      remise: b.remise,
     });
     await sendToPrinter(ticket);
     console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`
-      + (req.body && req.body.remise ? ` — remise ${libelleRemise(req.body.remise)}` : ""));
+      + (b.remise ? ` — remise ${libelleRemise(b.remise)}` : ""));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
