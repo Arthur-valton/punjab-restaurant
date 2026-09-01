@@ -4,41 +4,42 @@
     "items": [
       {
         "id": 183,
-        "name": "Poulet tandoori",
+        "name": "Poulet Tandoori",
         "price": 7,
         "category": "Entrées",
-        "subcategory": "Poulet",
+        "subcategory": "Grillades",
         "piment": true
       },
       {
         "id": 184,
-        "name": "Seekh kebab",
+        "name": "Seekh Kebab",
         "price": 8,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Grillades"
       },
       {
         "id": 185,
-        "name": "Poulet tikka",
+        "name": "Poulet Tikka",
         "price": 8,
         "category": "Entrées",
-        "subcategory": "Poulet",
+        "subcategory": "Grillades",
         "piment": true
       },
       {
         "id": 186,
-        "name": "Fish tikka",
+        "name": "Poisson Tikka",
         "price": 9,
         "category": "Entrées",
-        "subcategory": "Poisson",
+        "subcategory": "Grillades",
         "piment": true
       },
       {
         "id": 187,
-        "name": "Gambas tandoori",
+        "name": "Gambas Tandoori",
         "price": 16.5,
         "category": "Entrées",
-        "subcategory": "Poisson",
+        "subcategory": "Grillades",
         "piment": true
       },
       {
@@ -46,22 +47,23 @@
         "name": "Punjab mixte 2 personnes",
         "price": 21,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Grillades"
       },
       {
         "id": 189,
         "name": "Raita",
         "price": 5.5,
         "category": "Entrées",
-        "subcategory": "Soupe",
+        "subcategory": "Salade / Soupe",
         "piment": true
       },
       {
         "id": 190,
-        "name": "Raita crevette",
+        "name": "Raita crevettes",
         "price": 7.5,
         "category": "Entrées",
-        "subcategory": "Poisson",
+        "subcategory": "Salade / Soupe",
         "piment": true
       },
       {
@@ -69,22 +71,23 @@
         "name": "Salade crevette ou poulet",
         "price": 7.5,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Salade / Soupe"
       },
       {
         "id": 192,
-        "name": "Soupe dall",
+        "name": "Soupe Dall",
         "price": 8.5,
         "category": "Entrées",
-        "subcategory": "Soupe",
+        "subcategory": "Salade / Soupe",
         "piment": true
       },
       {
         "id": 193,
-        "name": "Oignon bahji",
+        "name": "Oignons Bahji",
         "price": 5,
         "category": "Entrées",
-        "subcategory": "Vegetarien",
+        "subcategory": "Beignets",
         "piment": true,
         "isFormula": false
       },
@@ -93,28 +96,31 @@
         "name": "Pakora Aubergine",
         "price": 6,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Beignets"
       },
       {
         "id": 195,
-        "name": "Aloi pakora",
+        "name": "Aloo Pakora",
         "price": 5,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Beignets"
       },
       {
         "id": 196,
-        "name": "Samossa",
+        "name": "Samossa Légumes",
         "price": 5.5,
         "category": "Entrées",
-        "piment": true
+        "piment": true,
+        "subcategory": "Beignets"
       },
       {
         "id": 197,
         "name": "Mixte Pakora",
         "price": 6.5,
         "category": "Entrées",
-        "subcategory": "Vegetarien",
+        "subcategory": "Beignets",
         "piment": true,
         "isFormula": false
       },
@@ -123,9 +129,73 @@
         "name": "Shahi Mix Pakora 2 pers",
         "price": 15,
         "category": "Entrées",
-        "subcategory": "Vegetarien",
+        "subcategory": "Beignets",
         "piment": true,
         "isFormula": false
+      },
+      {
+        "id": 70,
+        "name": "Naan Nature",
+        "price": 3,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 71,
+        "name": "Naan Fromage",
+        "price": 3.5,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 72,
+        "name": "Naan Ail",
+        "price": 3.5,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 73,
+        "name": "Chili Naan",
+        "price": 3.5,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 74,
+        "name": "Naan Punjab",
+        "price": 4,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 75,
+        "name": "Masala Kulcha",
+        "price": 4,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 76,
+        "name": "Naan Fromage & Ail",
+        "price": 4.5,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
+      },
+      {
+        "id": 77,
+        "name": "Chappati",
+        "price": 3,
+        "category": "Entrées",
+        "subcategory": "Naans",
+        "piment": false
       }
     ]
   },
@@ -657,59 +727,6 @@
         "price": 16,
         "category": "Biryani",
         "piment": true
-      }
-    ]
-  },
-  {
-    "category": "Naans",
-    "items": [
-      {
-        "id": 70,
-        "name": "Naan Nature",
-        "price": 3,
-        "category": "Naans"
-      },
-      {
-        "id": 71,
-        "name": "Naan Fromage",
-        "price": 3.5,
-        "category": "Naans"
-      },
-      {
-        "id": 72,
-        "name": "Naan Ail",
-        "price": 3.5,
-        "category": "Naans"
-      },
-      {
-        "id": 73,
-        "name": "Chili Naan",
-        "price": 3.5,
-        "category": "Naans"
-      },
-      {
-        "id": 74,
-        "name": "Naan Punjab",
-        "price": 4,
-        "category": "Naans"
-      },
-      {
-        "id": 75,
-        "name": "Masala Kulcha",
-        "price": 4,
-        "category": "Naans"
-      },
-      {
-        "id": 76,
-        "name": "Naan Fromage & Ail",
-        "price": 4.5,
-        "category": "Naans"
-      },
-      {
-        "id": 77,
-        "name": "Chappati",
-        "price": 3,
-        "category": "Naans"
       }
     ]
   },
