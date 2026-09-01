@@ -873,7 +873,7 @@
         "isFormula": true,
         "formulaSteps": [
           {
-            "label": "Boisson",
+            "label": "Parfum",
             "articles": [
               {
                 "name": "Mangue",
@@ -894,10 +894,27 @@
       },
       {
         "id": 169,
-        "name": "Lassi sucré ou salé",
+        "name": "Lassi",
         "price": 4.5,
         "category": "Boissons",
-        "subcategory": "Boisson Maison"
+        "subcategory": "Boisson Maison",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Type",
+            "articles": [
+              {
+                "name": "Sucré",
+                "piment": false
+              },
+              {
+                "name": "Salé",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 158,
@@ -943,6 +960,19 @@
         "piment": false,
         "isFormula": true,
         "formulaSteps": [
+          {
+            "label": "Type",
+            "articles": [
+              {
+                "name": "Sirop a l'eau",
+                "piment": false
+              },
+              {
+                "name": "Diabolo",
+                "piment": false
+              }
+            ]
+          },
           {
             "label": "Parfum",
             "articles": [
@@ -992,7 +1022,32 @@
         "name": "Digestif",
         "price": 4,
         "category": "Boissons",
-        "subcategory": "Digestif"
+        "subcategory": "Digestif",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Digestif",
+            "articles": [
+              {
+                "name": "GET 27",
+                "piment": false
+              },
+              {
+                "name": "Menthe pastille",
+                "piment": false
+              },
+              {
+                "name": "Mirabelle",
+                "piment": false
+              },
+              {
+                "name": "Digestif maison",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 170,
@@ -1020,7 +1075,24 @@
         "name": "Infusion",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Café/Thé"
+        "subcategory": "Café/Thé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "articles": [
+              {
+                "name": "Menthe poivrée",
+                "piment": false
+              },
+              {
+                "name": "Fruit rouge",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 224,
@@ -1074,6 +1146,13 @@
       {
         "id": 231,
         "name": "Thé au lait",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 232,
+        "name": "Thé noir",
         "price": 3.5,
         "category": "Boissons",
         "subcategory": "Café/Thé"
