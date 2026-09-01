@@ -126,10 +126,19 @@ app.put("/order/:id", async (req, res) => {
       clientPickupTime: existing.clientPickupTime,
     } : {};
 
-    // Le restaurant veut le ticket complet remis a jour, pas un differentiel :
-    // la cuisine remplace simplement l'ancien papier.
-    const tickets = ticketsDeCommande(order, { ...common, ...emporterInfo },
-                                      existing.orderType === "emporter");
+    // Le restaurant echange le papier en cuisine : on reimprime le ticket
+    // complet, mais seulement pour les postes dont le contenu a change.
+    // On compare a date identique, seuls les articles different donc.
+    const info = { ...common, ...emporterInfo };
+    const emporter = existing.orderType === "emporter";
+    const avant = ticketsDeCommande(existing.items || [], info, emporter);
+    const apres = ticketsDeCommande(order, info, emporter);
+    const POSTES = emporter ? ["COMMANDE"] : ["CUISINE", "DESSERTS", "BAR"];
+    const tickets = apres.map((t, k) => {
+      if (t && t !== avant[k]) return t;                    // contenu modifie
+      if (!t && avant[k]) return ticketAnnulation(POSTES[k], info);  // poste vide
+      return "";                                            // inchange : on n'imprime pas
+    });
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
     const printable = tickets.filter(Boolean);
@@ -955,6 +964,21 @@ wss.on("connection", (ws) => {
 });
 
 // ----- Route POST /print-all -----
+// Un poste vide de tout article apres modification : sans ce mot, la cuisine
+// garderait son ancien papier et preparerait des plats annules.
+function ticketAnnulation(titre, common) {
+  let b = CMD.INIT + CMD.CENTER;
+  b += CMD.DOUBLE_ON + CMD.BOLD_ON + `${titre} #${common.orderType === "emporter" ? common.emporterNum : common.orderNum}\n`;
+  b += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT + line("=");
+  b += orderHeader({ ...common, withNumber: false });
+  b += `Date: ${common.date}\n` + line("=");
+  b += bandeNoire("Rien a preparer");
+  b += CMD.CENTER + CMD.BOLD_ON + "Tous les articles de ce poste\n";
+  b += "ont ete retires de la commande.\n" + CMD.BOLD_OFF + CMD.LEFT;
+  b += line("=") + CMD.FEED + CMD.PARTIAL_CUT;
+  return b;
+}
+
 // Tickets de production d'une commande. Sert aussi bien a la prise de
 // commande qu'a la modification : le restaurant veut alors le ticket complet
 // remis a jour, pas un differentiel.
