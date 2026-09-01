@@ -1837,6 +1837,136 @@
                 "piment": false
               }
             ]
+          },
+          {
+            "label": "Boule 1",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
           }
         ],
         "piment": false
@@ -1922,6 +2052,136 @@
                 "piment": false
               }
             ]
+          },
+          {
+            "label": "Boule 1",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
           }
         ]
       },
@@ -1933,23 +2193,6 @@
         "piment": false,
         "isFormula": true,
         "formulaSteps": [
-          {
-            "label": "Naan",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
-              }
-            ]
-          },
           {
             "label": "Entrée",
             "articles": [
@@ -1985,6 +2228,23 @@
             ]
           },
           {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Dessert",
             "articles": [
               {
@@ -1997,6 +2257,136 @@
               },
               {
                 "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 1",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
                 "piment": false
               }
             ]
@@ -2029,21 +2419,26 @@
             ]
           },
           {
-            "label": "Naan",
+            "label": "Kir",
+            "siEtape": "Apéritif",
+            "pourChoix": [
+              "Kir"
+            ],
             "articles": [
               {
-                "name": "Naan Nature",
+                "name": "Kir Vin blanc 15cl",
                 "piment": false
               },
               {
-                "name": "Naan Ail",
+                "name": "Kir royal 15cl",
                 "piment": false
               },
               {
-                "name": "Naan Fromage",
+                "name": "Kir indien 15cl",
                 "piment": false
               }
-            ]
+            ],
+            "remplaceParent": true
           },
           {
             "label": "Entrée",
@@ -2088,10 +2483,31 @@
             ]
           },
           {
+            "label": "Naan",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Dessert",
             "articles": [
               {
                 "name": "Halwa",
+                "piment": false
+              },
+              {
+                "name": "Gulab Jamun",
                 "piment": false
               },
               {
@@ -2101,9 +2517,135 @@
               {
                 "name": "Coupe de glace 2 boules",
                 "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 1",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
               },
               {
-                "name": "Kullfi",
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
                 "piment": false
               }
             ]
@@ -2136,6 +2678,54 @@
             ]
           },
           {
+            "label": "Jus pers. 1",
+            "siEtape": "Boisson pers. 1",
+            "pourChoix": [
+              "Jus de fruits"
+            ],
+            "articles": [
+              {
+                "name": "Jus orange",
+                "piment": false
+              },
+              {
+                "name": "Jus mangue",
+                "piment": false
+              },
+              {
+                "name": "Jus ananas",
+                "piment": false
+              },
+              {
+                "name": "Jus fraise",
+                "piment": false
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
+            "label": "Kir pers. 1",
+            "siEtape": "Boisson pers. 1",
+            "pourChoix": [
+              "Kir"
+            ],
+            "articles": [
+              {
+                "name": "Kir Vin blanc 15cl",
+                "piment": false
+              },
+              {
+                "name": "Kir royal 15cl",
+                "piment": false
+              },
+              {
+                "name": "Kir indien 15cl",
+                "piment": false
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
             "label": "Boisson pers. 2",
             "articles": [
               {
@@ -2153,6 +2743,54 @@
             ]
           },
           {
+            "label": "Jus pers. 2",
+            "siEtape": "Boisson pers. 2",
+            "pourChoix": [
+              "Jus de fruits"
+            ],
+            "articles": [
+              {
+                "name": "Jus orange",
+                "piment": false
+              },
+              {
+                "name": "Jus mangue",
+                "piment": false
+              },
+              {
+                "name": "Jus ananas",
+                "piment": false
+              },
+              {
+                "name": "Jus fraise",
+                "piment": false
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
+            "label": "Kir pers. 2",
+            "siEtape": "Boisson pers. 2",
+            "pourChoix": [
+              "Kir"
+            ],
+            "articles": [
+              {
+                "name": "Kir Vin blanc 15cl",
+                "piment": false
+              },
+              {
+                "name": "Kir royal 15cl",
+                "piment": false
+              },
+              {
+                "name": "Kir indien 15cl",
+                "piment": false
+              }
+            ],
+            "remplaceParent": true
+          },
+          {
             "label": "Pichet à vin",
             "articles": [
               {
@@ -2165,40 +2803,6 @@
               },
               {
                 "name": "Pichet blanc",
-                "piment": false
-              }
-            ]
-          },
-          {
-            "label": "Naan pers. 1",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false
-              }
-            ]
-          },
-          {
-            "label": "Naan pers. 2",
-            "articles": [
-              {
-                "name": "Naan Nature",
-                "piment": false
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false
-              },
-              {
-                "name": "Naan Ail",
                 "piment": false
               }
             ]
@@ -2263,6 +2867,40 @@
             ]
           },
           {
+            "label": "Naan pers. 1",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Naan pers. 2",
+            "articles": [
+              {
+                "name": "Naan Nature",
+                "piment": false
+              },
+              {
+                "name": "Naan Ail",
+                "piment": false
+              },
+              {
+                "name": "Naan Fromage",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Dessert pers. 1",
             "articles": [
               {
@@ -2284,6 +2922,136 @@
             ]
           },
           {
+            "label": "Boule 1 pers. 1",
+            "siEtape": "Dessert pers. 1",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2 pers. 1",
+            "siEtape": "Dessert pers. 1",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Dessert pers. 2",
             "articles": [
               {
@@ -2300,6 +3068,136 @@
               },
               {
                 "name": "Coupe de glace 2 boules",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 1 pers. 2",
+            "siEtape": "Dessert pers. 2",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2 pers. 2",
+            "siEtape": "Dessert pers. 2",
+            "pourChoix": [
+              "Coupe de glace 2 boules"
+            ],
+            "articles": [
+              {
+                "name": "Glace citron",
+                "piment": false
+              },
+              {
+                "name": "Glace fraise",
+                "piment": false
+              },
+              {
+                "name": "Glace passion",
+                "piment": false
+              },
+              {
+                "name": "Glace caramel",
+                "piment": false
+              },
+              {
+                "name": "Glace mangue",
+                "piment": false
+              },
+              {
+                "name": "Glace chocolat",
+                "piment": false
+              },
+              {
+                "name": "Glace vanille",
+                "piment": false
+              },
+              {
+                "name": "Glace café",
+                "piment": false
+              },
+              {
+                "name": "Glace coco",
+                "piment": false
+              },
+              {
+                "name": "Glace menthe",
+                "piment": false
+              },
+              {
+                "name": "Glace nougat",
+                "piment": false
+              },
+              {
+                "name": "Glace ananas",
+                "piment": false
+              },
+              {
+                "name": "Glace cassis",
+                "piment": false
+              },
+              {
+                "name": "Glace pêche",
                 "piment": false
               }
             ]
