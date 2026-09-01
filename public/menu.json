@@ -1057,27 +1057,17 @@
       },
       {
         "id": 173,
-        "name": "Infusion",
+        "name": "Infusion Menthe poivrée",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Café/Thé",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Parfum",
-            "articles": [
-              {
-                "name": "Menthe poivrée",
-                "piment": false
-              },
-              {
-                "name": "Fruit rouge",
-                "piment": false
-              }
-            ]
-          }
-        ]
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 236,
+        "name": "Infusion Fruit rouge",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
       },
       {
         "id": 224,
