@@ -3269,7 +3269,98 @@
         "id": 221,
         "name": "Menu enfant",
         "price": 15,
-        "category": "Menu"
+        "category": "Menu",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Plat",
+            "articles": [
+              {
+                "name": "Butter Chicken",
+                "piment": true
+              },
+              {
+                "name": "Poulet Shahi Korma",
+                "piment": true
+              }
+            ]
+          },
+          {
+            "label": "Dessert",
+            "articles": [
+              {
+                "name": "Boule de glace",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Boule de glace"
+            ],
+            "articles": [
+              {
+                "name": "Citron",
+                "piment": false
+              },
+              {
+                "name": "Fraise",
+                "piment": false
+              },
+              {
+                "name": "Passion",
+                "piment": false
+              },
+              {
+                "name": "Caramel",
+                "piment": false
+              },
+              {
+                "name": "Mangue",
+                "piment": false
+              },
+              {
+                "name": "Chocolat",
+                "piment": false
+              },
+              {
+                "name": "Vanille",
+                "piment": false
+              },
+              {
+                "name": "Café",
+                "piment": false
+              },
+              {
+                "name": "Coco",
+                "piment": false
+              },
+              {
+                "name": "Menthe",
+                "piment": false
+              },
+              {
+                "name": "Nougat",
+                "piment": false
+              },
+              {
+                "name": "Ananas",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              }
+            ]
+          }
+        ]
       }
     ]
   }
