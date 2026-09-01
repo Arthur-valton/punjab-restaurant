@@ -834,7 +834,14 @@ function App() {
               /* ── Liste articles ── */
               <>
                 <div className="formula-picker-step-label">
-                  {`Étape ${formulaPicker.currentStep + 1}/${formulaPicker.item.formulaSteps.length} — ${formulaPicker.item.formulaSteps[formulaPicker.currentStep].label}`}
+                  {(() => {
+                    const steps = formulaPicker.item.formulaSteps;
+                    const label = steps[formulaPicker.currentStep].label;
+                    // « Étape 1/1 » n'apporte rien : on ne compte que s'il y en a plusieurs
+                    return steps.length > 1
+                      ? `Étape ${formulaPicker.currentStep + 1}/${steps.length} — ${label}`
+                      : label;
+                  })()}
                 </div>
                 <div className="formula-picker-items">
                   {(() => {
