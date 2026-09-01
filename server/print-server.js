@@ -197,6 +197,8 @@ const CMD = {
   DOUBLE_H: GS + "!\x01",
   QUAD: GS + "!\x33",
   DOUBLE_OFF: GS + "!\x00",
+  REVERSE_ON: GS + "B\x01",
+  REVERSE_OFF: GS + "B\x00",
   FEED: ESC + "d\x03",
   CUT: GS + "V\x00",
   PARTIAL_CUT: GS + "V\x01",
@@ -340,11 +342,10 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     // Séparateur de catégorie — ticket cuisine uniquement
     if (!showTotal && groups.length > 1) {
       buf += CMD.CENTER;
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `${group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}\n`;
-      buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+      buf += CMD.REVERSE_ON + CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += `  ${group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}  \n`;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
       buf += CMD.LEFT;
-      buf += line("-");
     }
 
     for (const item of group.items) {
