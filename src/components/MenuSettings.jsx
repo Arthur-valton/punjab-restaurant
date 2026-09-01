@@ -197,6 +197,12 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     );
     setEditingItem({ ...editingItem, formulaSteps: steps });
   }
+  function editToggleRemplaceNom(i) {
+    const steps = (editingItem.formulaSteps || []).map((s, si) =>
+      si === i ? { ...s, remplaceNom: !s.remplaceNom } : s
+    );
+    setEditingItem({ ...editingItem, formulaSteps: steps });
+  }
   function editRemoveStep(i) {
     const steps = (editingItem.formulaSteps || []).filter((_, si) => si !== i);
     setEditingItem({ ...editingItem, formulaSteps: steps.length ? steps : undefined, isFormula: steps.length > 0 });
@@ -455,6 +461,14 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                         </select>
                         <button className="ap-remove-btn" onClick={() => editRemoveStep(i)}>✕</button>
                       </div>
+                      <div className="ap-settings-row">
+                        <span className="ap-row-label">Le choix remplace le nom</span>
+                        <button
+                          className={`ap-toggle ${step.remplaceNom ? "on" : ""}`}
+                          onClick={() => editToggleRemplaceNom(i)}>
+                          <span className="ap-toggle-thumb" />
+                        </button>
+                      </div>
                       <div className="ap-row-sep" />
                       <div className="ap-chips-wrap">
                         {(step.articles || []).map((a, ai) => {
@@ -564,6 +578,14 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
                         </select>
                         <button className="ap-remove-btn"
                           onClick={() => setNewFormulaSteps(newFormulaSteps.filter((_, idx) => idx !== i))}>✕</button>
+                      </div>
+                      <div className="ap-settings-row">
+                        <span className="ap-row-label">Le choix remplace le nom</span>
+                        <button
+                          className={`ap-toggle ${step.remplaceNom ? "on" : ""}`}
+                          onClick={() => editToggleRemplaceNom(i)}>
+                          <span className="ap-toggle-thumb" />
+                        </button>
                       </div>
                       <div className="ap-row-sep" />
                       <div className="ap-chips-wrap">

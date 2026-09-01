@@ -3,6 +3,11 @@ import React from "react";
 const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
 
 // Niveaux de piment : 1 = recette normale (rien), 2 = +, 3 = ++, 4 = +++
+function nomAffiche(item) {
+  const c = (item.formulaChoices || []).find((x) => x.remplaceNom);
+  return c ? c.itemName : item.name;
+}
+
 function pimentMark(level) {
   return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
 }
@@ -135,12 +140,12 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
                     <tr>
                       <td className="c"><strong>{item.qty}x</strong></td>
                       <td className="l">
-                        {item.name}
+                        {nomAffiche(item)}
                         {pimentMark(item.piment) && <span className="ticket-piment">{pimentMark(item.piment)}</span>}
                       </td>
                       <td className="r">{(item.price * item.qty).toFixed(2)} &euro;</td>
                     </tr>
-                    {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                    {(item.formulaChoices || []).filter(c => !c.remplaceNom).map((choice, ci) => (
                       <tr key={`fc-${ci}`}>
                         <td className="c"></td>
                         <td className="l ticket-formula-choice">
@@ -165,7 +170,7 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
                 {boissons.map((item) => (
                   <tr key={item.cartId || item.id}>
                     <td className="c"><strong>{item.qty}x</strong></td>
-                    <td className="l">{item.name}</td>
+                    <td className="l">{nomAffiche(item)}</td>
                     <td className="r">{(item.price * item.qty).toFixed(2)} &euro;</td>
                   </tr>
                 ))}

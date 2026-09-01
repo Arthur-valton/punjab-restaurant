@@ -29,6 +29,18 @@ function pimentMark(level) {
   return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
 }
 
+// Un choix de formule peut remplacer le nom du produit : le bouton
+// s'appelle "Sirop à l'eau", le choix "Sirop à la menthe", et la ligne
+// affichée devient "Sirop à la menthe".
+function nomAffiche(item) {
+  const c = (item.formulaChoices || []).find((x) => x.remplaceNom);
+  return c ? c.itemName : item.name;
+}
+// Les choix qui remplacent le nom ne sont pas répétés en sous-ligne
+function choixVisibles(item) {
+  return (item.formulaChoices || []).filter((c) => !c.remplaceNom);
+}
+
 // Pastel Apple colors par sous-catégorie (couleurs manuelles prioritaires)
 const SUBCAT_COLORS = {
   "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
@@ -244,6 +256,7 @@ function App() {
     const { item, currentStep, choices } = formulaPicker;
     const step = item.formulaSteps[currentStep];
     const choice = { label: step.label, itemName: articleName };
+    if (step.remplaceNom) choice.remplaceNom = true;
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
     if (currentStep + 1 >= item.formulaSteps.length) {
@@ -444,7 +457,7 @@ function App() {
               <div key={item.cartId} className="cart-item-block">
                 <div className="cart-item">
                   <span className="cart-item-name">
-                    {item.name}
+                    {nomAffiche(item)}
                     {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
                   </span>
                   <div className="cart-item-controls">
@@ -459,7 +472,7 @@ function App() {
                   </div>
                   <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                 </div>
-                {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                {choixVisibles(item).map((choice, ci) => (
                   <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
                 ))}
               </div>
@@ -574,7 +587,7 @@ function App() {
                   <div key={item.cartId} className="cart-item-block">
                     <div className="cart-item">
                       <span className="cart-item-name">
-                        {item.name}
+                        {nomAffiche(item)}
                         {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
                       </span>
                       <div className="cart-item-controls">
@@ -586,7 +599,7 @@ function App() {
                       </div>
                       <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
                     </div>
-                    {item.formulaChoices && item.formulaChoices.map((choice, ci) => (
+                    {choixVisibles(item).map((choice, ci) => (
                       <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}</div>
                     ))}
                   </div>

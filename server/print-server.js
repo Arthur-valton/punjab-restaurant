@@ -281,10 +281,18 @@ function formulaSig(item) {
   return (item.formulaChoices || []).map((c) => `${c.label}=${c.itemName}=${c.piment || ""}`).join("|");
 }
 
+// Un choix peut remplacer le nom du produit : le bouton s'appelle
+// "Sirop a l'eau", le choix "Sirop a la menthe", et la ligne du ticket
+// affiche directement "Sirop a la menthe".
+function nomAffiche(item) {
+  const c = (item.formulaChoices || []).find((x) => x.remplaceNom);
+  return c ? c.itemName : item.name;
+}
+
 // Sous-lignes "> Parfum: Fraise" sous l'article
 function formulaLines(item, indent = "   ") {
   let b = "";
-  for (const c of item.formulaChoices || []) {
+  for (const c of (item.formulaChoices || []).filter((x) => !x.remplaceNom)) {
     const cm = pimentMark(c.piment);
     b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}\n`;
   }
@@ -402,7 +410,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     if (!seenCats[cat]) seenCats[cat] = [];
     // Regroupe sur le marqueur affiche : deux lignes identiques a l'impression
     // fusionnent, mais un plat avec piment reste separe du meme plat sans piment.
-    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name)
+    const existing = seenCats[cat].find(x => normName(nomAffiche(x)) === normName(nomAffiche(item))
       && pimentMark(x.piment) === pimentMark(item.piment)
       && formulaSig(x) === formulaSig(item));
     if (existing) existing.qty += item.qty;
@@ -437,19 +445,14 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
         const mark = pimentMark(item.piment);
         buf += CMD.BOLD_ON;
-        buf += pad(`${item.qty}x ${sanitize(item.name)}${mark ? " " + mark : ""}`, totalStr, WIDTH);
+        buf += pad(`${item.qty}x ${sanitize(nomAffiche(item))}${mark ? " " + mark : ""}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
-        if (item.formulaChoices) {
-          for (const choice of item.formulaChoices) {
-            const cm = pimentMark(choice.piment);
-            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
-          }
-        }
+        buf += formulaLines(item);
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
         buf += ESC + "J\x06";
       } else {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         buf += CMD.BOLD_ON + formulaLines(item) + CMD.BOLD_OFF;
         buf += ESC + "J\x0C";
@@ -564,29 +567,18 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += CMD.CENTER + CMD.BOLD_ON + ">>> AJOUTS <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
       for (const item of added) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-        if (item.formulaChoices) {
-          for (const choice of item.formulaChoices) {
-            const cm = pimentMark(choice.piment);
-            buf += CMD.BOLD_ON;
-            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
-            buf += CMD.BOLD_OFF;
-          }
-        }
+        buf += CMD.BOLD_ON + formulaLines(item) + CMD.BOLD_OFF;
       }
     }
     if (removed.length > 0) {
       buf += CMD.CENTER + CMD.BOLD_ON + ">>> ANNULES <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
       for (const item of removed) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-        if (item.formulaChoices) {
-          for (const choice of item.formulaChoices) {
-            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}\n`;
-          }
-        }
+        buf += formulaLines(item);
       }
     }
     buf += line("=");
@@ -603,27 +595,15 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     if (showTotal) {
       const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
       buf += CMD.BOLD_ON;
-      buf += pad(`${item.qty}x ${sanitize(item.name)}${mark ? " " + mark : ""}`, totalStr, WIDTH);
+      buf += pad(`${item.qty}x ${sanitize(nomAffiche(item))}${mark ? " " + mark : ""}`, totalStr, WIDTH);
       buf += CMD.BOLD_OFF;
-      if (item.formulaChoices) {
-        for (const choice of item.formulaChoices) {
-          const cm = pimentMark(choice.piment);
-          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
-        }
-      }
+      buf += formulaLines(item);
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
     } else {
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, mark);
+      buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, mark);
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      if (item.formulaChoices) {
-        for (const choice of item.formulaChoices) {
-          const cm = pimentMark(choice.piment);
-          buf += CMD.BOLD_ON;
-          buf += `  > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
-          buf += CMD.BOLD_OFF;
-        }
-      }
+      buf += CMD.BOLD_ON + formulaLines(item, "  ") + CMD.BOLD_OFF;
     }
   }
 
@@ -766,7 +746,9 @@ function mapFormulaLabelShared(label) {
 function buildGroups(items) {
   const seen = {};
   for (const item of items) {
-    if (item.formulaChoices && item.formulaChoices.length > 0) {
+    // Meme distinction que sur les tickets : seules les formules-MENU sont
+    // eclatees. Sinon le KDS afficherait une categorie "Parfum" pour un sirop.
+    if (item.formulaChoices && item.formulaChoices.length > 0 && isMenuFormula(item)) {
       for (const choice of item.formulaChoices) {
         const cat = mapFormulaLabelShared(choice.label);
         const merged = CAT_MERGE_SHARED[cat] || cat;
@@ -778,9 +760,12 @@ function buildGroups(items) {
     } else {
       const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
       if (!seen[cat]) seen[cat] = [];
-      const existing = seen[cat].find(x => normName(x.name) === normName(item.name) && (x.piment || null) === (item.piment || null));
+      const nom = nomAffiche(item);
+      const existing = seen[cat].find(x => normName(nomAffiche(x)) === normName(nom)
+        && (x.piment || null) === (item.piment || null)
+        && formulaSig(x) === formulaSig(item));
       if (existing) existing.qty += item.qty;
-      else seen[cat].push(item);
+      else seen[cat].push({ ...item, name: nom });
     }
   }
   const sorted = [...CAT_ORDER_SHARED.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER_SHARED.includes(c))];
