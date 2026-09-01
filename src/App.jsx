@@ -62,9 +62,12 @@ function prochaineEtape(item, choices, apres) {
 function indicateurFormule(item) {
   const steps = item.formulaSteps || [];
   if (!item.isFormula || steps.length === 0) return null;
-  if (estFormuleMenu(item)) return { classe: "menu", texte: `${steps.length} étapes` };
-  const st = steps.find((x) => x.remplaceNom) || steps[0];
-  return { classe: "choix", texte: `${(st.articles || []).length} choix` };
+  // Un menu se reconnaît à sa catégorie, pas à son nombre d'étapes : le menu
+  // Entrée+Plat n'en a que deux et reste un menu.
+  if (item.category === "Menu") return { classe: "menu", texte: `${steps.length} étapes` };
+  // Sinon : une seule étape = une liste de choix, plusieurs = un enchaînement
+  if (steps.length === 1) return { classe: "choix", texte: `${(steps[0].articles || []).length} choix` };
+  return { classe: "choix", texte: `${steps.length} étapes` };
 }
 
 // Quand les choix d'une formule portent des tarifs différents, le prix du
