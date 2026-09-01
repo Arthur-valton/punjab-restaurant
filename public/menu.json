@@ -8,14 +8,14 @@
         "price": 7,
         "category": "Entrées",
         "subcategory": "Grillades",
-        "piment": true
+        "piment": false
       },
       {
         "id": 184,
         "name": "Seekh Kebab",
         "price": 8,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Grillades"
       },
       {
@@ -24,7 +24,7 @@
         "price": 8,
         "category": "Entrées",
         "subcategory": "Grillades",
-        "piment": true
+        "piment": false
       },
       {
         "id": 186,
@@ -32,7 +32,7 @@
         "price": 9,
         "category": "Entrées",
         "subcategory": "Grillades",
-        "piment": true
+        "piment": false
       },
       {
         "id": 187,
@@ -40,14 +40,14 @@
         "price": 16.5,
         "category": "Entrées",
         "subcategory": "Grillades",
-        "piment": true
+        "piment": false
       },
       {
         "id": 188,
         "name": "Punjab mixte 2 personnes",
         "price": 21,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Grillades"
       },
       {
@@ -56,7 +56,7 @@
         "price": 5.5,
         "category": "Entrées",
         "subcategory": "Salade",
-        "piment": true
+        "piment": false
       },
       {
         "id": 190,
@@ -64,14 +64,14 @@
         "price": 7.5,
         "category": "Entrées",
         "subcategory": "Salade",
-        "piment": true
+        "piment": false
       },
       {
         "id": 191,
         "name": "Salade crevette",
         "price": 7.5,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Salade"
       },
       {
@@ -80,7 +80,7 @@
         "price": 7.5,
         "category": "Entrées",
         "subcategory": "Salade",
-        "piment": true
+        "piment": false
       },
       {
         "id": 192,
@@ -88,7 +88,7 @@
         "price": 8.5,
         "category": "Entrées",
         "subcategory": "Soupe",
-        "piment": true
+        "piment": false
       },
       {
         "id": 193,
@@ -96,7 +96,7 @@
         "price": 5,
         "category": "Entrées",
         "subcategory": "Beignets",
-        "piment": true,
+        "piment": false,
         "isFormula": false
       },
       {
@@ -104,7 +104,7 @@
         "name": "Pakora Aubergine",
         "price": 6,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Beignets"
       },
       {
@@ -112,7 +112,7 @@
         "name": "Aloo Pakora",
         "price": 5,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Beignets"
       },
       {
@@ -120,7 +120,7 @@
         "name": "Samossa Légumes",
         "price": 5.5,
         "category": "Entrées",
-        "piment": true,
+        "piment": false,
         "subcategory": "Beignets"
       },
       {
@@ -129,7 +129,7 @@
         "price": 6.5,
         "category": "Entrées",
         "subcategory": "Beignets",
-        "piment": true,
+        "piment": false,
         "isFormula": false
       },
       {
@@ -138,7 +138,7 @@
         "price": 15,
         "category": "Entrées",
         "subcategory": "Beignets",
-        "piment": true,
+        "piment": false,
         "isFormula": false
       },
       {
