@@ -3164,3 +3164,33 @@ body {
   font-size: 0.78em;
   opacity: 0.7;
 }
+
+/* Repère de type de bouton : simple / à choix / menu */
+.menu-btn-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+}
+.menu-btn-tag {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.menu-btn-tag.choix {
+  color: #0a6ea8;
+  background: rgba(10,132,255,0.14);
+  border: 1px solid rgba(10,132,255,0.35);
+}
+.menu-btn-tag.choix::before { content: "▾ "; }
+.menu-btn-tag.menu {
+  color: #7a4bbd;
+  background: rgba(175,82,222,0.14);
+  border: 1px solid rgba(175,82,222,0.4);
+}
+.menu-btn-tag.menu::before { content: "☰ "; }

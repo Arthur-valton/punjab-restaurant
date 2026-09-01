@@ -41,6 +41,16 @@ function estFormuleMenu(item) {
   return steps.every((st) => LABELS_POSTE.includes(norm(st.label)));
 }
 
+// Repère visuel sur le bouton : rien pour un article simple, le nombre de
+// choix pour une déclinaison, le nombre d'étapes pour un menu.
+function indicateurFormule(item) {
+  const steps = item.formulaSteps || [];
+  if (!item.isFormula || steps.length === 0) return null;
+  if (estFormuleMenu(item)) return { classe: "menu", texte: `${steps.length} étapes` };
+  const st = steps.find((x) => x.remplaceNom) || steps[0];
+  return { classe: "choix", texte: `${(st.articles || []).length} choix` };
+}
+
 // Quand les choix d'une formule portent des tarifs différents, le prix du
 // produit n'est qu'un tarif d'appel : on affiche « dès X € » plutôt qu'un
 // montant qui serait faux pour la moitié des choix.
@@ -612,12 +622,18 @@ function App() {
                 >
                   {qty > 0 && <span className="menu-btn-badge">{qty}</span>}
                   <span className="menu-btn-name">{item.name}</span>
-                  <span className="menu-btn-price" style={c ? { color: c.text } : undefined}>
+                  <span className="menu-btn-bottom">
+                    <span className="menu-btn-price" style={c ? { color: c.text } : undefined}>
+                      {(() => {
+                        const depart = prixDepart(item);
+                        return depart === null
+                          ? <>{item.price.toFixed(2)} &euro;</>
+                          : <><span className="menu-btn-price-prefix">dès </span>{depart.toFixed(2)} &euro;</>;
+                      })()}
+                    </span>
                     {(() => {
-                      const depart = prixDepart(item);
-                      return depart === null
-                        ? <>{item.price.toFixed(2)} &euro;</>
-                        : <><span className="menu-btn-price-prefix">dès </span>{depart.toFixed(2)} &euro;</>;
+                      const ind = indicateurFormule(item);
+                      return ind && <span className={`menu-btn-tag ${ind.classe}`}>{ind.texte}</span>;
                     })()}
                   </span>
                 </button>
