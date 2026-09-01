@@ -289,11 +289,30 @@ function nomAffiche(item) {
   return c ? c.itemName : item.name;
 }
 
-// Sous-lignes "> Parfum: Fraise" sous l'article
+// Choix a imprimer : on ecarte ceux qui ont remplace le nom ou leur parent
+function choixImprimables(item) {
+  const choices = item.formulaChoices || [];
+  const remplaces = new Set(choices.map((x) => x.remplaceParent).filter(Boolean));
+  return choices.filter((x) => !x.remplaceNom && !remplaces.has(x.label));
+}
+
+// Ticket de production : les precisions tiennent sur une seule ligne, a la
+// meme taille que l'article. « 1x Coupe de glace 2 boules » puis
+// « Citron + Chocolat » se lit d'un coup d'oeil ; des sous-lignes en petit
+// caractere avec leurs libelles cassaient la mise en page.
+function formulaLineCompacte(item) {
+  const c = choixImprimables(item);
+  if (c.length === 0) return "";
+  return "  " + c.map((x) => {
+    const mk = pimentMark(x.piment);
+    return sanitize(x.itemName) + (mk ? " " + mk : "");
+  }).join(" + ") + "\n";
+}
+
+// Sous-lignes detaillees "> Parfum: Fraise" — pour l'addition
 function formulaLines(item, indent = "   ") {
   let b = "";
-  const remplaces = new Set((item.formulaChoices || []).map((x) => x.remplaceParent).filter(Boolean));
-  for (const c of (item.formulaChoices || []).filter((x) => !x.remplaceNom && !remplaces.has(x.label))) {
+  for (const c of choixImprimables(item)) {
     const cm = pimentMark(c.piment);
     b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}\n`;
   }
@@ -465,8 +484,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
       } else {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
         buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
+        buf += formulaLineCompacte(item);
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-        buf += CMD.BOLD_ON + formulaLines(item) + CMD.BOLD_OFF;
         buf += ESC + "J\x0C";
       }
     }
