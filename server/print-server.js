@@ -452,9 +452,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += `${nbArticles} article(s)\n`;
   }
 
-  // Bon de reduction : addition des commandes a emporter uniquement.
+  // Bon de reduction sur toutes les additions (sur place et a emporter).
   // Pas de decoupe entre l'addition et le bon, juste une separation nette.
-  if (showTotal && orderType === "emporter") buf += couponBlock();
+  if (showTotal) buf += couponBlock();
 
   buf += CMD.FEED;
   buf += CMD.PARTIAL_CUT;
