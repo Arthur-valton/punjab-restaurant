@@ -490,7 +490,15 @@
       },
       {
         "id": 50,
-        "name": "Gambas Massala - Malai",
+        "name": "Gambas Massala",
+        "price": 21.5,
+        "category": "Plats",
+        "subcategory": "Poisson",
+        "piment": true
+      },
+      {
+        "id": 262,
+        "name": "Gambas Malai",
         "price": 21.5,
         "category": "Plats",
         "subcategory": "Poisson",
@@ -2919,7 +2927,11 @@
                 "piment": true
               },
               {
-                "name": "Gambas Malai / Masala",
+                "name": "Gambas Massala",
+                "piment": true
+              },
+              {
+                "name": "Gambas Malai",
                 "piment": true
               },
               {
@@ -2944,7 +2956,11 @@
                 "piment": true
               },
               {
-                "name": "Gambas Malai / Masala",
+                "name": "Gambas Massala",
+                "piment": true
+              },
+              {
+                "name": "Gambas Malai",
                 "piment": true
               },
               {
