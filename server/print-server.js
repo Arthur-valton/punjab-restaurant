@@ -344,9 +344,17 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
       buf += CMD.CENTER;
       const catLabel = group.cat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
       const catPadded = catLabel.padStart(Math.floor((WIDTH_DOUBLE + catLabel.length) / 2)).padEnd(WIDTH_DOUBLE);
-      buf += CMD.REVERSE_ON + CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += CMD.REVERSE_ON;
+      buf += ESC + "3\x0C";              // interligne 12 pts : bande fine sans blanc
+      buf += " ".repeat(WIDTH) + "\n";
+      buf += ESC + "2";                  // interligne par defaut pour le titre
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
       buf += catPadded + "\n";
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
+      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+      buf += ESC + "3\x0C";
+      buf += " ".repeat(WIDTH) + "\n";
+      buf += ESC + "2";
+      buf += CMD.REVERSE_OFF;
       buf += CMD.LEFT;
       buf += "\n";
     }
