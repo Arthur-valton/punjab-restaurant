@@ -307,9 +307,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += `*** ${title} ***\n`;
     buf += CMD.BOLD_OFF;
   } else {
-    // Ticket production : titre + numero de commande en gros
+    // Ticket production : titre + numero en gros.
+    // A emporter, on affiche la numerotation du jour (JJ-N) et non le
+    // numero interne, pour ne pas avoir deux numeros concurrents.
+    const ticketNum = orderType === "emporter" ? emporterNum : orderNum;
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-    buf += `${title} #${orderNum}\n`;
+    buf += `${title} #${ticketNum}\n`;
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
   buf += CMD.LEFT;
@@ -485,8 +488,9 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     buf += `*** ${title} ***\n`;
     buf += CMD.BOLD_OFF;
   } else {
+    const ticketNum = orderType === "emporter" ? emporterNum : orderNum;
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-    buf += `${title} #${orderNum}\n`;
+    buf += `${title} #${ticketNum}\n`;
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
   buf += CMD.LEFT;
