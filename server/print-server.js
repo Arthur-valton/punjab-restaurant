@@ -126,9 +126,9 @@ app.put("/order/:id", async (req, res) => {
     if (boissons.length > 0) {
       tickets.push(formatModifTicket({ title: "BAR (MODIF)", oldItems, newItems: boissons, showTotal: false, ...common }));
     }
-    tickets.push(formatModifTicket({ title: "SERVICE (MODIF)", oldItems, newItems: order, showTotal: true, ...common }));
+    // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
-    await sendToPrinter(tickets.join(""));
+    if (tickets.length > 0) await sendToPrinter(tickets.join(""));
 
     const groups = buildGroups(cuisineAll);
     const catStatus = {};
@@ -160,6 +160,11 @@ app.post("/order/:id/reprint-bill", async (req, res) => {
       orderNum: order.orderNum,
       date: order.date,
       showTotal: true,
+      orderType: order.orderType,
+      emporterNum: order.emporterNum,
+      clientName: order.clientName,
+      clientPhone: order.clientPhone,
+      clientPickupTime: order.clientPickupTime,
     });
     await sendToPrinter(ticket);
     console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`);
@@ -827,10 +832,10 @@ app.post("/print-all", async (req, res) => {
     if (boissons.length > 0) {
       tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: false, ...common }));
     }
-    tickets.push(formatTicket({ title: isEmporter ? "SERVICE - A EMPORTER" : "SERVICE", order, showTotal: true, ...common }));
+    // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
     console.log(`Impression ${isEmporter ? `Emporter #${emporterNum}` : `Table ${effectiveTable}`} #${orderNum} : ${tickets.length} ticket(s)`);
-    await sendToPrinter(tickets.join(""));
+    if (tickets.length > 0) await sendToPrinter(tickets.join(""));
 
     // Broadcast au KDS + stockage en mémoire
     const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
