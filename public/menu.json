@@ -1794,19 +1794,19 @@
             "articles": [
               {
                 "name": "Poulet Shahi Korma",
-                "piment": false
+                "piment": true
               },
               {
                 "name": "Poulet Tikka Massala",
-                "piment": false
+                "piment": true
               },
               {
                 "name": "Boeuf Curry",
-                "piment": false
+                "piment": true
               },
               {
                 "name": "Crevette Curry",
-                "piment": false
+                "piment": true
               }
             ]
           },
