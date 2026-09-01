@@ -980,9 +980,21 @@ body {
 }
 
 /* ---- PIMENT ---- */
-.cart-piment { margin-left: 6px; font-size: 1rem; display: inline; }
+/* Marqueurs de piment : + / ++ / +++ (rien = recette normale) */
+.cart-piment {
+  margin-left: 6px;
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #e74c3c;
+  background: rgba(231,76,60,0.12);
+  border-radius: 5px;
+  padding: 1px 6px;
+  vertical-align: middle;
+}
 .cart-piment--none { font-size: 0.75rem; opacity: 0.6; font-style: italic; }
-.ticket-piment { margin-left: 6px; font-size: 1rem; }
+.ticket-piment { margin-left: 6px; font-weight: 800; letter-spacing: 1px; }
 
 .piment-picker {
   background: #fff;
@@ -1015,7 +1027,15 @@ body {
   transition: all 0.15s;
 }
 .piment-picker-btn:active { background: #f0f0f0; border-color: #e44; }
-.piment-picker-emoji { font-size: 1.3rem; }
+.piment-picker-emoji {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #e74c3c;
+  min-width: 46px;
+  text-align: center;
+  display: inline-block;
+}
 .piment-picker-label { font-size: 1rem; font-weight: 600; }
 
 .settings-piment-toggle {

@@ -237,6 +237,20 @@ function sanitize(str) {
     .replace(/[çÇ]/g, "c");
 }
 
+// Niveaux de piment : 1 = sans (rien affiche), 2 = +, 3 = ++, 4 = +++
+const PIMENT_MARKS = { 2: "+", 3: "++", 4: "+++" };
+function pimentMark(level) {
+  return PIMENT_MARKS[level] || "";
+}
+
+// Ligne d'article avec le marqueur piment aligne a droite quand il rentre,
+// sinon simplement accole (l'imprimante passera a la ligne).
+function itemLine(label, mark, width) {
+  if (!mark) return label + "\n";
+  const space = width - label.length - mark.length;
+  return space >= 1 ? label + " ".repeat(space) + mark + "\n" : label + " " + mark + "\n";
+}
+
 function line(char = "-", width = WIDTH) {
   return char.repeat(width) + "\n";
 }
@@ -326,8 +340,6 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     itemsToGroup.push(...order.map(i => ({...i})));
   }
 
-  const pimentSymbols = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
-
   // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
   const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
@@ -344,9 +356,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   if (orderType === "emporter" && !showTotal) {
     for (const item of itemsToGroup) {
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `${item.qty}x ${sanitize(item.name)}\n`;
+      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      if (item.piment) buf += CMD.BOLD_ON + `  ${pimentSymbols[item.piment]}\n` + CMD.BOLD_OFF;
       buf += ESC + "J\x0C";
     }
     buf += line("=");
@@ -361,7 +372,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   for (const item of itemsToGroup) {
     const cat = mergedCat(item);
     if (!seenCats[cat]) seenCats[cat] = [];
-    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name) && (x.piment || null) === (item.piment || null));
+    // Regroupe sur le marqueur affiche : deux lignes identiques a l'impression
+    // fusionnent, mais un plat avec piment reste separe du meme plat sans piment.
+    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name) && pimentMark(x.piment) === pimentMark(item.piment));
     if (existing) existing.qty += item.qty;
     else seenCats[cat].push(item);
   }
@@ -392,27 +405,22 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     for (const item of group.items) {
       if (showTotal) {
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
+        const mark = pimentMark(item.piment);
         buf += CMD.BOLD_ON;
-        buf += pad(`${item.qty}x ${sanitize(item.name)}`, totalStr, WIDTH);
+        buf += pad(`${item.qty}x ${sanitize(item.name)}${mark ? " " + mark : ""}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
-        if (item.piment) buf += `   ${pimentSymbols[item.piment]}\n`;
         if (item.formulaChoices) {
           for (const choice of item.formulaChoices) {
-            const pimentTxt = choice.piment ? `  ${pimentSymbols[choice.piment]}` : "";
-            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${pimentTxt}\n`;
+            const cm = pimentMark(choice.piment);
+            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
           }
         }
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
         buf += ESC + "J\x06";
       } else {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += `${item.qty}x ${sanitize(item.name)}\n`;
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-        if (item.piment) {
-          buf += CMD.BOLD_ON;
-          buf += `  ${pimentSymbols[item.piment]}\n`;
-          buf += CMD.BOLD_OFF;
-        }
         buf += ESC + "J\x0C";
       }
     }
@@ -495,29 +503,34 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     buf += "MODIFICATIONS\n";
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
     buf += line("-");
-    const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
-    for (const item of added) {
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `++ ${item.qty}x ${sanitize(item.name)}\n`;
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      if (item.piment && item.piment > 1) {
-        buf += CMD.BOLD_ON + `   ${ps[item.piment]}\n` + CMD.BOLD_OFF;
-      }
-      if (item.formulaChoices) {
-        for (const choice of item.formulaChoices) {
-          buf += CMD.BOLD_ON;
-          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
-          buf += CMD.BOLD_OFF;
+    // Sous-titres AJOUTS / ANNULES plutot que des prefixes ++ et --,
+    // qui se confondraient avec les marqueurs de piment.
+    if (added.length > 0) {
+      buf += CMD.CENTER + CMD.BOLD_ON + ">>> AJOUTS <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
+      for (const item of added) {
+        buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+        buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+        if (item.formulaChoices) {
+          for (const choice of item.formulaChoices) {
+            const cm = pimentMark(choice.piment);
+            buf += CMD.BOLD_ON;
+            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
+            buf += CMD.BOLD_OFF;
+          }
         }
       }
     }
-    for (const item of removed) {
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `-- ${item.qty}x ${sanitize(item.name)}\n`;
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      if (item.formulaChoices) {
-        for (const choice of item.formulaChoices) {
-          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}\n`;
+    if (removed.length > 0) {
+      buf += CMD.CENTER + CMD.BOLD_ON + ">>> ANNULES <<<\n" + CMD.BOLD_OFF + CMD.LEFT;
+      for (const item of removed) {
+        buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+        buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment), WIDTH_DOUBLE);
+        buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+        if (item.formulaChoices) {
+          for (const choice of item.formulaChoices) {
+            buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}\n`;
+          }
         }
       }
     }
@@ -531,27 +544,28 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   buf += line("-");
 
   for (const item of newItems) {
+    const mark = pimentMark(item.piment);
     if (showTotal) {
       const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
       buf += CMD.BOLD_ON;
-      buf += pad(`${item.qty}x ${sanitize(item.name)}`, totalStr, WIDTH);
+      buf += pad(`${item.qty}x ${sanitize(item.name)}${mark ? " " + mark : ""}`, totalStr, WIDTH);
       buf += CMD.BOLD_OFF;
       if (item.formulaChoices) {
-        const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
-          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          const cm = pimentMark(choice.piment);
+          buf += `   > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
         }
       }
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
     } else {
       buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += `${item.qty}x ${sanitize(item.name)}\n`;
+      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, mark, WIDTH_DOUBLE);
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
-        const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
         for (const choice of item.formulaChoices) {
+          const cm = pimentMark(choice.piment);
           buf += CMD.BOLD_ON;
-          buf += `  > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${choice.piment > 1 ? `  ${ps[choice.piment]}` : ""}\n`;
+          buf += `  > ${sanitize(choice.label)}: ${sanitize(choice.itemName)}${cm ? "  " + cm : ""}\n`;
           buf += CMD.BOLD_OFF;
         }
       }

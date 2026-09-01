@@ -18,6 +18,17 @@ function getPrintUrl() {
   return "https://print.restaurant-dev.fr";
 }
 
+// Niveaux de piment : 1 = recette normale (rien d'affiche), puis + / ++ / +++
+const PIMENT_LEVELS = [
+  { level: 1, label: "Sans piment", emoji: "—" },
+  { level: 2, label: "Doux",        emoji: "+" },
+  { level: 3, label: "Moyen",       emoji: "++" },
+  { level: 4, label: "Fort",        emoji: "+++" },
+];
+function pimentMark(level) {
+  return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
+}
+
 // Pastel Apple colors par sous-catégorie (couleurs manuelles prioritaires)
 const SUBCAT_COLORS = {
   "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
@@ -419,7 +430,7 @@ function App() {
                 <div className="cart-item">
                   <span className="cart-item-name">
                     {item.name}
-                    {item.piment > 0 && <span className="cart-piment">{"🌶️".repeat(item.piment)}</span>}
+                    {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
                   </span>
                   <div className="cart-item-controls">
                     <button
@@ -549,7 +560,7 @@ function App() {
                     <div className="cart-item">
                       <span className="cart-item-name">
                         {item.name}
-                        {item.piment > 0 && <span className="cart-piment">{"🌶️".repeat(item.piment)}</span>}
+                        {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
                       </span>
                       <div className="cart-item-controls">
                         <button className={`qty-btn ${item.qty === 1 ? "delete" : ""}`} onClick={() => updateQty(item.cartId, item.qty - 1)}>
@@ -640,11 +651,7 @@ function App() {
           <div className="piment-picker" onClick={(e) => e.stopPropagation()}>
             <div className="piment-picker-title">{pimentPicker.item.name}</div>
             <div className="piment-picker-subtitle">Niveau de piment ?</div>
-            {[
-              { level: 1, label: "Sans piment", emoji: "🌶️" },
-              { level: 2, label: "Moyen",       emoji: "🌶️🌶️" },
-              { level: 3, label: "Fort",         emoji: "🌶️🌶️🌶️" },
-            ].map(({ level, label, emoji }) => (
+            {PIMENT_LEVELS.map(({ level, label, emoji }) => (
               <button
                 key={level}
                 className="piment-picker-btn"
@@ -681,7 +688,7 @@ function App() {
                       <span className="formula-summary-label">{c.label}</span>
                       <span className="formula-summary-name">
                         {c.itemName}
-                        {c.piment > 1 && <span style={{ marginLeft: 5 }}>{"🌶️".repeat(c.piment)}</span>}
+                        {pimentMark(c.piment) && <span style={{ marginLeft: 5 }}>{pimentMark(c.piment)}</span>}
                       </span>
                     </div>
                   ))}
@@ -701,7 +708,7 @@ function App() {
                     <span className="formula-picker-recap-label">{c.label}</span>
                     <span className="formula-picker-recap-name">
                       {c.itemName}
-                      {c.piment > 1 && <span style={{ marginLeft: 4 }}>{"🌶️".repeat(c.piment)}</span>}
+                      {pimentMark(c.piment) && <span style={{ marginLeft: 4 }}>{pimentMark(c.piment)}</span>}
                     </span>
                   </div>
                 ))}
@@ -715,11 +722,7 @@ function App() {
                   🌶️ Niveau de piment — <strong>{formulaPicker.pendingArticle}</strong>
                 </div>
                 <div className="formula-picker-items">
-                  {[
-                    { level: 1, label: "Sans piment",  emoji: "🌶️" },
-                    { level: 2, label: "Moyen",         emoji: "🌶️🌶️" },
-                    { level: 3, label: "Fort",           emoji: "🌶️🌶️🌶️" },
-                  ].map(({ level, label, emoji }) => (
+                  {PIMENT_LEVELS.map(({ level, label, emoji }) => (
                     <button
                       key={level}
                       className="formula-picker-item-btn"

@@ -2,6 +2,11 @@ import React from "react";
 
 const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
 
+// Niveaux de piment : 1 = recette normale (rien), 2 = +, 3 = ++, 4 = +++
+function pimentMark(level) {
+  return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
+}
+
 function getPrintUrl() {
   const host = window.location.hostname;
   if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
@@ -131,7 +136,7 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
                       <td className="c"><strong>{item.qty}x</strong></td>
                       <td className="l">
                         {item.name}
-                        {item.piment && <span className="ticket-piment">{"🌶️".repeat(item.piment)}</span>}
+                        {pimentMark(item.piment) && <span className="ticket-piment">{pimentMark(item.piment)}</span>}
                       </td>
                       <td className="r">{(item.price * item.qty).toFixed(2)} &euro;</td>
                     </tr>
@@ -140,7 +145,7 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
                         <td className="c"></td>
                         <td className="l ticket-formula-choice">
                           ↳ {choice.label} : {choice.itemName}
-                          {choice.piment > 1 && <span className="ticket-piment">{"🌶️".repeat(choice.piment)}</span>}
+                          {pimentMark(choice.piment) && <span className="ticket-piment">{pimentMark(choice.piment)}</span>}
                         </td>
                         <td className="r"></td>
                       </tr>
