@@ -588,9 +588,8 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
 
   // ── Section MODIFICATIONS ──
   if (added.length > 0 || removed.length > 0) {
-    buf += bandeNoire("Modifications");
-    // Sous-titres AJOUTS / ANNULES plutot que des prefixes ++ et --,
-    // qui se confondraient avec les marqueurs de piment.
+    // Deux blocs nettement separes : ce qui arrive, ce qui part. Des
+    // prefixes ++ / -- se confondraient avec les marqueurs de piment.
     if (added.length > 0) {
       buf += bandeNoire("Ajouts");
       for (const item of added) {
@@ -601,6 +600,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       }
     }
     if (removed.length > 0) {
+      if (added.length > 0) buf += line("=");   // separe nettement les deux blocs
       buf += bandeNoire("Annules");
       for (const item of removed) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
