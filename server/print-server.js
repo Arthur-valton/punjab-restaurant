@@ -580,9 +580,8 @@ function couponBlock() {
   b += "sur votre prochaine commande\n";
   b += CMD.BOLD_ON + "Valable sur place ou a emporter\n" + CMD.BOLD_OFF;
   b += CMD.BOLD_ON + CMD.DOUBLE_ON + `Jusqu'au ${endStr}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-  b += "A presenter avant le paiement\n";
-  b += CMD.BOLD_ON + "Ticket entier exige : addition + bon\n" + CMD.BOLD_OFF;
   b += CMD.BOLD_ON + "Non cumulable\n" + CMD.BOLD_OFF;
+  b += CMD.BOLD_ON + "A presenter avec le ticket entier\n" + CMD.BOLD_OFF;
   b += CMD.LEFT;
   b += line("*");
   return b;
