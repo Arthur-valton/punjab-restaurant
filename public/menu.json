@@ -938,7 +938,7 @@
       },
       {
         "id": 163,
-        "name": "Sirop / Diabolo",
+        "name": "Sirop à l'eau",
         "price": 3,
         "category": "Boissons",
         "subcategory": "Sirop",
@@ -946,35 +946,56 @@
         "isFormula": true,
         "formulaSteps": [
           {
-            "label": "Type",
+            "label": "Parfum",
+            "remplaceNom": true,
             "articles": [
               {
-                "name": "Sirop a l'eau",
+                "name": "Sirop à la menthe",
                 "piment": false
               },
               {
-                "name": "Diabolo",
+                "name": "Sirop à la fraise",
+                "piment": false
+              },
+              {
+                "name": "Sirop au kiwi banane",
+                "piment": false
+              },
+              {
+                "name": "Sirop à la grenadine",
                 "piment": false
               }
             ]
-          },
+          }
+        ]
+      },
+      {
+        "id": 237,
+        "name": "Diabolo",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Sirop",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
           {
             "label": "Parfum",
+            "remplaceNom": true,
             "articles": [
               {
-                "name": "Fraise",
+                "name": "Diabolo menthe",
                 "piment": false
               },
               {
-                "name": "Menthe",
+                "name": "Diabolo fraise",
                 "piment": false
               },
               {
-                "name": "Kiwi banane",
+                "name": "Diabolo kiwi banane",
                 "piment": false
               },
               {
-                "name": "Grenadine",
+                "name": "Diabolo grenadine",
                 "piment": false
               }
             ]
