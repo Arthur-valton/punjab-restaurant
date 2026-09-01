@@ -68,28 +68,19 @@
       },
       {
         "id": 191,
-        "name": "Salade",
+        "name": "Salade crevette",
         "price": 7.5,
         "category": "Entrées",
-        "piment": false,
+        "piment": true,
+        "subcategory": "Salade"
+      },
+      {
+        "id": 251,
+        "name": "Salade poulet",
+        "price": 7.5,
+        "category": "Entrées",
         "subcategory": "Salade",
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Type",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Salade crevette",
-                "piment": false
-              },
-              {
-                "name": "Salade poulet",
-                "piment": false
-              }
-            ]
-          }
-        ]
+        "piment": true
       },
       {
         "id": 192,
