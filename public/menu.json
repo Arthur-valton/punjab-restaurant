@@ -677,7 +677,13 @@
       },
       {
         "id": 79,
-        "name": "Kulfi",
+        "name": "Kulfi mangue",
+        "price": 5,
+        "category": "Desserts"
+      },
+      {
+        "id": 238,
+        "name": "Kulfi pistache",
         "price": 5,
         "category": "Desserts"
       },
