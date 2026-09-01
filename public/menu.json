@@ -1076,24 +1076,61 @@
       },
       {
         "id": 172,
-        "name": "Thé menthe",
+        "name": "Thé",
         "price": 3.5,
         "category": "Boissons",
-        "subcategory": "Café/Thé"
+        "subcategory": "Café/Thé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Thé menthe",
+                "piment": false
+              },
+              {
+                "name": "Thé cardamome",
+                "piment": false
+              },
+              {
+                "name": "Thé au lait",
+                "piment": false
+              },
+              {
+                "name": "Thé noir",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 173,
-        "name": "Infusion Menthe poivrée",
+        "name": "Infusion",
         "price": 3,
         "category": "Boissons",
-        "subcategory": "Café/Thé"
-      },
-      {
-        "id": 236,
-        "name": "Infusion Fruit rouge",
-        "price": 3,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
+        "subcategory": "Café/Thé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Infusion Menthe poivrée",
+                "piment": false
+              },
+              {
+                "name": "Infusion Fruit rouge",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 224,
@@ -1136,27 +1173,6 @@
         "price": 5,
         "category": "Boissons",
         "subcategory": "Eaux"
-      },
-      {
-        "id": 230,
-        "name": "Thé cardamome",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
-      },
-      {
-        "id": 231,
-        "name": "Thé au lait",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
-      },
-      {
-        "id": 232,
-        "name": "Thé noir",
-        "price": 3.5,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
       },
       {
         "id": 123,
