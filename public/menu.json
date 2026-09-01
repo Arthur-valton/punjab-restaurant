@@ -956,13 +956,6 @@
         "subcategory": "Eaux"
       },
       {
-        "id": 213,
-        "name": "Perrier",
-        "price": 3,
-        "category": "Boissons",
-        "subcategory": "Eaux"
-      },
-      {
         "id": 215,
         "name": "Digestif",
         "price": 4,
