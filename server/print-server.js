@@ -298,7 +298,7 @@ function choixImprimables(item) {
 
 // Ticket de production : les precisions tiennent sur une seule ligne, a la
 // meme taille que l'article. « 1x Coupe de glace 2 boules » puis
-// « Citron + Chocolat » se lit d'un coup d'oeil ; des sous-lignes en petit
+// « Vanille / Mangue » se lit d'un coup d'oeil ; des sous-lignes en petit
 // caractere avec leurs libelles cassaient la mise en page.
 function formulaLineCompacte(item) {
   const c = choixImprimables(item);
@@ -306,7 +306,7 @@ function formulaLineCompacte(item) {
   return "  " + c.map((x) => {
     const mk = pimentMark(x.piment);
     return sanitize(x.itemName) + (mk ? " " + mk : "");
-  }).join(" + ") + "\n";
+  }).join(" / ") + "\n";
 }
 
 // Sous-lignes detaillees "> Parfum: Fraise" — pour l'addition
