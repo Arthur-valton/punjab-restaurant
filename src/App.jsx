@@ -816,7 +816,13 @@ function App() {
                       ? articles.map((article, ai) => {
                           const name = typeof article === "string" ? article : article.name;
                           const hasPiment = typeof article !== "string" && article.piment;
-                          const prix = typeof article !== "string" && article.price != null ? Number(article.price) : null;
+                          // Le prix du choix, sinon celui du produit. Sur un menu
+                          // multi-étapes on n'affiche rien : le prix couvre le menu
+                          // entier, pas chaque entrée ou plat pris isolément.
+                          const prixArticle = typeof article !== "string" && article.price != null ? Number(article.price) : null;
+                          const prix = prixArticle != null
+                            ? prixArticle
+                            : (formulaPicker.item.formulaSteps.length === 1 ? formulaPicker.item.price : null);
                           return (
                             <button
                               key={ai}
