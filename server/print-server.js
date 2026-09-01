@@ -378,7 +378,14 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
           const remplaces = new Set(item.formulaChoices.map((c) => c.remplaceParent).filter(Boolean));
           for (const choice of item.formulaChoices) {
             if (remplaces.has(choice.label)) continue;
-            itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabelShared(choice.label), qty: item.qty, piment: choice.piment || null });
+            if (choice.sousChoixDe) continue;   // sort sous son parent, pas seul
+            const article = { name: choice.itemName, category: mapFormulaLabelShared(choice.label), qty: item.qty, piment: choice.piment || null };
+            // Les precisions rattachees (boules d'une coupe) suivent leur
+            // article : imprimees a part, on ne saurait plus a quelle coupe
+            // elles appartiennent quand il y en a plusieurs.
+            const rattaches = item.formulaChoices.filter((c) => c.sousChoixDe === choice.label);
+            if (rattaches.length > 0) article.formulaChoices = rattaches;
+            itemsToGroup.push(article);
           }
         } else {
           itemsToGroup.push({ ...item });
@@ -927,22 +934,17 @@ app.post("/print-all", async (req, res) => {
       // separes par les bandes noires de categorie.
       tickets.push(formatTicket({ title: "COMMANDE", order, showTotal: false, ...common }));
     } else {
-      if (cuisine.length > 0) {
-        // Ticket cuisine sans les desserts + ticket desserts separe.
-        // Le filtre s'applique apres eclatement des formules : le dessert d'un
-        // menu part donc bien sur le ticket DESSERTS.
-        tickets.push(formatTicket({
-          title: "CUISINE", order: cuisine, showTotal: false,
-          catFilter: (c) => c !== "Desserts", ...common,
-        }));
-        tickets.push(formatTicket({
-          title: "DESSERTS", order: cuisine, showTotal: false,
-          catFilter: (c) => c === "Desserts", ...common,
-        }));
-      }
-      if (boissons.length > 0) {
-        tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: false, ...common }));
-      }
+      // La commande entiere est passee aux trois tickets : c'est le filtre,
+      // applique APRES eclatement des formules, qui aiguille chaque article.
+      // Trier sur la categorie de l'article laisserait l'aperitif d'un menu
+      // (categorie « Menu ») partir en cuisine au lieu du bar.
+      const estBar = (c) => BAR_CATEGORIES.has(c);
+      tickets.push(formatTicket({ title: "CUISINE", order, showTotal: false,
+        catFilter: (c) => !estBar(c) && c !== "Desserts", ...common }));
+      tickets.push(formatTicket({ title: "DESSERTS", order, showTotal: false,
+        catFilter: (c) => c === "Desserts", ...common }));
+      tickets.push(formatTicket({ title: "BAR", order, showTotal: false,
+        catFilter: estBar, ...common }));
     }
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 

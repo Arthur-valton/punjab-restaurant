@@ -338,7 +338,12 @@ function App() {
     const choice = { label: step.label, itemName: articleName };
     if (step.remplaceNom) choice.remplaceNom = true;
     // Sous-etape de precision : le detail remplace le choix generique
-    if (step.remplaceParent && step.siEtape) choice.remplaceParent = step.siEtape;
+    if (step.siEtape) {
+      // Soit le detail remplace le choix generique (jus, kir), soit il
+      // s'y rattache (les boules restent collees a leur coupe).
+      if (step.remplaceParent) choice.remplaceParent = step.siEtape;
+      else choice.sousChoixDe = step.siEtape;
+    }
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
