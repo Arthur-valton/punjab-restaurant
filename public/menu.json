@@ -866,40 +866,57 @@
       },
       {
         "id": 168,
-        "name": "Lassi Mangue",
+        "name": "Lassi Maison",
         "price": 5.5,
         "category": "Boissons",
         "piment": false,
-        "subcategory": "Boisson Maison"
-      },
-      {
-        "id": 233,
-        "name": "Lassi Coco",
-        "price": 5.5,
-        "category": "Boissons",
-        "subcategory": "Boisson Maison"
-      },
-      {
-        "id": 234,
-        "name": "Lassi Rose",
-        "price": 5.5,
-        "category": "Boissons",
-        "subcategory": "Boisson Maison"
+        "subcategory": "Boisson Maison",
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Lassi Mangue",
+                "piment": false
+              },
+              {
+                "name": "Lassi Coco",
+                "piment": false
+              },
+              {
+                "name": "Lassi Rose",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 169,
-        "name": "Lassi Sucré",
+        "name": "Lassi Sucré / Salé",
         "price": 4.5,
         "category": "Boissons",
         "subcategory": "Boisson Maison",
-        "piment": false
-      },
-      {
-        "id": 235,
-        "name": "Lassi Salé",
-        "price": 4.5,
-        "category": "Boissons",
-        "subcategory": "Boisson Maison"
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Lassi Sucré",
+                "piment": false
+              },
+              {
+                "name": "Lassi Salé",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 158,
