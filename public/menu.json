@@ -907,7 +907,7 @@
             "remplaceNom": true,
             "articles": [
               {
-                "name": "Kir Vin blanc",
+                "name": "Kir Vin blanc 15cl",
                 "piment": false,
                 "price": 5
               },
@@ -944,7 +944,7 @@
               }
             ],
             "pourChoix": [
-              "Kir Vin blanc",
+              "Kir Vin blanc 15cl",
               "Kir royal 15cl"
             ]
           }
