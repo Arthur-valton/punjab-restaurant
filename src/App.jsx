@@ -29,6 +29,18 @@ function pimentMark(level) {
   return ({ 2: "+", 3: "++", 4: "+++" })[level] || "";
 }
 
+// Quand les choix d'une formule portent des tarifs différents, le prix du
+// produit n'est qu'un tarif d'appel : on affiche « dès X € » plutôt qu'un
+// montant qui serait faux pour la moitié des choix.
+function prixDepart(item) {
+  const prix = (item.formulaSteps || [])
+    .flatMap((s) => s.articles || [])
+    .map((a) => (a && typeof a === "object" && a.price != null ? Number(a.price) : null))
+    .filter((p) => p != null && !Number.isNaN(p));
+  if (new Set(prix).size < 2) return null;
+  return Math.min(...prix);
+}
+
 // Un choix de formule peut remplacer le nom du produit : le bouton
 // s'appelle "Sirop à l'eau", le choix "Sirop à la menthe", et la ligne
 // affichée devient "Sirop à la menthe".
@@ -589,7 +601,12 @@ function App() {
                   {qty > 0 && <span className="menu-btn-badge">{qty}</span>}
                   <span className="menu-btn-name">{item.name}</span>
                   <span className="menu-btn-price" style={c ? { color: c.text } : undefined}>
-                    {item.price.toFixed(2)} &euro;
+                    {(() => {
+                      const depart = prixDepart(item);
+                      return depart === null
+                        ? <>{item.price.toFixed(2)} &euro;</>
+                        : <><span className="menu-btn-price-prefix">dès </span>{depart.toFixed(2)} &euro;</>;
+                    })()}
                   </span>
                 </button>
               );
