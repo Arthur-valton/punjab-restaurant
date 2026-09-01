@@ -670,58 +670,236 @@
     "category": "Desserts",
     "items": [
       {
-        "id": 78,
+        "id": 239,
         "name": "Halwa",
         "price": 5,
-        "category": "Desserts"
+        "category": "Desserts",
+        "subcategory": "Spécialités"
       },
       {
-        "id": 79,
-        "name": "Kulfi mangue",
-        "price": 5,
-        "category": "Desserts"
-      },
-      {
-        "id": 238,
-        "name": "Kulfi pistache",
-        "price": 5,
-        "category": "Desserts"
-      },
-      {
-        "id": 80,
+        "id": 240,
         "name": "Kheer",
         "price": 5,
-        "category": "Desserts"
+        "category": "Desserts",
+        "subcategory": "Spécialités"
       },
       {
-        "id": 81,
-        "name": "Café Gourmand",
-        "price": 9.9,
-        "category": "Desserts"
+        "id": 241,
+        "name": "Kulfi mangue",
+        "price": 6,
+        "category": "Desserts",
+        "subcategory": "Spécialités"
       },
       {
-        "id": 82,
-        "name": "Sorbet 2 Boules",
-        "price": 5,
-        "category": "Desserts"
+        "id": 242,
+        "name": "Kulfi pistache",
+        "price": 6,
+        "category": "Desserts",
+        "subcategory": "Spécialités"
       },
       {
-        "id": 117,
-        "name": "Coupe glace",
-        "price": 6.9,
-        "category": "Desserts"
-      },
-      {
-        "id": 118,
-        "name": "Coupe 2 glace",
-        "price": 5,
-        "category": "Desserts"
-      },
-      {
-        "id": 131,
-        "name": "Coupe glace",
+        "id": 243,
+        "name": "Colonel",
         "price": 7.9,
-        "category": "Desserts"
+        "category": "Desserts",
+        "subcategory": "Givrés"
+      },
+      {
+        "id": 244,
+        "name": "Iceberg",
+        "price": 7.9,
+        "category": "Desserts",
+        "subcategory": "Givrés"
+      },
+      {
+        "id": 245,
+        "name": "Coupe exotique",
+        "price": 6.9,
+        "category": "Desserts",
+        "subcategory": "Coupes glacées"
+      },
+      {
+        "id": 246,
+        "name": "Coupe fruits rouges",
+        "price": 6.9,
+        "category": "Desserts",
+        "subcategory": "Coupes glacées"
+      },
+      {
+        "id": 247,
+        "name": "Coupe chantilly",
+        "price": 6.9,
+        "category": "Desserts",
+        "subcategory": "Coupes glacées",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Coupe chocolat au caramel",
+                "piment": false
+              },
+              {
+                "name": "Coupe café",
+                "piment": false
+              },
+              {
+                "name": "Coupe chocolat",
+                "piment": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 248,
+        "name": "Coupe de glace 2 boules",
+        "price": 5,
+        "category": "Desserts",
+        "subcategory": "Coupes glacées",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boule 1",
+            "articles": [
+              {
+                "name": "Citron",
+                "piment": false
+              },
+              {
+                "name": "Fraise",
+                "piment": false
+              },
+              {
+                "name": "Passion",
+                "piment": false
+              },
+              {
+                "name": "Caramel",
+                "piment": false
+              },
+              {
+                "name": "Mangue",
+                "piment": false
+              },
+              {
+                "name": "Chocolat",
+                "piment": false
+              },
+              {
+                "name": "Vanille",
+                "piment": false
+              },
+              {
+                "name": "Café",
+                "piment": false
+              },
+              {
+                "name": "Coco",
+                "piment": false
+              },
+              {
+                "name": "Menthe",
+                "piment": false
+              },
+              {
+                "name": "Nougat",
+                "piment": false
+              },
+              {
+                "name": "Ananas",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boule 2",
+            "articles": [
+              {
+                "name": "Citron",
+                "piment": false
+              },
+              {
+                "name": "Fraise",
+                "piment": false
+              },
+              {
+                "name": "Passion",
+                "piment": false
+              },
+              {
+                "name": "Caramel",
+                "piment": false
+              },
+              {
+                "name": "Mangue",
+                "piment": false
+              },
+              {
+                "name": "Chocolat",
+                "piment": false
+              },
+              {
+                "name": "Vanille",
+                "piment": false
+              },
+              {
+                "name": "Café",
+                "piment": false
+              },
+              {
+                "name": "Coco",
+                "piment": false
+              },
+              {
+                "name": "Menthe",
+                "piment": false
+              },
+              {
+                "name": "Nougat",
+                "piment": false
+              },
+              {
+                "name": "Ananas",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 249,
+        "name": "Café gourmand",
+        "price": 9.9,
+        "category": "Desserts",
+        "subcategory": "Gourmand"
+      },
+      {
+        "id": 250,
+        "name": "Thé gourmand",
+        "price": 9.9,
+        "category": "Desserts",
+        "subcategory": "Gourmand"
       }
     ]
   },
