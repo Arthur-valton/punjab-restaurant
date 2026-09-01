@@ -41,6 +41,23 @@ function estFormuleMenu(item) {
   return steps.every((st) => LABELS_POSTE.includes(norm(st.label)));
 }
 
+// Une étape peut ne concerner que certains choix précédents (« pourChoix ») :
+// le Kir indien n'a pas de supplément, l'étape est donc sautée pour lui.
+function etapeApplicable(step, choices) {
+  if (!step.pourChoix || step.pourChoix.length === 0) return true;
+  return choices.some((c) => step.pourChoix.includes(c.itemName));
+}
+function etapesApplicables(item, choices) {
+  return (item.formulaSteps || []).filter((st) => etapeApplicable(st, choices));
+}
+function prochaineEtape(item, choices, apres) {
+  const steps = item.formulaSteps || [];
+  for (let k = apres + 1; k < steps.length; k++) {
+    if (etapeApplicable(steps[k], choices)) return k;
+  }
+  return -1;
+}
+
 // Repère visuel sur le bouton : rien pour un article simple, le nombre de
 // choix pour une déclinaison, le nombre d'étapes pour un menu.
 function indicateurFormule(item) {
@@ -271,7 +288,7 @@ function App() {
   function addItem(item, piment = null) {
     // Formula item → open multi-step picker
     if (item.isFormula && item.formulaSteps?.length > 0) {
-      setFormulaPicker({ item, currentStep: 0, choices: [] });
+      setFormulaPicker({ item, currentStep: 0, choices: [], parcours: [] });
       return;
     }
     if (item.piment && piment === null) {
@@ -310,25 +327,31 @@ function App() {
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
-    if (currentStep + 1 >= item.formulaSteps.length) {
+    const parcours = [...(formulaPicker.parcours || []), currentStep];
+    const suivante = prochaineEtape(item, newChoices, currentStep);
+    if (suivante === -1) {
       // Déclinaison → ajout direct. Le récapitulatif ne s'affiche que pour un
       // menu enchaînant plusieurs postes de production.
       if (!estFormuleMenu(item)) {
         addFormula(item, newChoices);
       } else {
-        setFormulaPicker({ item, currentStep, choices: newChoices, showSummary: true });
+        setFormulaPicker({ item, currentStep, choices: newChoices, parcours, showSummary: true });
       }
     } else {
-      setFormulaPicker({ item, currentStep: currentStep + 1, choices: newChoices });
+      setFormulaPicker({ item, currentStep: suivante, choices: newChoices, parcours });
     }
   }
 
   function goBackFormula() {
-    const { currentStep, choices } = formulaPicker;
-    if (currentStep === 0) { setFormulaPicker(null); return; }
+    const { choices } = formulaPicker;
+    const parcours = formulaPicker.parcours || [];
+    if (parcours.length === 0) { setFormulaPicker(null); return; }
+    // On revient à l'étape d'où venait le dernier choix, pas à currentStep - 1 :
+    // des étapes ont pu être sautées.
     setFormulaPicker({
       ...formulaPicker,
-      currentStep: currentStep - 1,
+      currentStep: parcours[parcours.length - 1],
+      parcours: parcours.slice(0, -1),
       choices: choices.slice(0, -1),
       showSummary: false,
       pendingArticle: null,
@@ -764,9 +787,10 @@ function App() {
             <div className="formula-picker-header">
               <div className="formula-picker-title">{formulaPicker.item.name}</div>
               <div className="formula-picker-progress">
-                {formulaPicker.item.formulaSteps.map((_, i) => (
-                  <span key={i} className={`formula-picker-dot ${i < formulaPicker.currentStep ? "done" : i === formulaPicker.currentStep ? "active" : ""}`} />
-                ))}
+                {etapesApplicables(formulaPicker.item, formulaPicker.choices).map((_, i) => {
+                  const rang = (formulaPicker.parcours || []).length;
+                  return <span key={i} className={`formula-picker-dot ${i < rang ? "done" : i === rang ? "active" : ""}`} />;
+                })}
               </div>
             </div>
 
@@ -835,11 +859,14 @@ function App() {
               <>
                 <div className="formula-picker-step-label">
                   {(() => {
-                    const steps = formulaPicker.item.formulaSteps;
-                    const label = steps[formulaPicker.currentStep].label;
+                    const item = formulaPicker.item;
+                    const label = item.formulaSteps[formulaPicker.currentStep].label;
+                    // Seules les étapes qui concernent les choix faits sont comptées
+                    const concernees = etapesApplicables(item, formulaPicker.choices);
+                    const rang = (formulaPicker.parcours || []).length + 1;
                     // « Étape 1/1 » n'apporte rien : on ne compte que s'il y en a plusieurs
-                    return steps.length > 1
-                      ? `Étape ${formulaPicker.currentStep + 1}/${steps.length} — ${label}`
+                    return concernees.length > 1
+                      ? `Étape ${rang}/${concernees.length} — ${label}`
                       : label;
                   })()}
                 </div>
@@ -882,8 +909,8 @@ function App() {
                       : <p className="formula-picker-empty">Aucun article configuré pour cette étape</p>;
                   })()}
                 </div>
-                <button className="formula-picker-cancel" onClick={formulaPicker.currentStep > 0 ? goBackFormula : () => setFormulaPicker(null)}>
-                  {formulaPicker.currentStep > 0 ? "← Retour" : "Annuler"}
+                <button className="formula-picker-cancel" onClick={(formulaPicker.parcours || []).length > 0 ? goBackFormula : () => setFormulaPicker(null)}>
+                  {(formulaPicker.parcours || []).length > 0 ? "← Retour" : "Annuler"}
                 </button>
               </>
             )}
