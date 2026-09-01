@@ -119,16 +119,26 @@ app.put("/order/:id", async (req, res) => {
     const common = { tableNumber, orderNum, date };
 
     const oldItems = existing.items || [];
+    const emporterInfo = existing.orderType === "emporter" ? {
+      orderType: "emporter",
+      emporterNum: existing.emporterNum,
+      clientName: existing.clientName,
+      clientPhone: existing.clientPhone,
+      clientPickupTime: existing.clientPickupTime,
+    } : {};
 
     // Chaque ticket compare l'ancien et le nouveau SUR SON PERIMETRE,
     // sinon les articles des autres tickets ressortent en "supprimes".
     const isBar = (i) => BAR_CATEGORIES.has(i.category);
     const isDessert = (i) => (CAT_MERGE_SHARED[i.category] || i.category) === "Desserts";
-    const scopes = [
-      { title: "CUISINE (MODIF)",  keep: (i) => !isBar(i) && !isDessert(i) },
-      { title: "DESSERTS (MODIF)", keep: (i) => !isBar(i) && isDessert(i) },
-      { title: "BAR (MODIF)",      keep: isBar },
-    ];
+    const scopes = existing.orderType === "emporter"
+      // A emporter : tout sur un seul ticket, comme a la commande
+      ? [{ title: "MODIFICATION", keep: () => true }]
+      : [
+          { title: "CUISINE (MODIF)",  keep: (i) => !isBar(i) && !isDessert(i) },
+          { title: "DESSERTS (MODIF)", keep: (i) => !isBar(i) && isDessert(i) },
+          { title: "BAR (MODIF)",      keep: isBar },
+        ];
 
     const tickets = scopes.map(({ title, keep }) => formatModifTicket({
       title,
@@ -136,6 +146,7 @@ app.put("/order/:id", async (req, res) => {
       newItems: order.filter(keep),
       showTotal: false,
       ...common,
+      ...emporterInfo,
     }));
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
@@ -257,6 +268,27 @@ function pad(left, right, width = WIDTH, fill = " ") {
   return left + fill.repeat(Math.max(1, space)) + right + "\n";
 }
 
+// Bloc d'identification de la commande : TABLE n, ou infos emporter.
+// Partage par le ticket de commande et le ticket de modification.
+function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime }) {
+  let b = CMD.CENTER;
+  if (orderType === "emporter") {
+    b += CMD.BOLD_ON + CMD.QUAD + "A EMPORTER\n" + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    b += CMD.BOLD_ON + CMD.DOUBLE_ON + `#${emporterNum}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    // Nom et telephone sur une seule ligne
+    const contact = [clientName, clientPhone].filter(Boolean).map(sanitize).join(" - ");
+    if (contact) b += CMD.BOLD_ON + contact + "\n" + CMD.BOLD_OFF;
+    // Heure de retrait en tres gros : information critique pour l'emporter
+    if (clientPickupTime) {
+      b += CMD.BOLD_ON + "RETRAIT\n" + CMD.BOLD_OFF;
+      b += CMD.BOLD_ON + CMD.QUAD + `${clientPickupTime}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    }
+  } else {
+    b += CMD.BOLD_ON + CMD.QUAD + `TABLE ${tableNumber}\n` + CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+  }
+  return b + CMD.LEFT;
+}
+
 function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter }) {
   let buf = "";
   buf += CMD.INIT;
@@ -283,22 +315,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   buf += CMD.LEFT;
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
-  buf += CMD.CENTER;
-  if (orderType === "emporter") {
-    buf += CMD.BOLD_ON + CMD.QUAD;
-    buf += `A EMPORTER\n`;
-    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-    buf += CMD.BOLD_ON + CMD.DOUBLE_ON;
-    buf += `#${emporterNum}\n`;
-    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-    if (clientName) buf += CMD.BOLD_ON + `${sanitize(clientName)}\n` + CMD.BOLD_OFF;
-    if (clientPhone) buf += `Tel: ${clientPhone}\n`;
-    if (clientPickupTime) { buf += CMD.BOLD_ON; buf += `Retrait: ${clientPickupTime}\n`; buf += CMD.BOLD_OFF; }
-  } else {
-    buf += CMD.BOLD_ON + CMD.QUAD;
-    buf += `TABLE ${tableNumber}\n`;
-    buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
-  }
+  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
   buf += CMD.LEFT;
   buf += `Date: ${date}\n`;
   buf += line("=");
@@ -337,8 +354,10 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     itemsToGroup.push(...order.map(i => ({...i})));
   }
 
-  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats)
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
+  // Grouper par catégorie avec ordre fixe (Biryani fusionné dans Plats).
+  // Les boissons ferment le ticket — utile sur le ticket emporter unique.
+  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi",
+                     "Boissons", "Apéritifs", "Aperitifs", "Vin", "Rosé", "Rose", "Bières", "Bieres", "Bar"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
   const mergedCat = (item) => CAT_MERGE[item.category] || item.category || "Autres";
 
@@ -348,22 +367,6 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   if (itemsToGroup.length === 0) return "";
 
   const nbArticles = itemsToGroup.reduce((s, i) => s + i.qty, 0);
-
-  // À EMPORTER cuisine : impression à plat, sans séparation de catégorie
-  if (orderType === "emporter" && !showTotal) {
-    for (const item of itemsToGroup) {
-      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-      buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
-      buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
-      buf += ESC + "J\x0C";
-    }
-    buf += line("=");
-    buf += CMD.CENTER;
-    buf += `${nbArticles} article(s)\n`;
-    buf += CMD.FEED;
-    buf += CMD.PARTIAL_CUT;
-    return buf;
-  }
 
   const seenCats = {};
   for (const item of itemsToGroup) {
@@ -449,7 +452,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   return buf;
 }
 
-function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, date, showTotal }) {
+function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime }) {
   // Clé unique par item : cartId si présent (formules), sinon id
   const itemKey = (i) => i.cartId || String(i.id);
   const oldMap = new Map((oldItems || []).map((i) => [itemKey(i), i]));
@@ -488,9 +491,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   buf += CMD.LEFT;
   buf += line("=");
   buf += `Commande: #${orderNum}\n`;
-  buf += CMD.CENTER + CMD.BOLD_ON + CMD.QUAD;
-  buf += `TABLE ${tableNumber}\n`;
-  buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF + CMD.LEFT;
+  buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
   buf += `Date: ${date}\n`;
   buf += line("=");
 
@@ -860,21 +861,27 @@ app.post("/print-all", async (req, res) => {
     const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone, clientPickupTime };
     const tickets = [];
 
-    if (cuisine.length > 0) {
-      // Ticket cuisine sans les desserts + ticket desserts separe.
-      // Le filtre s'applique apres eclatement des formules : le dessert d'un
-      // menu part donc bien sur le ticket DESSERTS.
-      tickets.push(formatTicket({
-        title: isEmporter ? "CUISINE - A EMPORTER" : "CUISINE",
-        order: cuisine, showTotal: false, catFilter: (c) => c !== "Desserts", ...common,
-      }));
-      tickets.push(formatTicket({
-        title: isEmporter ? "DESSERTS - A EMPORTER" : "DESSERTS",
-        order: cuisine, showTotal: false, catFilter: (c) => c === "Desserts", ...common,
-      }));
-    }
-    if (boissons.length > 0) {
-      tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: false, ...common }));
+    if (isEmporter) {
+      // A emporter : cuisine, desserts et bar sur un SEUL ticket,
+      // separes par les bandes noires de categorie.
+      tickets.push(formatTicket({ title: "COMMANDE", order, showTotal: false, ...common }));
+    } else {
+      if (cuisine.length > 0) {
+        // Ticket cuisine sans les desserts + ticket desserts separe.
+        // Le filtre s'applique apres eclatement des formules : le dessert d'un
+        // menu part donc bien sur le ticket DESSERTS.
+        tickets.push(formatTicket({
+          title: "CUISINE", order: cuisine, showTotal: false,
+          catFilter: (c) => c !== "Desserts", ...common,
+        }));
+        tickets.push(formatTicket({
+          title: "DESSERTS", order: cuisine, showTotal: false,
+          catFilter: (c) => c === "Desserts", ...common,
+        }));
+      }
+      if (boissons.length > 0) {
+        tickets.push(formatTicket({ title: "BAR", order: boissons, showTotal: false, ...common }));
+      }
     }
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
