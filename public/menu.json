@@ -915,10 +915,28 @@
       },
       {
         "id": 159,
-        "name": "Heineken ou 1664",
+        "name": "Bière",
         "price": 4,
         "category": "Boissons",
-        "subcategory": "Bière"
+        "subcategory": "Bière",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Bière",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Heineken",
+                "piment": false
+              },
+              {
+                "name": "1664",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 160,
