@@ -179,9 +179,11 @@ app.post("/order/:id/reprint-bill", async (req, res) => {
       clientName: order.clientName,
       clientPhone: order.clientPhone,
       clientPickupTime: order.clientPickupTime,
+      remise: req.body && req.body.remise,
     });
     await sendToPrinter(ticket);
-    console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`);
+    console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`
+      + (req.body && req.body.remise ? ` — remise ${libelleRemise(req.body.remise)}` : ""));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -411,7 +413,7 @@ function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPh
   return b + CMD.LEFT;
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter }) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter, remise }) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -543,11 +545,21 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
 
   if (showTotal) {
     const total = order.reduce((s, i) => s + i.price * i.qty, 0);
+    const montant = montantRemise(total, remise);
     buf += CMD.BOLD_ON;
     buf += CMD.DOUBLE_ON;
     buf += pad("TOTAL", `${total.toFixed(2)} EUR`, WIDTH_DOUBLE);
     buf += CMD.DOUBLE_OFF;
     buf += CMD.BOLD_OFF;
+    if (montant > 0) {
+      buf += CMD.BOLD_ON;
+      buf += pad(`REMISE ${libelleRemise(remise)}`, `-${montant.toFixed(2)} EUR`, WIDTH);
+      buf += CMD.BOLD_OFF;
+      buf += line("-");
+      buf += CMD.BOLD_ON + CMD.DOUBLE_ON;
+      buf += pad("A PAYER", `${(total - montant).toFixed(2)} EUR`, WIDTH_DOUBLE);
+      buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
+    }
     buf += line("=");
     buf += CMD.CENTER;
     buf += "Merci de votre visite !\n";
@@ -566,6 +578,19 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
 }
 
 // Bon de reduction 10% valable 30 jours, imprime a la suite de l'addition
+// Remise appliquee a une addition : { type: "pourcent"|"euro", valeur: n }
+function montantRemise(total, remise) {
+  if (!remise || !remise.valeur) return 0;
+  const v = Number(remise.valeur);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  const brut = remise.type === "euro" ? v : total * v / 100;
+  return Math.min(Math.max(brut, 0), total);   // jamais negatif, jamais superieur au total
+}
+function libelleRemise(remise) {
+  if (!remise) return "";
+  return remise.type === "euro" ? `${Number(remise.valeur).toFixed(2)} EUR` : `${Number(remise.valeur)}%`;
+}
+
 function couponBlock() {
   const end = new Date();
   end.setDate(end.getDate() + 30);

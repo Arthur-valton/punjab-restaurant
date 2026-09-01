@@ -227,6 +227,7 @@ function App() {
   const [showOrders, setShowOrders] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [pimentPicker, setPimentPicker] = useState(null); // { item } | null
+  const [remisePour, setRemisePour] = useState(null); // { order, type, valeur } | null
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
 
   async function updateMenu(newMenu) {
@@ -535,8 +536,12 @@ function App() {
     setEditingOrderId(null);
   }
 
-  async function reprintBill(orderId) {
-    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}/reprint-bill`, { method: "POST" });
+  async function reprintBill(orderId, remise) {
+    await fetch(`${getPrintUrl()}/order/${encodeURIComponent(orderId)}/reprint-bill`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(remise ? { remise } : {}),
+    });
   }
 
   async function closeTable(orderId) {
@@ -1027,7 +1032,7 @@ function App() {
                   </div>
                   <div className="orders-panel-actions">
                     <button className="orders-panel-edit-btn" onClick={() => loadOrderForEdit(o)}>Modifier</button>
-                    <button className="orders-panel-bill-btn" onClick={() => reprintBill(o.id)}>Addition</button>
+                    <button className="orders-panel-bill-btn" onClick={() => setRemisePour({ order: o, type: "aucune", valeur: "" })}>Addition</button>
                     <button className="orders-panel-close-btn" onClick={() => closeTable(o.id)}>Clôturer</button>
                   </div>
                 </div>
@@ -1124,6 +1129,61 @@ function App() {
         </div>
       )}
 
+
+      {/* Remise avant impression de l'addition */}
+      {remisePour && (() => {
+        const cmd = remisePour.order;
+        const total = (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0);
+        const v = parseFloat(String(remisePour.valeur).replace(",", "."));
+        const brut = remisePour.type === "aucune" || !Number.isFinite(v) || v <= 0 ? 0
+          : remisePour.type === "euro" ? v : total * v / 100;
+        const montant = Math.min(Math.max(brut, 0), total);
+        const choisir = (type, valeur) => setRemisePour({ ...remisePour, type, valeur });
+        return (
+          <div className="emporter-modal-overlay" onClick={() => setRemisePour(null)}>
+            <div className="emporter-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="remise-entete">
+                <span className="remise-titre">ADDITION</span>
+                <span className="remise-cible">
+                  {cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`}
+                </span>
+                <span className="remise-total">{total.toFixed(2)} &euro;</span>
+              </div>
+              <div className="remise-corps">
+                <div className="remise-choix">
+                  <button className={`remise-btn ${remisePour.type === "aucune" ? "actif" : ""}`}
+                    onClick={() => choisir("aucune", "")}>Aucune</button>
+                  <button className={`remise-btn ${remisePour.type === "pourcent" && String(remisePour.valeur) === "10" ? "actif" : ""}`}
+                    onClick={() => choisir("pourcent", "10")}>−10 %</button>
+                </div>
+                <div className="remise-libre">
+                  <input className="emporter-input" type="number" inputMode="decimal" min="0" step="0.5"
+                    placeholder="Montant libre"
+                    value={remisePour.type === "aucune" ? "" : remisePour.valeur}
+                    onChange={(e) => choisir(remisePour.type === "aucune" ? "pourcent" : remisePour.type, e.target.value)} />
+                  <button className={`remise-unite ${remisePour.type === "pourcent" ? "actif" : ""}`}
+                    onClick={() => choisir("pourcent", remisePour.valeur)}>%</button>
+                  <button className={`remise-unite ${remisePour.type === "euro" ? "actif" : ""}`}
+                    onClick={() => choisir("euro", remisePour.valeur)}>&euro;</button>
+                </div>
+                {montant > 0 && (
+                  <div className="remise-resume">
+                    <span>Remise −{montant.toFixed(2)} &euro;</span>
+                    <strong>À payer {(total - montant).toFixed(2)} &euro;</strong>
+                  </div>
+                )}
+              </div>
+              <div className="emporter-modal-actions">
+                <button className="emporter-btn-cancel" onClick={() => setRemisePour(null)}>Annuler</button>
+                <button className="emporter-btn-confirm" onClick={() => {
+                  reprintBill(cmd.id, montant > 0 ? { type: remisePour.type, valeur: v } : null);
+                  setRemisePour(null);
+                }}>Imprimer</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* Ticket overlay */}
       {showTicket && ticketData && (
         <Ticket

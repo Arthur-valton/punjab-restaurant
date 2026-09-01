@@ -3194,3 +3194,37 @@ body {
   border: 1px solid rgba(175,82,222,0.4);
 }
 .menu-btn-tag.menu::before { content: "☰ "; }
+
+/* ---- Remise sur l'addition ---- */
+.remise-entete {
+  background: rgba(46,204,113,0.12);
+  border-bottom: 1px solid rgba(46,204,113,0.3);
+  padding: 16px 20px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.remise-titre { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em; color: #2ecc71; }
+.remise-cible { font-size: 0.95rem; color: rgba(255,255,255,0.7); }
+.remise-total { font-size: 2rem; font-weight: 800; color: #2ecc71; line-height: 1.1; }
+.remise-corps { padding: 16px 16px 4px; display: flex; flex-direction: column; gap: 12px; }
+.remise-choix { display: flex; gap: 10px; }
+.remise-btn {
+  flex: 1; height: 52px; border-radius: 12px; cursor: pointer; font-family: inherit;
+  font-size: 1rem; font-weight: 700;
+  border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff;
+}
+.remise-btn.actif { background: #2ecc71; border-color: #2ecc71; color: #fff; }
+.remise-libre { display: flex; gap: 8px; align-items: stretch; }
+.remise-libre .emporter-input { flex: 1; }
+.remise-unite {
+  width: 56px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  font-size: 1.05rem; font-weight: 700;
+  border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff;
+}
+.remise-unite.actif { background: #2ecc71; border-color: #2ecc71; }
+.remise-resume {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3);
+  color: rgba(255,255,255,0.75); font-size: 0.9rem;
+}
+.remise-resume strong { color: #2ecc71; font-size: 1.1rem; }
