@@ -307,14 +307,15 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += `*** ${title} ***\n`;
     buf += CMD.BOLD_OFF;
   } else {
-    // Ticket production : titre seul en gros
+    // Ticket production : titre + numero de commande en gros
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-    buf += `${title}\n`;
+    buf += `${title} #${orderNum}\n`;
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
   buf += CMD.LEFT;
   buf += line("=");
-  buf += `Commande: #${orderNum}\n`;
+  // Le numero figure deja dans le titre des tickets de production
+  if (showTotal) buf += `Commande: #${orderNum}\n`;
   buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
   buf += CMD.LEFT;
   buf += `Date: ${date}\n`;
@@ -485,12 +486,12 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     buf += CMD.BOLD_OFF;
   } else {
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-    buf += `${title}\n`;
+    buf += `${title} #${orderNum}\n`;
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
   buf += CMD.LEFT;
   buf += line("=");
-  buf += `Commande: #${orderNum}\n`;
+  if (showTotal) buf += `Commande: #${orderNum}\n`;
   buf += orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPhone, clientPickupTime });
   buf += `Date: ${date}\n`;
   buf += line("=");
