@@ -55,7 +55,7 @@
         "name": "Raita",
         "price": 5.5,
         "category": "Entrées",
-        "subcategory": "Salade / Soupe",
+        "subcategory": "Salade",
         "piment": true
       },
       {
@@ -63,7 +63,7 @@
         "name": "Raita crevettes",
         "price": 7.5,
         "category": "Entrées",
-        "subcategory": "Salade / Soupe",
+        "subcategory": "Salade",
         "piment": true
       },
       {
@@ -72,7 +72,7 @@
         "price": 7.5,
         "category": "Entrées",
         "piment": false,
-        "subcategory": "Salade / Soupe",
+        "subcategory": "Salade",
         "isFormula": true,
         "formulaSteps": [
           {
@@ -96,7 +96,7 @@
         "name": "Soupe Dall",
         "price": 8.5,
         "category": "Entrées",
-        "subcategory": "Salade / Soupe",
+        "subcategory": "Soupe",
         "piment": true
       },
       {
