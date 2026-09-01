@@ -742,7 +742,10 @@ const FORMULA_LABEL_MAP_SHARED = {
   "pichet": "Boissons", "pichet a vin": "Boissons",
 };
 function mapFormulaLabelShared(label) {
-  const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  // Menus pour plusieurs convives : « Plat pers. 1 » vise le meme poste que
+  // « Plat ». On retire le suffixe de convive avant de router.
+  key = key.replace(/\s*(pers\.?|personne)?\s*\d+\s*$/, "").trim();
   return FORMULA_LABEL_MAP_SHARED[key] || label;
 }
 
