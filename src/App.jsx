@@ -905,7 +905,7 @@ function App() {
                                 }
                               }}
                             >
-                              {name}{hasPiment && <span style={{ marginLeft: 6, opacity: 0.6 }}>🌶️</span>}
+                              {name}
                               {prix != null && <span className="formula-picker-price">{prix.toFixed(2)} €</span>}
                             </button>
                           );
