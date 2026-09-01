@@ -308,7 +308,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   // À EMPORTER cuisine : impression à plat, sans séparation de catégorie
   if (orderType === "emporter" && !showTotal) {
     for (const item of itemsToGroup) {
-      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
       buf += `${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.piment) buf += CMD.BOLD_ON + `  ${pimentSymbols[item.piment]}\n` + CMD.BOLD_OFF;
@@ -363,9 +363,8 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
         buf += `   ${item.price.toFixed(2)} EUR/u\n`;
         buf += ESC + "J\x06";
       } else {
-        buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-        buf += `${item.qty}x ${sanitize(item.name)}
-`;
+        buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+        buf += `${item.qty}x ${sanitize(item.name)}\n`;
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         if (item.piment) {
           buf += CMD.BOLD_ON;
@@ -448,7 +447,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
     buf += line("-");
     const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
     for (const item of added) {
-      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
       buf += `++ ${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.piment && item.piment > 1) {
@@ -463,7 +462,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       }
     }
     for (const item of removed) {
-      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
       buf += `-- ${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
@@ -495,9 +494,8 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       }
       buf += `   ${item.price.toFixed(2)} EUR/u\n`;
     } else {
-      buf += CMD.DOUBLE_H + CMD.BOLD_ON;
-      buf += `${item.qty}x ${sanitize(item.name)}
-`;
+      buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
+      buf += `${item.qty}x ${sanitize(item.name)}\n`;
       buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
       if (item.formulaChoices) {
         const ps = { 1: "PIMENT: Sans", 2: "PIMENT: ~~ Moyen ~~", 3: "PIMENT: !!! FORT !!!" };
