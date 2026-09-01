@@ -259,6 +259,38 @@ function itemLine(label, mark) {
   return mark ? `${label} ${mark}\n` : `${label}\n`;
 }
 
+// Deux natures de formule :
+//  - formule-MENU (Menu Midi = entree + plat + dessert) : chaque choix part
+//    vers un poste different, le nom du menu n'interesse pas la cuisine ;
+//  - formule-VARIANTE (Sirop parfum fraise, Lassi mangue, Kir cassis) : le
+//    produit c'est l'article lui-meme, le choix n'est qu'une declinaison.
+// On n'eclate que la premiere : sinon le bar recoit "1x Mangue" sans savoir
+// qu'il s'agit d'un lassi.
+function isMenuFormula(item) {
+  const choices = item.formulaChoices || [];
+  if (choices.length === 0) return false;
+  const own = CAT_MERGE_SHARED[item.category] || item.category;
+  const cats = choices.map((c) => mapFormulaLabelShared(c.label));
+  const toutesConnues = cats.every((c) => Object.values(FORMULA_LABEL_MAP_SHARED).includes(c));
+  return toutesConnues && cats.some((c) => c !== own);
+}
+
+// Signature des choix : deux declinaisons du meme article ne doivent pas
+// fusionner en une seule ligne sur le ticket.
+function formulaSig(item) {
+  return (item.formulaChoices || []).map((c) => `${c.label}=${c.itemName}=${c.piment || ""}`).join("|");
+}
+
+// Sous-lignes "> Parfum: Fraise" sous l'article
+function formulaLines(item, indent = "   ") {
+  let b = "";
+  for (const c of item.formulaChoices || []) {
+    const cm = pimentMark(c.piment);
+    b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}\n`;
+  }
+  return b;
+}
+
 function line(char = "-", width = WIDTH) {
   return char.repeat(width) + "\n";
 }
@@ -325,27 +357,18 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   buf += `Date: ${date}\n`;
   buf += line("=");
 
-  // Mapping labels de formule → catégories ticket (insensible aux accents/casse/pluriel)
-  const FORMULA_LABEL_MAP = {
-    "entree": "Entrees", "entrees": "Entrees",
-    "plat": "Plats", "plats": "Plats",
-    "dessert": "Desserts", "desserts": "Desserts",
-    "naan": "Naans", "naans": "Naans",
-    "boisson": "Boissons", "boissons": "Boissons",
-  };
-  function mapFormulaLabel(label) {
-    const key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    return FORMULA_LABEL_MAP[key] || label;
-  }
-
-  // Pour ticket cuisine : éclater les formules en articles par étape dans leurs vraies catégories
+  // Pour ticket cuisine : eclater les formules-MENU en articles par poste.
+  // Les formules-VARIANTE gardent leur article, le choix passe en sous-ligne.
   let itemsToGroup = [];
   if (!showTotal) {
     for (const item of order) {
       if (item.formulaChoices && item.formulaChoices.length > 0) {
-        // Expansion normale : chaque choix dans sa catégorie
-        for (const choice of item.formulaChoices) {
-          itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabel(choice.label), qty: item.qty, piment: choice.piment || null });
+        if (isMenuFormula(item)) {
+          for (const choice of item.formulaChoices) {
+            itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabelShared(choice.label), qty: item.qty, piment: choice.piment || null });
+          }
+        } else {
+          itemsToGroup.push({ ...item });
         }
       } else if (item.isFormula && item.formulaSteps?.length > 0) {
         // Formule sans choix : afficher le nom + les étapes attendues
@@ -379,7 +402,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     if (!seenCats[cat]) seenCats[cat] = [];
     // Regroupe sur le marqueur affiche : deux lignes identiques a l'impression
     // fusionnent, mais un plat avec piment reste separe du meme plat sans piment.
-    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name) && pimentMark(x.piment) === pimentMark(item.piment));
+    const existing = seenCats[cat].find(x => normName(x.name) === normName(item.name)
+      && pimentMark(x.piment) === pimentMark(item.piment)
+      && formulaSig(x) === formulaSig(item));
     if (existing) existing.qty += item.qty;
     else seenCats[cat].push(item);
   }
@@ -426,6 +451,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
         buf += itemLine(`${item.qty}x ${sanitize(item.name)}`, pimentMark(item.piment));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+        buf += CMD.BOLD_ON + formulaLines(item) + CMD.BOLD_OFF;
         buf += ESC + "J\x0C";
       }
     }
