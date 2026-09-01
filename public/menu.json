@@ -480,60 +480,59 @@
       },
       {
         "id": 108,
-        "name": "Naan",
+        "name": "Naan Nature",
         "price": 3,
         "category": "Plats",
-        "subcategory": "Naans",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Type",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Chappati",
-                "piment": false,
-                "price": 3
-              },
-              {
-                "name": "Naan Nature",
-                "piment": false,
-                "price": 3
-              },
-              {
-                "name": "Chili Naan",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Masala Kulcha",
-                "piment": false,
-                "price": 4
-              },
-              {
-                "name": "Naan Punjab",
-                "piment": false,
-                "price": 4
-              },
-              {
-                "name": "Naan Fromage & Ail",
-                "piment": false,
-                "price": 4.5
-              }
-            ]
-          }
-        ]
+        "subcategory": "Naans"
+      },
+      {
+        "id": 109,
+        "name": "Naan Fromage",
+        "price": 3.5,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 110,
+        "name": "Naan Ail",
+        "price": 3.5,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 111,
+        "name": "Chili Naan",
+        "price": 3.5,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 112,
+        "name": "Naan Punjab",
+        "price": 4,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 113,
+        "name": "Masala Kulcha",
+        "price": 4,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 114,
+        "name": "Naan Fromage & Ail",
+        "price": 4.5,
+        "category": "Plats",
+        "subcategory": "Naans"
+      },
+      {
+        "id": 115,
+        "name": "Chappati",
+        "price": 3,
+        "category": "Plats",
+        "subcategory": "Naans"
       },
       {
         "id": 200,
@@ -619,59 +618,51 @@
     "items": [
       {
         "id": 70,
-        "name": "Naan",
+        "name": "Naan Nature",
         "price": 3,
-        "category": "Naans",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Type",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Chappati",
-                "piment": false,
-                "price": 3
-              },
-              {
-                "name": "Naan Nature",
-                "piment": false,
-                "price": 3
-              },
-              {
-                "name": "Chili Naan",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Naan Ail",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Naan Fromage",
-                "piment": false,
-                "price": 3.5
-              },
-              {
-                "name": "Masala Kulcha",
-                "piment": false,
-                "price": 4
-              },
-              {
-                "name": "Naan Punjab",
-                "piment": false,
-                "price": 4
-              },
-              {
-                "name": "Naan Fromage & Ail",
-                "piment": false,
-                "price": 4.5
-              }
-            ]
-          }
-        ]
+        "category": "Naans"
+      },
+      {
+        "id": 71,
+        "name": "Naan Fromage",
+        "price": 3.5,
+        "category": "Naans"
+      },
+      {
+        "id": 72,
+        "name": "Naan Ail",
+        "price": 3.5,
+        "category": "Naans"
+      },
+      {
+        "id": 73,
+        "name": "Chili Naan",
+        "price": 3.5,
+        "category": "Naans"
+      },
+      {
+        "id": 74,
+        "name": "Naan Punjab",
+        "price": 4,
+        "category": "Naans"
+      },
+      {
+        "id": 75,
+        "name": "Masala Kulcha",
+        "price": 4,
+        "category": "Naans"
+      },
+      {
+        "id": 76,
+        "name": "Naan Fromage & Ail",
+        "price": 4.5,
+        "category": "Naans"
+      },
+      {
+        "id": 77,
+        "name": "Chappati",
+        "price": 3,
+        "category": "Naans"
       }
     ]
   },
