@@ -1096,21 +1096,32 @@
         "name": "Café",
         "price": 2,
         "category": "Boissons",
-        "subcategory": "Café/Thé"
-      },
-      {
-        "id": 171,
-        "name": "Café allongé",
-        "price": 3,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
-      },
-      {
-        "id": 238,
-        "name": "Café crème",
-        "price": 3,
-        "category": "Boissons",
-        "subcategory": "Café/Thé"
+        "subcategory": "Café/Thé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Type",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Café",
+                "piment": false,
+                "price": 2
+              },
+              {
+                "name": "Café allongé",
+                "piment": false,
+                "price": 3
+              },
+              {
+                "name": "Café crème",
+                "piment": false,
+                "price": 3
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 172,
