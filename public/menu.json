@@ -723,6 +723,337 @@
     "category": "Boissons",
     "items": [
       {
+        "id": 142,
+        "name": "Kir au vin blanc 15cl",
+        "price": 5,
+        "category": "Boissons",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Supplément",
+            "articles": [
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Mur",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              }
+            ]
+          }
+        ],
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 130,
+        "name": "Kir royal 15cl",
+        "price": 7,
+        "category": "Boissons",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Supplément",
+            "articles": [
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              },
+              {
+                "name": "Mur",
+                "piment": false
+              }
+            ]
+          }
+        ],
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 150,
+        "name": "Ricard 4cl",
+        "price": 4.5,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 151,
+        "name": "Cocktail Maison 25cl",
+        "price": 6,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 152,
+        "name": "Cocktail Maison sans alcool",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 153,
+        "name": "Martini 6cl blanc/rouge",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 154,
+        "name": "Porto rouge 6cl",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 155,
+        "name": "Suze 4cl",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 156,
+        "name": "Bombay Gin 6cl",
+        "price": 5.9,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 157,
+        "name": "Gin tonic 10cl",
+        "price": 6.9,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 223,
+        "name": "Jus de fruit Pago",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Jus & Soda"
+      },
+      {
+        "id": 167,
+        "name": "Ice tea",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Jus & Soda"
+      },
+      {
+        "id": 168,
+        "name": "Lassi Maison",
+        "price": 5.5,
+        "category": "Boissons",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": [
+              {
+                "name": "Mangue",
+                "piment": false
+              },
+              {
+                "name": "Rose",
+                "piment": false
+              },
+              {
+                "name": "Coco",
+                "piment": false
+              }
+            ]
+          }
+        ],
+        "subcategory": "Boisson Maison"
+      },
+      {
+        "id": 169,
+        "name": "Lassi sucré ou salé",
+        "price": 4.5,
+        "category": "Boissons",
+        "subcategory": "Boisson Maison"
+      },
+      {
+        "id": 158,
+        "name": "Bière indienne 33cl",
+        "price": 6,
+        "category": "Boissons",
+        "subcategory": "Bière"
+      },
+      {
+        "id": 159,
+        "name": "Heineken ou 1664",
+        "price": 4,
+        "category": "Boissons",
+        "subcategory": "Bière"
+      },
+      {
+        "id": 160,
+        "name": "Johnie Walker 6cl",
+        "price": 5.9,
+        "category": "Boissons",
+        "subcategory": "Whisky"
+      },
+      {
+        "id": 161,
+        "name": "Chivas 6cl",
+        "price": 7.9,
+        "category": "Boissons",
+        "subcategory": "Whisky"
+      },
+      {
+        "id": 162,
+        "name": "JB Coca 6cl",
+        "price": 7.9,
+        "category": "Boissons",
+        "subcategory": "Whisky"
+      },
+      {
+        "id": 163,
+        "name": "Sirop / Diabolo",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Sirop"
+      },
+      {
+        "id": 164,
+        "name": "Evian 50cl",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 165,
+        "name": "Evian 1L",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 213,
+        "name": "Perrier",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 215,
+        "name": "Digestif",
+        "price": 4,
+        "category": "Boissons",
+        "subcategory": "Digestif"
+      },
+      {
+        "id": 170,
+        "name": "Café",
+        "price": 2,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 171,
+        "name": "Café allongé / crème",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 172,
+        "name": "Thé menthe",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 173,
+        "name": "Infusion",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 224,
+        "name": "Kir indien 15cl",
+        "price": 7,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
+      },
+      {
+        "id": 225,
+        "name": "Coca",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Jus & Soda"
+      },
+      {
+        "id": 226,
+        "name": "Schweppes",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Jus & Soda"
+      },
+      {
+        "id": 227,
+        "name": "Orangina",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Jus & Soda"
+      },
+      {
+        "id": 228,
+        "name": "S.Pellegrino 50cl",
+        "price": 3,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 229,
+        "name": "S.Pellegrino 1L",
+        "price": 5,
+        "category": "Boissons",
+        "subcategory": "Eaux"
+      },
+      {
+        "id": 230,
+        "name": "Thé cardamome",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
+        "id": 231,
+        "name": "Thé au lait",
+        "price": 3.5,
+        "category": "Boissons",
+        "subcategory": "Café/Thé"
+      },
+      {
         "id": 123,
         "name": "Chinon 75cl",
         "price": 25,
@@ -858,285 +1189,29 @@
         "id": 208,
         "name": "Pichet 50cl",
         "price": 11,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "Vin"
       },
       {
         "id": 219,
         "name": "Pichet 25",
         "price": 6,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "Vin"
       },
       {
         "id": 220,
         "name": "Long duc ville de ange",
         "price": 25,
-        "category": "Boissons"
+        "category": "Boissons",
+        "subcategory": "Vin"
       },
       {
         "id": 222,
         "name": "Vin mousseux",
         "price": 35,
-        "category": "Boissons"
-      }
-    ]
-  },
-  {
-    "category": "Apéritifs",
-    "items": [
-      {
-        "id": 130,
-        "name": "Kir pétillante",
-        "price": 7,
-        "category": "Apéritifs",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Supplément",
-            "articles": [
-              {
-                "name": "Rose",
-                "piment": false
-              },
-              {
-                "name": "Cassis",
-                "piment": false
-              },
-              {
-                "name": "Pêche",
-                "piment": false
-              },
-              {
-                "name": "Framboise",
-                "piment": false
-              },
-              {
-                "name": "Mur",
-                "piment": false
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 142,
-        "name": "Kir",
-        "price": 5,
-        "category": "Apéritifs",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Supplément",
-            "articles": [
-              {
-                "name": "Rose",
-                "piment": false
-              },
-              {
-                "name": "Cassis",
-                "piment": false
-              },
-              {
-                "name": "Mur",
-                "piment": false
-              },
-              {
-                "name": "Pêche",
-                "piment": false
-              },
-              {
-                "name": "Framboise",
-                "piment": false
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 150,
-        "name": "Ricard",
-        "price": 4.5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 151,
-        "name": "Cocktail Maison",
-        "price": 6,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 152,
-        "name": "Cocktail Maison SA",
-        "price": 5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 153,
-        "name": "Martini",
-        "price": 5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 154,
-        "name": "Porto",
-        "price": 5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 155,
-        "name": "Suze",
-        "price": 5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 156,
-        "name": "Bombay GIN",
-        "price": 5.9,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 157,
-        "name": "Gin tonic",
-        "price": 6.9,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 158,
-        "name": "Bière indienne",
-        "price": 6,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 159,
-        "name": "Bière",
-        "price": 4,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 160,
-        "name": "Johnie Walker",
-        "price": 5.9,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 161,
-        "name": "Chivas",
-        "price": 7.9,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 162,
-        "name": "JB COCA",
-        "price": 7.9,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 163,
-        "name": "Sirop - DIABLO",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 164,
-        "name": "EAU 50cl",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 165,
-        "name": "Eau 1l",
-        "price": 5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 166,
-        "name": "Soft 3,50",
-        "price": 3.5,
-        "category": "Apéritifs",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 167,
-        "name": "Ice tea",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 168,
-        "name": "Lassi Maison",
-        "price": 5.5,
-        "category": "Apéritifs",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Boisson",
-            "articles": [
-              {
-                "name": "Mangue",
-                "piment": false
-              },
-              {
-                "name": "Rose",
-                "piment": false
-              },
-              {
-                "name": "Coco",
-                "piment": false
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 169,
-        "name": "Lassi nature",
-        "price": 4.5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 170,
-        "name": "Café",
-        "price": 2,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 171,
-        "name": "Café allongé / crème",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 172,
-        "name": "Tea",
-        "price": 3.5,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 173,
-        "name": "Infusion",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 213,
-        "name": "Perrier",
-        "price": 3,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 215,
-        "name": "Digestif",
-        "price": 4,
-        "category": "Apéritifs"
-      },
-      {
-        "id": 223,
-        "name": "Jus pago",
-        "price": 3.5,
-        "category": "Apéritifs"
+        "category": "Boissons",
+        "subcategory": "Vin"
       }
     ]
   },
