@@ -292,7 +292,8 @@ function nomAffiche(item) {
 // Sous-lignes "> Parfum: Fraise" sous l'article
 function formulaLines(item, indent = "   ") {
   let b = "";
-  for (const c of (item.formulaChoices || []).filter((x) => !x.remplaceNom)) {
+  const remplaces = new Set((item.formulaChoices || []).map((x) => x.remplaceParent).filter(Boolean));
+  for (const c of (item.formulaChoices || []).filter((x) => !x.remplaceNom && !remplaces.has(x.label))) {
     const cm = pimentMark(c.piment);
     b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}\n`;
   }
@@ -372,7 +373,11 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     for (const item of order) {
       if (item.formulaChoices && item.formulaChoices.length > 0) {
         if (isMenuFormula(item)) {
+          // Un choix generique remplace par un sous-choix ne part pas en
+          // production : le bar recevrait « Jus de fruits » ET « Jus mangue ».
+          const remplaces = new Set(item.formulaChoices.map((c) => c.remplaceParent).filter(Boolean));
           for (const choice of item.formulaChoices) {
+            if (remplaces.has(choice.label)) continue;
             itemsToGroup.push({ name: choice.itemName, category: mapFormulaLabelShared(choice.label), qty: item.qty, piment: choice.piment || null });
           }
         } else {
@@ -742,6 +747,7 @@ const FORMULA_LABEL_MAP_SHARED = {
   "pichet": "Boissons", "pichet a vin": "Boissons",
   // Les boules d'une coupe partent au poste desserts
   "boule": "Desserts", "boules": "Desserts",
+  "jus": "Boissons", "kir": "Boissons",
 };
 function mapFormulaLabelShared(label) {
   let key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();

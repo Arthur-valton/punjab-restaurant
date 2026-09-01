@@ -97,7 +97,10 @@ function nomAffiche(item) {
 }
 // Les choix qui remplacent le nom ne sont pas répétés en sous-ligne
 function choixVisibles(item) {
-  return (item.formulaChoices || []).filter((c) => !c.remplaceNom);
+  const choices = item.formulaChoices || [];
+  // Un choix generique (« Jus de fruits ») disparaît au profit du detail
+  const remplaces = new Set(choices.map((c) => c.remplaceParent).filter(Boolean));
+  return choices.filter((c) => !c.remplaceNom && !remplaces.has(c.label));
 }
 
 // Pastel Apple colors par sous-catégorie (couleurs manuelles prioritaires)
@@ -334,6 +337,8 @@ function App() {
     const step = item.formulaSteps[currentStep];
     const choice = { label: step.label, itemName: articleName };
     if (step.remplaceNom) choice.remplaceNom = true;
+    // Sous-etape de precision : le detail remplace le choix generique
+    if (step.remplaceParent && step.siEtape) choice.remplaceParent = step.siEtape;
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
     const newChoices = [...choices, choice];
