@@ -683,15 +683,27 @@
       },
       {
         "id": 241,
-        "name": "Kulfi mangue",
+        "name": "Kulfi",
         "price": 6,
-        "category": "Desserts"
-      },
-      {
-        "id": 242,
-        "name": "Kulfi pistache",
-        "price": 6,
-        "category": "Desserts"
+        "category": "Desserts",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Parfum",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Kulfi mangue",
+                "piment": false
+              },
+              {
+                "name": "Kulfi pistache",
+                "piment": false
+              }
+            ]
+          }
+        ]
       },
       {
         "id": 243,
