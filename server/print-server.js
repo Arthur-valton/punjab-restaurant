@@ -118,7 +118,6 @@ app.put("/order/:id", async (req, res) => {
     const cuisineAll = [...cuisine, ...boissons];
     const common = { tableNumber, orderNum, date };
 
-    const oldItems = existing.items || [];
     const emporterInfo = existing.orderType === "emporter" ? {
       orderType: "emporter",
       emporterNum: existing.emporterNum,
@@ -127,27 +126,10 @@ app.put("/order/:id", async (req, res) => {
       clientPickupTime: existing.clientPickupTime,
     } : {};
 
-    // Chaque ticket compare l'ancien et le nouveau SUR SON PERIMETRE,
-    // sinon les articles des autres tickets ressortent en "supprimes".
-    const isBar = (i) => BAR_CATEGORIES.has(i.category);
-    const isDessert = (i) => (CAT_MERGE_SHARED[i.category] || i.category) === "Desserts";
-    const scopes = existing.orderType === "emporter"
-      // A emporter : tout sur un seul ticket, comme a la commande
-      ? [{ title: "MODIFICATION", keep: () => true }]
-      : [
-          { title: "CUISINE (MODIF)",  keep: (i) => !isBar(i) && !isDessert(i) },
-          { title: "DESSERTS (MODIF)", keep: (i) => !isBar(i) && isDessert(i) },
-          { title: "BAR (MODIF)",      keep: isBar },
-        ];
-
-    const tickets = scopes.map(({ title, keep }) => formatModifTicket({
-      title,
-      oldItems: oldItems.filter(keep),
-      newItems: order.filter(keep),
-      showTotal: false,
-      ...common,
-      ...emporterInfo,
-    }));
+    // Le restaurant veut le ticket complet remis a jour, pas un differentiel :
+    // la cuisine remplace simplement l'ancien papier.
+    const tickets = ticketsDeCommande(order, { ...common, ...emporterInfo },
+                                      existing.orderType === "emporter");
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
     const printable = tickets.filter(Boolean);
@@ -973,6 +955,30 @@ wss.on("connection", (ws) => {
 });
 
 // ----- Route POST /print-all -----
+// Tickets de production d'une commande. Sert aussi bien a la prise de
+// commande qu'a la modification : le restaurant veut alors le ticket complet
+// remis a jour, pas un differentiel.
+function ticketsDeCommande(order, common, isEmporter, suffixe = "") {
+  if (isEmporter) {
+    // A emporter : cuisine, desserts et bar sur un SEUL ticket,
+    // separes par les bandes noires de categorie.
+    return [formatTicket({ title: "COMMANDE" + suffixe, order, showTotal: false, ...common })];
+  }
+  // La commande entiere est passee aux trois tickets : c'est le filtre,
+  // applique APRES eclatement des formules, qui aiguille chaque article.
+  // Trier sur la categorie de l'article laisserait l'aperitif d'un menu
+  // (categorie « Menu ») partir en cuisine au lieu du bar.
+  const estBar = (c) => BAR_CATEGORIES.has(c);
+  return [
+    formatTicket({ title: "CUISINE" + suffixe, order, showTotal: false,
+      catFilter: (c) => !estBar(c) && c !== "Desserts", ...common }),
+    formatTicket({ title: "DESSERTS" + suffixe, order, showTotal: false,
+      catFilter: (c) => c === "Desserts", ...common }),
+    formatTicket({ title: "BAR" + suffixe, order, showTotal: false,
+      catFilter: estBar, ...common }),
+  ];
+}
+
 app.post("/print-all", async (req, res) => {
   try {
     const { order, tableNumber, orderNum, date, orderId: clientOrderId,
@@ -998,23 +1004,7 @@ app.post("/print-all", async (req, res) => {
     const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone, clientPickupTime };
     const tickets = [];
 
-    if (isEmporter) {
-      // A emporter : cuisine, desserts et bar sur un SEUL ticket,
-      // separes par les bandes noires de categorie.
-      tickets.push(formatTicket({ title: "COMMANDE", order, showTotal: false, ...common }));
-    } else {
-      // La commande entiere est passee aux trois tickets : c'est le filtre,
-      // applique APRES eclatement des formules, qui aiguille chaque article.
-      // Trier sur la categorie de l'article laisserait l'aperitif d'un menu
-      // (categorie « Menu ») partir en cuisine au lieu du bar.
-      const estBar = (c) => BAR_CATEGORIES.has(c);
-      tickets.push(formatTicket({ title: "CUISINE", order, showTotal: false,
-        catFilter: (c) => !estBar(c) && c !== "Desserts", ...common }));
-      tickets.push(formatTicket({ title: "DESSERTS", order, showTotal: false,
-        catFilter: (c) => c === "Desserts", ...common }));
-      tickets.push(formatTicket({ title: "BAR", order, showTotal: false,
-        catFilter: estBar, ...common }));
-    }
+    tickets.push(...ticketsDeCommande(order, common, isEmporter));
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
     // formatTicket renvoie "" si le filtre ne laisse aucun article
