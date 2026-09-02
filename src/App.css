@@ -3228,3 +3228,23 @@ body {
   color: rgba(255,255,255,0.75); font-size: 0.9rem;
 }
 .remise-resume strong { color: #2ecc71; font-size: 1.1rem; }
+
+/* ---- Clôture proposée après impression de l'addition ---- */
+.cloture-entete {
+  background: rgba(231,76,60,0.12);
+  border-bottom: 1px solid rgba(231,76,60,0.3);
+  padding: 16px 20px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.cloture-titre { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em; color: #e74c3c; }
+.cloture-cible { font-size: 1.4rem; font-weight: 800; color: #fff; }
+.cloture-corps {
+  padding: 20px 16px; text-align: center;
+  font-size: 1.05rem; color: rgba(255,255,255,0.85);
+}
+.cloture-btn-valider {
+  flex: 2; height: 46px; border-radius: 12px; border: none;
+  background: #c62828; color: #fff;
+  font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.cloture-btn-valider:active { opacity: 0.85; }

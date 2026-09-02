@@ -228,6 +228,7 @@ function App() {
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [pimentPicker, setPimentPicker] = useState(null); // { item } | null
   const [remisePour, setRemisePour] = useState(null); // { order, type, valeur } | null
+  const [clotureApres, setClotureApres] = useState(null); // commande dont l'addition vient de sortir
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
 
   async function updateMenu(newMenu) {
@@ -558,9 +559,11 @@ function App() {
         body: JSON.stringify(corps),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return true;
     } catch (err) {
       // Sans ce retour, l'addition ne sortait pas et personne ne le savait.
       alert("L'addition n'a pas pu s'imprimer : " + err.message);
+      return false;
     }
   }
 
@@ -1195,15 +1198,45 @@ function App() {
               </div>
               <div className="emporter-modal-actions">
                 <button className="emporter-btn-cancel" onClick={() => setRemisePour(null)}>Annuler</button>
-                <button className="emporter-btn-confirm" onClick={() => {
-                  reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null);
+                <button className="emporter-btn-confirm" onClick={async () => {
+                  const ok = await reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null);
                   setRemisePour(null);
+                  // On ne propose la cloture que si l'addition est bien sortie
+                  if (ok) setClotureApres(cmd);
                 }}>Imprimer</button>
               </div>
             </div>
           </div>
         );
       })()}
+
+      {/* Cloture proposee juste apres l'impression de l'addition */}
+      {clotureApres && (
+        <div className="emporter-modal-overlay" onClick={() => setClotureApres(null)}>
+          <div className="emporter-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cloture-entete">
+              <span className="cloture-titre">ADDITION IMPRIMÉE</span>
+              <span className="cloture-cible">
+                {clotureApres.orderType === "emporter"
+                  ? `À emporter #${clotureApres.emporterNum}`
+                  : `Table ${clotureApres.tableNumber}`}
+              </span>
+            </div>
+            <div className="cloture-corps">
+              {clotureApres.orderType === "emporter"
+                ? "Clôturer cette commande ?"
+                : "Clôturer la table ?"}
+            </div>
+            <div className="emporter-modal-actions">
+              <button className="emporter-btn-cancel" onClick={() => setClotureApres(null)}>Plus tard</button>
+              <button className="cloture-btn-valider" onClick={() => {
+                closeTable(clotureApres.id);
+                setClotureApres(null);
+              }}>Clôturer</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Ticket overlay */}
       {showTicket && ticketData && (
         <Ticket
