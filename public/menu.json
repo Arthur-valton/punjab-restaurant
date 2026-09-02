@@ -246,7 +246,15 @@
         "name": "VIN PICHET ROSE",
         "price": 11,
         "category": "Entrées",
-        "subcategory": "VIN"
+        "subcategory": "VIN",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": []
+          }
+        ]
       }
     ]
   },
