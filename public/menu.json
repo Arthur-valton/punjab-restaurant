@@ -234,6 +234,13 @@
         "price": 11,
         "category": "Entrées",
         "subcategory": "Vin"
+      },
+      {
+        "id": 267,
+        "name": "VIN PICHET ROSE",
+        "price": 11,
+        "category": "Entrées",
+        "subcategory": "VIN"
       }
     ]
   },
