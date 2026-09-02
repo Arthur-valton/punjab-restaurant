@@ -211,6 +211,13 @@
         "price": 4,
         "category": "Entrées",
         "subcategory": "Vin"
+      },
+      {
+        "id": 264,
+        "name": "Verre rosé",
+        "price": 4,
+        "category": "Entrées",
+        "subcategory": "Vin"
       }
     ]
   },
