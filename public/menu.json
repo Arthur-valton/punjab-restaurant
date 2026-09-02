@@ -225,6 +225,13 @@
         "price": 4,
         "category": "Entrées",
         "subcategory": "Vin"
+      },
+      {
+        "id": 266,
+        "name": "Pichet rose",
+        "price": 11,
+        "category": "Entrées",
+        "subcategory": "Vin"
       }
     ]
   },
