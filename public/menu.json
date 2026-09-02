@@ -221,10 +221,12 @@
       },
       {
         "id": 265,
-        "name": "Vin rouge",
-        "price": 4,
+        "name": "Pichet 50cl Rouge",
+        "price": 11,
         "category": "Entrées",
-        "subcategory": "Vin"
+        "subcategory": "VIN",
+        "piment": false,
+        "isFormula": false
       },
       {
         "id": 266,
