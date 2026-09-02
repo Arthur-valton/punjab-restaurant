@@ -1965,7 +1965,7 @@
         "isFormula": true,
         "formulaSteps": [
           {
-            "label": "Format",
+            "label": "Boisson",
             "remplaceNom": true,
             "articles": [
               {
