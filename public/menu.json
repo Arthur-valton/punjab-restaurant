@@ -204,6 +204,13 @@
         "category": "Entrées",
         "subcategory": "Naans",
         "piment": false
+      },
+      {
+        "id": 263,
+        "name": "Verre Blanc",
+        "price": 4,
+        "category": "Entrées",
+        "subcategory": "Vin"
       }
     ]
   },
