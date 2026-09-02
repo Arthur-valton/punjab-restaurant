@@ -226,7 +226,13 @@
         "category": "Entrées",
         "subcategory": "VIN",
         "piment": false,
-        "isFormula": false
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Boisson",
+            "articles": []
+          }
+        ]
       },
       {
         "id": 266,
