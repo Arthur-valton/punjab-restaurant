@@ -3252,20 +3252,26 @@ body {
 /* ---- Plat hors carte saisi a la main (allergie, substitution) ---- */
 .formula-picker-item-btn.libre {
   border-style: dashed;
-  opacity: 0.9;
+  color: #666;
 }
+/* Meme gabarit que les boutons de choix : marges, rayon, graisse, focus orange */
 .formula-libre-input {
-  width: 100%;
+  margin: 8px 12px;
+  width: calc(100% - 24px);
   box-sizing: border-box;
-  height: 56px;
-  margin: 4px 0 12px;
-  padding: 0 16px;
+  padding: 14px 16px;
+  border: 1.5px solid #eee;
   border-radius: 12px;
-  border: 2px solid rgba(0,0,0,0.15);
-  background: #fff;
-  font-size: 1.15rem;
+  background: #fafafa;
+  font-size: 1rem;
+  font-weight: 600;
   font-family: inherit;
-  color: #111;
+  color: #222;
 }
-.formula-libre-input:focus { outline: none; border-color: #3b82f6; }
-.formula-picker-confirm:disabled { opacity: 0.4; }
+.formula-libre-input:focus {
+  outline: none;
+  border-color: #e67e22;
+  background: #fff;
+}
+.formula-libre-input::placeholder { color: #bbb; font-weight: 500; }
+.formula-picker-confirm:disabled { opacity: 0.35; }
