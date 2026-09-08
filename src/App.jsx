@@ -230,6 +230,7 @@ function App() {
   const [remisePour, setRemisePour] = useState(null); // { order, type, valeur } | null
   const [clotureApres, setClotureApres] = useState(null); // commande dont l'addition vient de sortir
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
+  const [texteLibre, setTexteLibre] = useState("");  // plat saisi a la main (allergie, substitution)
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -360,6 +361,21 @@ function App() {
                          ...(prix != null ? { price: prix } : {}) }];
     });
     setFormulaPicker(null);
+  }
+
+  // Un plat hors carte (allergie, substitution) : le nom tape remplace
+  // l'article, le reste du parcours ne change pas.
+  function validerSaisieLibre() {
+    const nom = texteLibre.trim();
+    if (!nom) return;
+    const { saisie, ...rest } = formulaPicker;
+    setTexteLibre("");
+    if (saisie.piment) {
+      setFormulaPicker({ ...rest, pendingArticle: nom, pendingPrix: saisie.prix ?? null });
+    } else {
+      setFormulaPicker(rest);
+      pickFormulaItem(nom, null, saisie.prix ?? null);
+    }
   }
 
   function pickFormulaItem(articleName, piment = null, prix = null) {
@@ -932,7 +948,28 @@ function App() {
               </div>
             )}
 
-            {formulaPicker.pendingArticle ? (
+            {formulaPicker.saisie ? (
+              /* ── Saisie libre : plat hors carte ── */
+              <>
+                <div className="formula-picker-step-label">Saisir le plat</div>
+                <input
+                  className="formula-libre-input"
+                  autoFocus
+                  value={texteLibre}
+                  placeholder="Nom du plat"
+                  onChange={(e) => setTexteLibre(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") validerSaisieLibre(); }}
+                />
+                <button className="formula-picker-confirm" disabled={!texteLibre.trim()} onClick={validerSaisieLibre}>
+                  Valider
+                </button>
+                <button className="formula-picker-cancel" onClick={() => {
+                  setTexteLibre("");
+                  const { saisie, ...rest } = formulaPicker;
+                  setFormulaPicker(rest);
+                }}>← Retour</button>
+              </>
+            ) : formulaPicker.pendingArticle ? (
               /* ── Sous-étape piment ── */
               <>
                 <div className="formula-picker-step-label">
@@ -979,6 +1016,8 @@ function App() {
                       ? articles.map((article, ai) => {
                           const name = typeof article === "string" ? article : article.name;
                           const hasPiment = typeof article !== "string" && article.piment;
+                          // « Autre » : le nom du plat est tape a la main
+                          const libre = typeof article !== "string" && article.libre;
                           // Le prix du choix, sinon celui du produit. Sur un menu
                           // multi-étapes on n'affiche rien : le prix couvre le menu
                           // entier, pas chaque entrée ou plat pris isolément.
@@ -993,9 +1032,12 @@ function App() {
                           return (
                             <button
                               key={ai}
-                              className="formula-picker-item-btn"
+                              className={`formula-picker-item-btn${libre ? " libre" : ""}`}
                               onClick={() => {
-                                if (hasPiment) {
+                                if (libre) {
+                                  setTexteLibre("");
+                                  setFormulaPicker({ ...formulaPicker, saisie: { prix, piment: hasPiment } });
+                                } else if (hasPiment) {
                                   setFormulaPicker({ ...formulaPicker, pendingArticle: name, pendingPrix: prix });
                                 } else {
                                   pickFormulaItem(name, null, prix);
@@ -1003,7 +1045,8 @@ function App() {
                               }}
                             >
                               {name}
-                              {prix != null && <span className="formula-picker-price">{prix.toFixed(2)} €</span>}
+                              {libre && <span className="formula-picker-price">à saisir</span>}
+                              {!libre && prix != null && <span className="formula-picker-price">{prix.toFixed(2)} €</span>}
                             </button>
                           );
                         })

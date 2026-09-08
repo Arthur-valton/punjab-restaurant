@@ -3248,3 +3248,24 @@ body {
   font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
 }
 .cloture-btn-valider:active { opacity: 0.85; }
+
+/* ---- Plat hors carte saisi a la main (allergie, substitution) ---- */
+.formula-picker-item-btn.libre {
+  border-style: dashed;
+  opacity: 0.9;
+}
+.formula-libre-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 56px;
+  margin: 4px 0 12px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 2px solid rgba(0,0,0,0.15);
+  background: #fff;
+  font-size: 1.15rem;
+  font-family: inherit;
+  color: #111;
+}
+.formula-libre-input:focus { outline: none; border-color: #3b82f6; }
+.formula-picker-confirm:disabled { opacity: 0.4; }

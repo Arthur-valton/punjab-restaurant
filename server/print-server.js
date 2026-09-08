@@ -855,6 +855,9 @@ const FORMULA_LABEL_MAP_SHARED = {
   // Les boules d'une coupe partent au poste desserts
   "boule": "Desserts", "boules": "Desserts",
   "jus": "Boissons", "kir": "Boissons",
+  // Libelle volontairement specifique : un simple "parfum" ferait passer
+  // le Kulfi (etape "Parfum") pour un menu et l'enverrait au bar.
+  "parfum kir": "Boissons",
 };
 function mapFormulaLabelShared(label) {
   let key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
