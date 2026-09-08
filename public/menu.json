@@ -2048,6 +2048,11 @@
               {
                 "name": "Palak Paneer",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -2240,6 +2245,11 @@
               {
                 "name": "Palak Paneer",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           }
@@ -2267,6 +2277,11 @@
               {
                 "name": "Palak Paneer",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -2471,6 +2486,11 @@
               {
                 "name": "Palak Paneer",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -2726,6 +2746,11 @@
               {
                 "name": "Boeuf Vindaloo",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -3162,6 +3187,11 @@
               {
                 "name": "Poulet Tikka Massala",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -3191,6 +3221,11 @@
               {
                 "name": "Poulet Tikka Massala",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
@@ -3516,6 +3551,11 @@
               {
                 "name": "Poulet Shahi Korma",
                 "piment": true
+              },
+              {
+                "name": "Autre",
+                "piment": true,
+                "libre": true
               }
             ]
           },
