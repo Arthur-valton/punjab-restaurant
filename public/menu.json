@@ -2960,6 +2960,32 @@
             "remplaceParent": true
           },
           {
+            "label": "Parfum kir pers. 1",
+            "siEtape": "Kir pers. 1",
+            "pourChoix": [
+              "Kir Vin blanc 15cl",
+              "Kir royal 15cl"
+            ],
+            "articles": [
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              },
+              {
+                "name": "Mûre",
+                "piment": false
+              }
+            ]
+          },
+          {
             "label": "Boisson pers. 2",
             "articles": [
               {
@@ -3023,6 +3049,32 @@
               }
             ],
             "remplaceParent": true
+          },
+          {
+            "label": "Parfum kir pers. 2",
+            "siEtape": "Kir pers. 2",
+            "pourChoix": [
+              "Kir Vin blanc 15cl",
+              "Kir royal 15cl"
+            ],
+            "articles": [
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              },
+              {
+                "name": "Mûre",
+                "piment": false
+              }
+            ]
           },
           {
             "label": "Pichet à vin",
