@@ -2702,15 +2702,36 @@
                 "piment": false
               },
               {
-                "name": "Kir royal 15cl",
-                "piment": false
-              },
-              {
                 "name": "Kir indien 15cl",
                 "piment": false
               }
             ],
             "remplaceParent": true
+          },
+          {
+            "label": "Parfum kir",
+            "siEtape": "Kir",
+            "pourChoix": [
+              "Kir Vin blanc 15cl"
+            ],
+            "articles": [
+              {
+                "name": "Pêche",
+                "piment": false
+              },
+              {
+                "name": "Cassis",
+                "piment": false
+              },
+              {
+                "name": "Framboise",
+                "piment": false
+              },
+              {
+                "name": "Mûre",
+                "piment": false
+              }
+            ]
           },
           {
             "label": "Naan",
