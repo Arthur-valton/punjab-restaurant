@@ -2506,15 +2506,29 @@
                 "piment": false
               },
               {
+                "name": "Kulfi",
+                "piment": false
+              },
+              {
+                "name": "Coupe de glace",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Parfum kulfi",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Kulfi"
+            ],
+            "remplaceParent": true,
+            "articles": [
+              {
                 "name": "Kulfi mangue",
                 "piment": false
               },
               {
                 "name": "Kulfi pistache",
-                "piment": false
-              },
-              {
-                "name": "Coupe de glace",
                 "piment": false
               }
             ]
@@ -2770,11 +2784,7 @@
                 "piment": false
               },
               {
-                "name": "Kulfi mangue",
-                "piment": false
-              },
-              {
-                "name": "Kulfi pistache",
+                "name": "Kulfi",
                 "piment": false
               },
               {
@@ -2783,6 +2793,24 @@
               },
               {
                 "name": "Coupe de glace",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Parfum kulfi",
+            "siEtape": "Dessert",
+            "pourChoix": [
+              "Kulfi"
+            ],
+            "remplaceParent": true,
+            "articles": [
+              {
+                "name": "Kulfi mangue",
+                "piment": false
+              },
+              {
+                "name": "Kulfi pistache",
                 "piment": false
               }
             ]
@@ -3245,11 +3273,7 @@
                 "piment": false
               },
               {
-                "name": "Kulfi mangue",
-                "piment": false
-              },
-              {
-                "name": "Kulfi pistache",
+                "name": "Kulfi",
                 "piment": false
               },
               {
@@ -3258,6 +3282,24 @@
               },
               {
                 "name": "Coupe de glace",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Parfum kulfi pers. 1",
+            "siEtape": "Dessert pers. 1",
+            "pourChoix": [
+              "Kulfi"
+            ],
+            "remplaceParent": true,
+            "articles": [
+              {
+                "name": "Kulfi mangue",
+                "piment": false
+              },
+              {
+                "name": "Kulfi pistache",
                 "piment": false
               }
             ]
@@ -3400,11 +3442,7 @@
                 "piment": false
               },
               {
-                "name": "Kulfi mangue",
-                "piment": false
-              },
-              {
-                "name": "Kulfi pistache",
+                "name": "Kulfi",
                 "piment": false
               },
               {
@@ -3413,6 +3451,24 @@
               },
               {
                 "name": "Coupe de glace",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Parfum kulfi pers. 2",
+            "siEtape": "Dessert pers. 2",
+            "pourChoix": [
+              "Kulfi"
+            ],
+            "remplaceParent": true,
+            "articles": [
+              {
+                "name": "Kulfi mangue",
+                "piment": false
+              },
+              {
+                "name": "Kulfi pistache",
                 "piment": false
               }
             ]
