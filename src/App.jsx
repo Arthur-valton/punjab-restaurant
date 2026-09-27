@@ -108,6 +108,9 @@ function sousArbre(item, step) {
 function menuGroupable(item) {
   const principales = etapesPrincipales(item);
   if (!item.isFormula || principales.length === 0) return false;
+  // Une etape principale conditionnelle ne concerne pas tout le monde : en
+  // groupe on ne saurait pas combien de couverts doivent y repondre.
+  if (principales.some((st) => st.pourChoix && st.pourChoix.length)) return false;
   const cles = principales.map((st) => cleService(st.label));
   return new Set(cles).size === cles.length;
 }
@@ -413,9 +416,11 @@ function App() {
 
   // ---- Commande groupée ----------------------------------------------
   // Menus de l'onglet courant qui acceptent la prise en groupe
+  // Uniquement l'onglet Menu : prendre des lassis ou des kirs « par service »
+  // n'a aucun sens, et leurs etapes ne se pretent pas au comptage par couvert.
   const menusGroupables = useMemo(
-    () => visibleItems.filter(menuGroupable),
-    [visibleItems]
+    () => (activeCategory === "Menu" ? visibleItems.filter(menuGroupable) : []),
+    [visibleItems, activeCategory]
   );
   // Les services à parcourir, dans l'ordre des menus retenus
   const servicesGroupe = useMemo(() => {
@@ -432,6 +437,19 @@ function App() {
       return { cle, label: labelService(blocs[0].step.label), blocs };
     });
   }, [groupe, menusGroupables]);
+
+  // Dans une précision (boules d'une coupe, parfum, piment), « Retour » doit
+  // reculer d'un cran : jeter le choix entier obligerait à retaper la coupe.
+  function retourGroupe() {
+    setGroupe((g) => {
+      const ctx = g.encours;
+      const net = { ...g, pendingArticle: null, pendingPrix: null, saisie: null };
+      if (!ctx || ctx.parcours.length <= 1) return { ...net, encours: null };
+      const parcours = ctx.parcours.slice(0, -1);
+      return { ...net, encours: { ...ctx, choices: ctx.choices.slice(0, -1),
+                                  parcours, currentStep: ctx.parcours[ctx.parcours.length - 1] } };
+    });
+  }
 
   // Ce que montre la ligne récapitulative : le choix qui a remplacé le
   // générique prend la tête, les précisions suivent.
@@ -1488,7 +1506,9 @@ function App() {
 
       {/* Commande groupée : un tour par service pour toute la table */}
       {groupe && (
-        <div className="numpad-overlay" onClick={() => setGroupe(null)}>
+        // Pas de fermeture au clic a cote : une table entiere represente des
+        // dizaines de taps, un doigt pose sur le fond les effacerait tous.
+        <div className="numpad-overlay">
           <div className="formula-picker" onClick={(e) => e.stopPropagation()}>
             <div className="formula-picker-header">
               <div className="formula-picker-title">
@@ -1535,7 +1555,7 @@ function App() {
                 }}>Valider</button>
                 <button className="formula-picker-cancel" onClick={() => {
                   setTexteLibre("");
-                  setGroupe((g) => ({ ...g, saisie: null, encours: null }));
+                  retourGroupe();
                 }}>← Retour</button>
               </>
             ) : groupe.pendingArticle ? (
@@ -1553,9 +1573,7 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <button className="formula-picker-cancel" onClick={() =>
-                  setGroupe((g) => ({ ...g, pendingArticle: null, pendingPrix: null, encours: null }))
-                }>← Retour</button>
+                <button className="formula-picker-cancel" onClick={retourGroupe}>← Retour</button>
               </>
             ) : groupe.encours ? (
               /* ── Précision rattachée au choix en cours ── */
@@ -1580,9 +1598,7 @@ function App() {
                         );
                       })}
                     </div>
-                    <button className="formula-picker-cancel" onClick={() =>
-                      setGroupe((g) => ({ ...g, encours: null }))
-                    }>← Retour</button>
+                    <button className="formula-picker-cancel" onClick={retourGroupe}>← Retour</button>
                   </>
                 );
               })()
@@ -1611,7 +1627,21 @@ function App() {
                   })}
                 </div>
                 <button className="formula-picker-confirm" disabled={couvertsGroupe() === 0}
-                        onClick={() => setGroupe((g) => ({ ...g, phase: "services", etape: 0 }))}>
+                        onClick={() => setGroupe((g) => {
+                          // La composition a pu changer depuis un « Retour » : on rogne les
+                          // choix deja pris aux quantites retenues, sinon ils comptent pour
+                          // des couverts qui n'existent plus et sont jetes en silence.
+                          const picks = {};
+                          for (const [cle, parItem] of Object.entries(g.picks)) {
+                            const net = {};
+                            for (const [id, liste] of Object.entries(parItem)) {
+                              const n = g.compo[id] || 0;
+                              if (n > 0 && liste.length) net[id] = liste.slice(0, n);
+                            }
+                            if (Object.keys(net).length) picks[cle] = net;
+                          }
+                          return { ...g, picks, phase: "services", etape: 0 };
+                        })}>
                   {couvertsGroupe() ? `Prendre la commande — ${couvertsGroupe()} couvert${couvertsGroupe() > 1 ? "s" : ""}`
                                     : "Choisis au moins un menu"}
                 </button>
@@ -1623,7 +1653,9 @@ function App() {
                 const sv = servicesGroupe[groupe.etape];
                 if (!sv) return null;
                 const attendus = sv.blocs.reduce((n, b) => n + b.qty, 0);
-                const faits = sv.blocs.reduce((n, b) => n + picksDe(sv.cle, b.item.id).length, 0);
+                // Plafonne par menu : sinon deux naans pour un couvert masqueraient
+                // le couvert voisin qui n'a rien, et le menu partirait incomplet.
+                const faits = sv.blocs.reduce((n, b) => n + Math.min(b.qty, picksDe(sv.cle, b.item.id).length), 0);
                 const manque = attendus - faits;
                 const dernier = groupe.etape === servicesGroupe.length - 1;
                 return (
@@ -1654,7 +1686,7 @@ function App() {
                               const nom = typeof a === "string" ? a : a.name;
                               const libre = typeof a !== "string" && a.libre;
                               return (
-                                <button key={ai} disabled={!reste}
+                                <button key={ai} disabled={reste <= 0}
                                         className={`formula-picker-item-btn${libre ? " libre" : ""}`}
                                         onClick={() => tapArticleGroupe(b.item, sv.cle, b.step, a)}>
                                   {nom}
