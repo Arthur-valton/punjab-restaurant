@@ -858,6 +858,7 @@ const FORMULA_LABEL_MAP_SHARED = {
   // Libelle volontairement specifique : un simple "parfum" ferait passer
   // le Kulfi (etape "Parfum") pour un menu et l'enverrait au bar.
   "parfum kir": "Boissons",
+  "parfum kulfi": "Desserts",
 };
 function mapFormulaLabelShared(label) {
   let key = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
