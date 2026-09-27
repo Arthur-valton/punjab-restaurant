@@ -63,6 +63,69 @@ function prochaineEtape(item, choices, apres) {
   return -1;
 }
 
+// ---- Commande groupée : un tour par service pour toute la table ----
+// Deux étapes « Naan pers. 1 » et « Naan pers. 2 » désignent le même service.
+function cleService(label) {
+  let k = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let avant;
+  do {
+    avant = k;
+    k = k.replace(/\s*(pers\.?|personne)?\s*\d+\s*$/, "").trim();
+  } while (k !== avant);
+  return k;
+}
+function labelService(label) {
+  let k = label, avant;
+  do {
+    avant = k;
+    k = k.replace(/\s*(pers\.?|personne)?\s*\d+\s*$/i, "").trim();
+  } while (k !== avant);
+  return k;
+}
+// Les étapes conditionnelles ne sont pas des services : elles précisent un choix.
+function etapesPrincipales(item) {
+  return (item.formulaSteps || []).filter((st) => !st.siEtape);
+}
+// Une étape principale et toute sa descendance conditionnelle, dans l'ordre.
+function sousArbre(item, step) {
+  const steps = item.formulaSteps || [];
+  const dedans = new Set([step.label]);
+  let bouge = true;
+  while (bouge) {
+    bouge = false;
+    for (const st of steps) {
+      if (st.siEtape && dedans.has(st.siEtape) && !dedans.has(st.label)) {
+        dedans.add(st.label);
+        bouge = true;
+      }
+    }
+  }
+  return steps.filter((st) => dedans.has(st.label));
+}
+// Un menu dont deux étapes partagent le même service (le Dégustation et ses
+// « pers. 1 / pers. 2 ») ne se prend pas en groupe : on ne saurait pas à quelle
+// étape rattacher chaque choix. Il garde son parcours habituel.
+function menuGroupable(item) {
+  const principales = etapesPrincipales(item);
+  if (!item.isFormula || principales.length === 0) return false;
+  const cles = principales.map((st) => cleService(st.label));
+  return new Set(cles).size === cles.length;
+}
+// Fusionne les enchaînements de plusieurs menus en gardant l'ordre de chacun :
+// l'apéritif du Taj Mahal se place avant les naans, pas à la fin.
+function fusionnerOrdre(listes) {
+  const res = [];
+  for (const liste of listes) {
+    let pos = 0;
+    for (const k of liste) {
+      const at = res.indexOf(k);
+      if (at === -1) { res.splice(pos, 0, k); pos++; }
+      else pos = at + 1;
+    }
+  }
+  return res;
+}
+
 // Repère visuel sur le bouton : rien pour un article simple, le nombre de
 // choix pour une déclinaison, le nombre d'étapes pour un menu.
 function indicateurFormule(item) {
@@ -231,6 +294,7 @@ function App() {
   const [clotureApres, setClotureApres] = useState(null); // commande dont l'addition vient de sortir
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
   const [texteLibre, setTexteLibre] = useState("");  // plat saisi a la main (allergie, substitution)
+  const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -345,6 +409,137 @@ function App() {
       idx = prochaineEtape(item, choices, idx);
     }
     return { idx, choices, parcours };
+  }
+
+  // ---- Commande groupée ----------------------------------------------
+  // Menus de l'onglet courant qui acceptent la prise en groupe
+  const menusGroupables = useMemo(
+    () => visibleItems.filter(menuGroupable),
+    [visibleItems]
+  );
+  // Les services à parcourir, dans l'ordre des menus retenus
+  const servicesGroupe = useMemo(() => {
+    if (!groupe) return [];
+    const retenus = menusGroupables.filter((it) => (groupe.compo[it.id] || 0) > 0);
+    const cles = fusionnerOrdre(retenus.map((it) => etapesPrincipales(it).map((st) => cleService(st.label))));
+    return cles.map((cle) => {
+      const blocs = retenus
+        .map((it) => {
+          const step = etapesPrincipales(it).find((st) => cleService(st.label) === cle);
+          return step ? { item: it, step, qty: groupe.compo[it.id] } : null;
+        })
+        .filter(Boolean);
+      return { cle, label: labelService(blocs[0].step.label), blocs };
+    });
+  }, [groupe, menusGroupables]);
+
+  // Ce que montre la ligne récapitulative : le choix qui a remplacé le
+  // générique prend la tête, les précisions suivent.
+  function libellePick(choices) {
+    const remplaces = new Set(choices.map((c) => c.remplaceParent).filter(Boolean));
+    const gardes = choices.filter((c) => !remplaces.has(c.label));
+    if (gardes.length === 0) return "";
+    const mk = pimentMark(gardes[0].piment);
+    const suite = gardes.slice(1).map((c) => c.itemName);
+    return gardes[0].itemName + (mk ? " " + mk : "") + (suite.length ? " — " + suite.join(" / ") : "");
+  }
+  function retirerPick(cle, itemId, libelle) {
+    setGroupe((g) => {
+      const liste = [...((g.picks[cle] || {})[itemId] || [])];
+      for (let k = liste.length - 1; k >= 0; k--) {
+        if (libellePick(liste[k]) === libelle) { liste.splice(k, 1); break; }
+      }
+      return { ...g, picks: { ...g.picks, [cle]: { ...(g.picks[cle] || {}), [itemId]: liste } } };
+    });
+  }
+
+  function picksDe(cle, itemId) {
+    return (groupe?.picks?.[cle]?.[itemId]) || [];
+  }
+  function couvertsGroupe() {
+    return Object.values(groupe?.compo || {}).reduce((s, q) => s + q, 0);
+  }
+
+  // Enregistre un choix complet (article + ses précisions) pour un menu
+  function poserPick(cle, itemId, choices) {
+    setGroupe((g) => {
+      const parCle = { ...(g.picks[cle] || {}) };
+      parCle[itemId] = [...(parCle[itemId] || []), choices];
+      return { ...g, picks: { ...g.picks, [cle]: parCle }, encours: null,
+               pendingArticle: null, pendingPrix: null, saisie: null };
+    });
+  }
+
+  // Avance dans les sous-étapes du choix en cours, ou le valide s'il n'y en a plus
+  function suiteGroupe(ctx, choices, parcours, apres) {
+    const { idx, choices: apresAuto, parcours: pc } = avancer(ctx.sub, choices, parcours, apres);
+    if (idx === -1) poserPick(ctx.cle, ctx.item.id, apresAuto);
+    else setGroupe((g) => ({ ...g, encours: { ...ctx, choices: apresAuto, parcours: pc, currentStep: idx },
+                             pendingArticle: null, pendingPrix: null, saisie: null }));
+  }
+
+  // Tap sur un article : soit on demande le piment, soit on saisit un plat
+  // hors carte, soit on enchaîne directement sur les sous-étapes.
+  function tapArticleGroupe(item, cle, step, article) {
+    const nom = typeof article === "string" ? article : article.name;
+    const prix = typeof article !== "string" && article.price != null ? Number(article.price) : null;
+    const sub = { ...item, formulaSteps: sousArbre(item, step) };
+    const ctx = { item, cle, step, sub, choices: [], parcours: [], currentStep: 0 };
+    if (typeof article !== "string" && article.libre) {
+      setTexteLibre("");
+      setGroupe((g) => ({ ...g, encours: ctx, saisie: { prix, piment: !!article.piment } }));
+      return;
+    }
+    if (typeof article !== "string" && article.piment) {
+      setGroupe((g) => ({ ...g, encours: ctx, pendingArticle: nom, pendingPrix: prix }));
+      return;
+    }
+    choisirGroupe(ctx, nom, null, prix);
+  }
+
+  // Ajoute le choix courant au parcours puis cherche la suite
+  function choisirGroupe(ctx, nom, piment, prix) {
+    const step = ctx.sub.formulaSteps[ctx.currentStep];
+    const choice = { label: step.label, itemName: nom };
+    if (step.remplaceNom) choice.remplaceNom = true;
+    if (step.siEtape) {
+      if (step.remplaceParent) choice.remplaceParent = step.siEtape;
+      else choice.sousChoixDe = step.siEtape;
+    }
+    if (prix != null) choice.prix = prix;
+    if (piment && piment > 1) choice.piment = piment;
+    suiteGroupe(ctx, [...ctx.choices, choice], [...ctx.parcours, ctx.currentStep], ctx.currentStep);
+  }
+
+  // Chaque couvert reçoit une formule complète : le serveur d'impression
+  // éclate déjà les menus poste par poste, rien d'autre à adapter.
+  function validerGroupe() {
+    const ajouts = [];
+    for (const it of menusGroupables) {
+      const n = groupe.compo[it.id] || 0;
+      for (let k = 0; k < n; k++) {
+        const choices = [];
+        for (const st of etapesPrincipales(it)) {
+          const pick = picksDe(cleService(st.label), it.id)[k];
+          if (pick) choices.push(...pick);
+        }
+        if (choices.length) ajouts.push({ item: it, choices });
+      }
+    }
+    setOrderItems((prev) => {
+      let suite = [...prev];
+      for (const { item, choices } of ajouts) {
+        const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
+        const cartId = `${item.id}-f${sig}`;
+        const prix = choices.find((c) => c.prix != null)?.prix;
+        const existing = suite.find((i) => i.cartId === cartId);
+        if (existing) suite = suite.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
+        else suite = [...suite, { ...item, cartId, qty: 1, formulaChoices: choices,
+                                  ...(prix != null ? { price: prix } : {}) }];
+      }
+      return suite;
+    });
+    setGroupe(null);
   }
 
   // Ajoute une formule au panier. Deux sélections identiques se regroupent
@@ -749,6 +944,16 @@ function App() {
         )}
 
         <div className="menu-grid">
+          {menusGroupables.length > 0 && (
+            <button
+              className="groupe-ouvrir"
+              onClick={() => setGroupe({ compo: {}, phase: "compo", etape: 0, picks: {},
+                                         encours: null, pendingArticle: null, pendingPrix: null, saisie: null })}
+            >
+              <span className="groupe-ouvrir-titre">Commande groupée</span>
+              <span className="groupe-ouvrir-aide">toute la table, un service à la fois</span>
+            </button>
+          )}
           <div className="menu-grid-items">
             {visibleItems.map((item) => {
               const qty = getItemQty(item.id);
@@ -1277,6 +1482,216 @@ function App() {
                 setClotureApres(null);
               }}>Clôturer</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commande groupée : un tour par service pour toute la table */}
+      {groupe && (
+        <div className="numpad-overlay" onClick={() => setGroupe(null)}>
+          <div className="formula-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="formula-picker-header">
+              <div className="formula-picker-title">
+                {groupe.phase === "compo" ? "Commande groupée" : `Table de ${couvertsGroupe()}`}
+              </div>
+              {groupe.phase === "services" && (
+                <>
+                  <div className="groupe-compo-rappel">
+                    {menusGroupables.filter((it) => groupe.compo[it.id] > 0)
+                      .map((it) => `${groupe.compo[it.id]}× ${it.name.replace(/^Menu /, "")}`).join("  ·  ")}
+                  </div>
+                  <div className="formula-picker-progress">
+                    {servicesGroupe.map((_, i) => (
+                      <span key={i} className={`formula-picker-dot ${i < groupe.etape ? "done" : i === groupe.etape ? "active" : ""}`} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {groupe.saisie ? (
+              /* ── Plat hors carte ── */
+              <>
+                <div className="formula-picker-step-label">Saisir le plat</div>
+                <input
+                  className="formula-libre-input"
+                  autoFocus
+                  value={texteLibre}
+                  placeholder="Nom du plat"
+                  onChange={(e) => setTexteLibre(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" || !texteLibre.trim()) return;
+                    const nom = texteLibre.trim(), sai = groupe.saisie, ctx = groupe.encours;
+                    setTexteLibre("");
+                    if (sai.piment) setGroupe((g) => ({ ...g, saisie: null, pendingArticle: nom, pendingPrix: sai.prix }));
+                    else choisirGroupe(ctx, nom, null, sai.prix);
+                  }}
+                />
+                <button className="formula-picker-confirm" disabled={!texteLibre.trim()} onClick={() => {
+                  const nom = texteLibre.trim(), sai = groupe.saisie, ctx = groupe.encours;
+                  setTexteLibre("");
+                  if (sai.piment) setGroupe((g) => ({ ...g, saisie: null, pendingArticle: nom, pendingPrix: sai.prix }));
+                  else choisirGroupe(ctx, nom, null, sai.prix);
+                }}>Valider</button>
+                <button className="formula-picker-cancel" onClick={() => {
+                  setTexteLibre("");
+                  setGroupe((g) => ({ ...g, saisie: null, encours: null }));
+                }}>← Retour</button>
+              </>
+            ) : groupe.pendingArticle ? (
+              /* ── Niveau de piment ── */
+              <>
+                <div className="formula-picker-step-label">
+                  🌶️ Niveau de piment — <strong>{groupe.pendingArticle}</strong>
+                </div>
+                <div className="formula-picker-items">
+                  {PIMENT_LEVELS.map(({ level, label, emoji }) => (
+                    <button key={level} className="formula-picker-item-btn" onClick={() => {
+                      choisirGroupe(groupe.encours, groupe.pendingArticle, level, groupe.pendingPrix ?? null);
+                    }}>
+                      <span style={{ marginRight: 8 }}>{emoji}</span>{label}
+                    </button>
+                  ))}
+                </div>
+                <button className="formula-picker-cancel" onClick={() =>
+                  setGroupe((g) => ({ ...g, pendingArticle: null, pendingPrix: null, encours: null }))
+                }>← Retour</button>
+              </>
+            ) : groupe.encours ? (
+              /* ── Précision rattachée au choix en cours ── */
+              (() => {
+                const ctx = groupe.encours;
+                const step = ctx.sub.formulaSteps[ctx.currentStep];
+                return (
+                  <>
+                    <div className="formula-picker-step-label">
+                      {step.label} — <strong>{ctx.item.name.replace(/^Menu /, "")}</strong>
+                    </div>
+                    <div className="formula-picker-items">
+                      {(step.articles || []).map((a, ai) => {
+                        const nom = typeof a === "string" ? a : a.name;
+                        const px = typeof a !== "string" && a.price != null ? Number(a.price) : null;
+                        return (
+                          <button key={ai} className="formula-picker-item-btn" onClick={() => {
+                            if (typeof a !== "string" && a.piment) {
+                              setGroupe((g) => ({ ...g, pendingArticle: nom, pendingPrix: px }));
+                            } else choisirGroupe(ctx, nom, null, px);
+                          }}>{nom}</button>
+                        );
+                      })}
+                    </div>
+                    <button className="formula-picker-cancel" onClick={() =>
+                      setGroupe((g) => ({ ...g, encours: null }))
+                    }>← Retour</button>
+                  </>
+                );
+              })()
+            ) : groupe.phase === "compo" ? (
+              /* ── Composition de la table ── */
+              <>
+                <div className="formula-picker-step-label">Combien de chaque menu ?</div>
+                <div className="formula-picker-items">
+                  {menusGroupables.map((it) => {
+                    const q = groupe.compo[it.id] || 0;
+                    return (
+                      <div key={it.id} className="groupe-stepper">
+                        <span className="groupe-stepper-nom">
+                          {it.name}
+                          <span className="groupe-stepper-prix">{it.price.toFixed(2)} €</span>
+                        </span>
+                        <button className="groupe-rond" disabled={q === 0} onClick={() =>
+                          setGroupe((g) => ({ ...g, compo: { ...g.compo, [it.id]: Math.max(0, q - 1) } }))
+                        }>−</button>
+                        <span className="groupe-stepper-n">{q}</span>
+                        <button className="groupe-rond" onClick={() =>
+                          setGroupe((g) => ({ ...g, compo: { ...g.compo, [it.id]: q + 1 } }))
+                        }>+</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button className="formula-picker-confirm" disabled={couvertsGroupe() === 0}
+                        onClick={() => setGroupe((g) => ({ ...g, phase: "services", etape: 0 }))}>
+                  {couvertsGroupe() ? `Prendre la commande — ${couvertsGroupe()} couvert${couvertsGroupe() > 1 ? "s" : ""}`
+                                    : "Choisis au moins un menu"}
+                </button>
+                <button className="formula-picker-cancel" onClick={() => setGroupe(null)}>Annuler</button>
+              </>
+            ) : (
+              /* ── Un service, toutes les cartes à la fois ── */
+              (() => {
+                const sv = servicesGroupe[groupe.etape];
+                if (!sv) return null;
+                const attendus = sv.blocs.reduce((n, b) => n + b.qty, 0);
+                const faits = sv.blocs.reduce((n, b) => n + picksDe(sv.cle, b.item.id).length, 0);
+                const manque = attendus - faits;
+                const dernier = groupe.etape === servicesGroupe.length - 1;
+                return (
+                  <>
+                    <div className="formula-picker-step-label groupe-service-label">
+                      <span>Étape {groupe.etape + 1}/{servicesGroupe.length} — {sv.label}</span>
+                      <span className={`groupe-compte ${manque ? "" : "plein"}`}>{faits} / {attendus}</span>
+                    </div>
+                    <div className="formula-picker-items">
+                      {sv.blocs.map((b) => {
+                        const pris = picksDe(sv.cle, b.item.id);
+                        const reste = b.qty - pris.length;
+                        const groupes = [];
+                        pris.forEach((pk) => {
+                          const lb = libellePick(pk);
+                          const ex = groupes.find((x) => x.lb === lb);
+                          if (ex) ex.n++; else groupes.push({ lb, n: 1 });
+                        });
+                        return (
+                          <div key={b.item.id} className="groupe-bloc">
+                            {sv.blocs.length > 1 && (
+                              <div className={`groupe-bloc-tete ${reste ? "" : "plein"}`}>
+                                <span className="groupe-bloc-nom">{b.item.name.replace(/^Menu /, "")}</span>
+                                <span className="groupe-bloc-compte">{pris.length} / {b.qty}</span>
+                              </div>
+                            )}
+                            {(b.step.articles || []).map((a, ai) => {
+                              const nom = typeof a === "string" ? a : a.name;
+                              const libre = typeof a !== "string" && a.libre;
+                              return (
+                                <button key={ai} disabled={!reste}
+                                        className={`formula-picker-item-btn${libre ? " libre" : ""}`}
+                                        onClick={() => tapArticleGroupe(b.item, sv.cle, b.step, a)}>
+                                  {nom}
+                                  {libre && <span className="formula-picker-price">à saisir</span>}
+                                </button>
+                              );
+                            })}
+                            {groupes.length > 0 && (
+                              <div className="groupe-pris">
+                                {groupes.map((x) => (
+                                  <div key={x.lb} className="groupe-pris-ligne">
+                                    <span className="groupe-pris-n">{x.n}</span>
+                                    <span className="groupe-pris-txt">{x.lb}</span>
+                                    <button className="groupe-pris-moins"
+                                            aria-label={`Retirer ${x.lb}`}
+                                            onClick={() => retirerPick(sv.cle, b.item.id, x.lb)}>−</button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button className="formula-picker-confirm" disabled={manque > 0}
+                            onClick={() => dernier ? validerGroupe() : setGroupe((g) => ({ ...g, etape: g.etape + 1 }))}>
+                      {manque > 0 ? `Il reste ${manque} couvert${manque > 1 ? "s" : ""}`
+                                  : dernier ? "Ajouter au panier" : "Service suivant"}
+                    </button>
+                    <button className="formula-picker-cancel" onClick={() =>
+                      groupe.etape > 0 ? setGroupe((g) => ({ ...g, etape: g.etape - 1 }))
+                                       : setGroupe((g) => ({ ...g, phase: "compo" }))
+                    }>← Retour</button>
+                  </>
+                );
+              })()
+            )}
           </div>
         </div>
       )}

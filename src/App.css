@@ -3275,3 +3275,98 @@ body {
 }
 .formula-libre-input::placeholder { color: #bbb; font-weight: 500; }
 .formula-picker-confirm:disabled { opacity: 0.35; }
+
+/* ---- Commande groupée : un tour par service pour toute la table ---- */
+.groupe-ouvrir {
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 12px 16px;
+  border: 1.5px dashed rgba(230,126,34,0.55);
+  border-radius: 12px;
+  background: rgba(230,126,34,0.08);
+  color: #b35f10;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.groupe-ouvrir:active { background: rgba(230,126,34,0.16); }
+.groupe-ouvrir-titre { font-size: 1rem; font-weight: 700; }
+.groupe-ouvrir-aide { font-size: 0.78rem; opacity: 0.8; }
+
+.groupe-compo-rappel {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 2px 0 8px;
+}
+
+.groupe-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid #eee;
+}
+.groupe-stepper-nom {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+}
+.groupe-stepper-prix { font-size: 0.8rem; font-weight: 500; color: #888; }
+.groupe-stepper-n {
+  min-width: 28px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+}
+.groupe-rond {
+  width: 42px; height: 42px; flex: 0 0 42px;
+  border-radius: 50%;
+  border: 1.5px solid #e0e0e0;
+  background: #fafafa;
+  font-family: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #222;
+  cursor: pointer;
+}
+.groupe-rond:disabled { opacity: 0.3; }
+.groupe-rond:active { background: #fff3e8; border-color: #e67e22; color: #e67e22; }
+
+.groupe-service-label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.groupe-compte { font-weight: 700; color: #e67e22; }
+.groupe-compte.plein { color: #27ae60; }
+
+.groupe-bloc { margin-bottom: 14px; }
+.groupe-bloc:last-child { margin-bottom: 0; }
+.groupe-bloc-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 10px;
+  margin-bottom: 7px;
+  border-radius: 8px;
+  background: #f7f7f7;
+  border-left: 3px solid #e67e22;
+}
+.groupe-bloc-tete.plein { border-left-color: #27ae60; }
+.groupe-bloc-nom { font-size: 0.82rem; font-weight: 700; color: #333; }
+.groupe-bloc-compte { font-size: 0.82rem; font-weight: 700; color: #e67e22; }
+.groupe-bloc-tete.plein .groupe-bloc-compte { color: #27ae60; }
+
+.groupe-pris { border-top: 1px solid #eee; margin-top: 7px; padding-top: 6px; }
+.groupe-pris-ligne { display: flex; align-items: center; gap: 9px; padding: 2px 0; font-size: 0.9rem; }
+.groupe-pris-n { font-weight: 700; min-width: 18px; color: #222; }
+.groupe-pris-txt { flex: 1; color: #333; }
+.groupe-pris-moins {
+  border: none; background: none; color: #888;
+  font-family: inherit; font-size: 1.25rem; line-height: 1;
+  padding: 0 8px; cursor: pointer;
+}
