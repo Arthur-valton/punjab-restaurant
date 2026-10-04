@@ -561,12 +561,17 @@
             ]
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "category": "Vins",
+    "items": [
       {
         "id": 123,
         "name": "Chinon",
         "price": 14,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": true,
@@ -593,7 +598,7 @@
         "id": 143,
         "name": "St Nicolas de bourg",
         "price": 17,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": true,
@@ -620,7 +625,7 @@
         "id": 145,
         "name": "Saumur champ",
         "price": 15,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": true,
@@ -647,7 +652,7 @@
         "id": 180,
         "name": "Côte du Rhône",
         "price": 13,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": true,
@@ -674,7 +679,7 @@
         "id": 182,
         "name": "Syrah",
         "price": 22,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -683,7 +688,7 @@
         "id": 199,
         "name": "Verre Rouge",
         "price": 4,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rouge",
         "piment": false,
         "isFormula": false
@@ -692,21 +697,21 @@
         "id": 205,
         "name": "Chardonnay",
         "price": 23,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Blanc"
       },
       {
         "id": 206,
         "name": "Sauvignon",
         "price": 23,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Blanc"
       },
       {
         "id": 269,
         "name": "Verre Blanc",
         "price": 4,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Blanc",
         "piment": false,
         "isFormula": false
@@ -715,7 +720,7 @@
         "id": 201,
         "name": "Côte de Provence",
         "price": 17,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rosé",
         "piment": false,
         "isFormula": true,
@@ -742,7 +747,7 @@
         "id": 270,
         "name": "Verre Rosé",
         "price": 4,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rosé",
         "piment": false,
         "isFormula": false
@@ -751,21 +756,21 @@
         "id": 203,
         "name": "Armunia",
         "price": 25,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rosé"
       },
       {
         "id": 204,
         "name": "Terre Brune",
         "price": 30,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Rosé"
       },
       {
         "id": 208,
         "name": "Pichet",
         "price": 6,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Vin",
         "piment": false,
         "isFormula": true,
@@ -805,21 +810,21 @@
         "id": 220,
         "name": "Long duc ville de ange",
         "price": 25,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Vin"
       },
       {
         "id": 222,
         "name": "Vin mousseux",
         "price": 35,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Vin"
       },
       {
         "id": 253,
         "name": "Saumur Champ",
         "price": 28,
-        "category": "Boissons",
+        "category": "Vins",
         "subcategory": "Vin"
       }
     ]
