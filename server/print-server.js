@@ -39,7 +39,7 @@ const PORT = 3001;
 const PRINTER_PORT = 9100;
 
 // Catégories considérées comme "bar" (pas envoyées à la cuisine ni au KDS)
-const BAR_CATEGORIES = new Set(["Boissons", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"]);
+const BAR_CATEGORIES = new Set(["Boissons", "Vins", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"]);
 
 // IP imprimante selon le réseau WiFi ou la plage IP locale
 const PRINTER_IPS = {
@@ -559,7 +559,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   // Ordre de production en cuisine : naans, entrees, plats, desserts
   // (Biryani fusionné dans Plats). Les boissons ferment le ticket.
   const CAT_ORDER = ["Naans", "Entrees", "Plats", "Desserts", "Menu Midi",
-                     "Boissons", "Apéritifs", "Aperitifs", "Vin", "Rosé", "Rose", "Bières", "Bieres", "Bar"];
+                     "Boissons", "Apéritifs", "Aperitifs", "Vins", "Vin", "Rosé", "Rose", "Bières", "Bieres", "Bar"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
   const mergedCat = (item) => CAT_MERGE[item.category] || item.category || "Autres";
 
@@ -906,7 +906,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items, order
 }
 
 // ----- Helpers catégories (partagés) -----
-const CAT_ORDER_SHARED = ["Naans", "Entrees", "Plats", "Desserts", "Boissons", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
+const CAT_ORDER_SHARED = ["Naans", "Entrees", "Plats", "Desserts", "Boissons", "Vins", "Vin", "Rosé", "Apéritifs", "Menu Midi", "Menu Rajasthan", "Menu Taj Mahal"];
 const CAT_MERGE_SHARED = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
 
 const FORMULA_LABEL_MAP_SHARED = {
