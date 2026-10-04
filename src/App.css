@@ -3456,3 +3456,21 @@ body {
   letter-spacing: 0.1em;
   white-space: nowrap;
 }
+
+/* ---- Commande dont un menu attend encore un choix ---- */
+.orders-panel-a-completer {
+  display: block;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(230,126,34,0.7);
+  border-radius: 8px;
+  background: rgba(230,126,34,0.14);
+  color: #e08a30;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.orders-panel-a-completer:active { background: rgba(230,126,34,0.26); }

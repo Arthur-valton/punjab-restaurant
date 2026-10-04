@@ -902,6 +902,13 @@ function App() {
       qty: i.qty,
       piment: i.piment || null,
       formulaChoices: i.formulaChoices || null,
+      // Sans les etapes, on ne peut plus savoir ce qui reste a choisir sur
+      // un menu mis en pause : le bouton « A completer » disparaissait des
+      // qu'on rouvrait la commande. Repli sur la carte pour les anciennes.
+      isFormula: i.isFormula ?? !!i.formulaChoices,
+      formulaSteps: i.formulaSteps
+        || menuData.flatMap((sec) => sec.items).find((p) => p.id === i.id)?.formulaSteps
+        || null,
       cartId: i.cartId || (i.formulaChoices ? `${i.id}-f${Date.now() + Math.random()}` : (i.piment ? `${i.id}-p${i.piment}` : String(i.id))),
     }));
     setOrderItems(items);
@@ -1419,6 +1426,22 @@ function App() {
                     )}
                     <span className="orders-panel-num">#{o.orderNum}</span>
                   </div>
+                  {(() => {
+                    // Un menu laisse en pause doit sauter aux yeux ici :
+                    // sinon personne ne se souvient d'aller le completer.
+                    const reste = (o.items || []).flatMap((it) =>
+                      etapesManquantes(
+                        it.formulaSteps ? it : { ...it, formulaSteps: menuData.flatMap((sec) => sec.items).find((p) => p.id === it.id)?.formulaSteps },
+                        it.formulaChoices
+                      ).map((st) => st.label)
+                    );
+                    if (!reste.length) return null;
+                    return (
+                      <button className="orders-panel-a-completer" onClick={() => loadOrderForEdit(o)}>
+                        ⏸ À compléter : {[...new Set(reste)].join(", ")}
+                      </button>
+                    );
+                  })()}
                   <div className="orders-panel-items">
                     {o.items.slice(0, 4).map((item, i) => (
                       <span key={i} className="orders-panel-tag">{item.qty}× {item.name}</span>
