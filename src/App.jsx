@@ -344,6 +344,7 @@ function App() {
   const [libreNom, setLibreNom] = useState("");
   const [librePrix, setLibrePrix] = useState("");
   const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
+  const [envoyerApresPause, setEnvoyerApresPause] = useState(false);
   const pauseRef = useRef(0);  // deux menus en pause ne doivent jamais fusionner
 
   async function updateMenu(newMenu) {
@@ -522,6 +523,12 @@ function App() {
     });
   }
 
+  useEffect(() => {
+    if (!envoyerApresPause) return;
+    setEnvoyerApresPause(false);
+    validateOrder();
+  }, [envoyerApresPause]);
+
   // Ce que montre la ligne récapitulative : le choix qui a remplacé le
   // générique prend la tête, les précisions suivent.
   function libellePick(choices) {
@@ -602,7 +609,8 @@ function App() {
 
   // Chaque couvert reçoit une formule complète : le serveur d'impression
   // éclate déjà les menus poste par poste, rien d'autre à adapter.
-  function validerGroupe() {
+  function validerGroupe(pause = false) {
+    const incomplete = pause === true;
     const ajouts = [];
     for (const it of tousMenusGroupables) {
       const n = groupe.compo[it.id] || 0;
@@ -634,6 +642,7 @@ function App() {
       return suite;
     });
     setGroupe(null);
+    if (incomplete) setEnvoyerApresPause(true);
   }
 
   // Ajoute une formule au panier. Deux sélections identiques se regroupent
@@ -685,6 +694,7 @@ function App() {
       return prev.map((i, n) => (n === k ? { ...ligne, qty: i.qty } : i));
     });
     setFormulaPicker(null);
+    setEnvoyerApresPause(true);   // le ticket doit sortir avec ce qui est decide
   }
 
   // Point d'entree unique : plusieurs couverts en attente se reprennent en
@@ -1948,7 +1958,7 @@ function App() {
                         .some((parMenu) => Object.values(parMenu).some((l) => l.length > 0));
                       if (!aDesChoix || (dernier && manque === 0)) return null;
                       return (
-                        <button className="formula-picker-pause" onClick={validerGroupe}>
+                        <button className="formula-picker-pause" onClick={() => validerGroupe(true)}>
                           Mettre en pause — envoyer ce qui est choisi
                         </button>
                       );
