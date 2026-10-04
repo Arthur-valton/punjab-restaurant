@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
 
@@ -22,7 +22,7 @@ function getPrintUrl() {
   return "https://print.restaurant-dev.fr";
 }
 
-export default function Ticket({ order, tableNumber, orderNum, orderId, orderType, emporterNum, clientName, clientPhone, clientPickupTime, onNewOrder, editingOrderId, onPrintSuccess }) {
+export default function Ticket({ order, tableNumber, orderNum, orderId, orderType, emporterNum, clientName, clientPhone, clientPickupTime, onNewOrder, editingOrderId, onPrintSuccess, autoPrint}) {
   const [printStatus, setPrintStatus] = React.useState(null);
   const [printMsg, setPrintMsg] = React.useState("");
 
@@ -40,6 +40,17 @@ export default function Ticket({ order, tableNumber, orderNum, orderId, orderTyp
   const missingFormula = order.filter(
     (i) => i.isFormula && i.formulaSteps?.length > 0 && (!i.formulaChoices || i.formulaChoices.length === 0)
   );
+
+  // Impression automatique : quand la table est deja connue, la pause ou la
+  // completion d'une commande doit sortir le ticket sans confirmation.
+  // Le garde-fou porte sur le numero de commande : sans cela, le composant
+  // restant monte d'une impression a l'autre, la seconde ne partait jamais.
+  const dernierImprime = useRef(null);
+  useEffect(() => {
+    if (!autoPrint || dernierImprime.current === orderNum) return;
+    dernierImprime.current = orderNum;
+    handlePrint();
+  }, [autoPrint, orderNum]);
 
   async function handlePrint() {
     setPrintStatus("printing");

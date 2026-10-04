@@ -345,6 +345,7 @@ function App() {
   const [librePrix, setLibrePrix] = useState("");
   const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
   const [envoyerApresPause, setEnvoyerApresPause] = useState(false);
+  const [imprimerAuto, setImprimerAuto] = useState(false);
   const pauseRef = useRef(0);  // deux menus en pause ne doivent jamais fusionner
 
   async function updateMenu(newMenu) {
@@ -526,6 +527,16 @@ function App() {
   useEffect(() => {
     if (!envoyerApresPause) return;
     setEnvoyerApresPause(false);
+    // Table connue (ou commande a emporter deja numerotee) : le ticket part
+    // seul. Sinon on passe par les ecrans habituels, il manque une info.
+    setImprimerAuto(Boolean(editingOrderId || tableNumber || emporterNum));
+    setCartOpen(false);
+    // Une table deja posee vaut « sur place » : reposer la question ferait
+    // perdre un tap et retarderait le ticket.
+    if (!editingOrderId && tableNumber && orderType !== "emporter") {
+      submitOrder();
+      return;
+    }
     validateOrder();
   }, [envoyerApresPause]);
 
@@ -642,7 +653,7 @@ function App() {
       return suite;
     });
     setGroupe(null);
-    if (incomplete) setEnvoyerApresPause(true);
+    if (incomplete || reprises.size) setEnvoyerApresPause(true);
   }
 
   // Ajoute une formule au panier. Deux sélections identiques se regroupent
@@ -662,6 +673,9 @@ function App() {
                          ...(prix != null ? { price: prix } : {}) }];
     });
     setFormulaPicker(null);
+    // Completer une commande deja envoyee doit ressortir le ticket : sinon le
+    // choix reste au panier et la cuisine ne le voit jamais.
+    if (reprise) setEnvoyerApresPause(true);
   }
 
   // Un plat hors carte (allergie, substitution) : le nom tape remplace
@@ -1072,7 +1086,7 @@ function App() {
             </div>
           </div>
           <div className="cart-bottom">
-            <button className="btn-validate-big" onClick={validateOrder}>
+            <button className="btn-validate-big" onClick={() => { setImprimerAuto(false); validateOrder(); }}>
               <span className="btn-validate-label">Commander</span>
               <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
             </button>
@@ -1247,7 +1261,7 @@ function App() {
                 <span className="cart-count">{totalQty}</span>
                 <span className="cart-expand-arrow">{cartOpen ? "▼" : "▲"}</span>
               </button>
-              <button className="btn-validate-big" onClick={validateOrder}>
+              <button className="btn-validate-big" onClick={() => { setImprimerAuto(false); validateOrder(); }}>
                 <span className="btn-validate-label">{tableNumber ? "Valider" : "Entrez la table"}</span>
                 <span className="btn-validate-price">{totalPrice.toFixed(2)} &euro;</span>
               </button>
@@ -2011,6 +2025,7 @@ function App() {
       {/* Ticket overlay */}
       {showTicket && ticketData && (
         <Ticket
+          key={ticketData.orderNum}
           order={ticketData.items}
           tableNumber={ticketData.table}
           orderNum={ticketData.orderNum}
@@ -2022,7 +2037,9 @@ function App() {
           clientPickupTime={ticketData.clientPickupTime}
           onNewOrder={newOrder}
           editingOrderId={editingOrderId}
+          autoPrint={imprimerAuto}
           onPrintSuccess={(tcOrderId) => {
+            setImprimerAuto(false);
             const vercelId = ticketData.orderId;
             // Mettre à jour le state local
             setServerOrders((prev) =>
