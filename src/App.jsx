@@ -462,25 +462,35 @@ function App() {
   // Menus de l'onglet courant qui acceptent la prise en groupe
   // Uniquement l'onglet Menu : prendre des lassis ou des kirs « par service »
   // n'a aucun sens, et leurs etapes ne se pretent pas au comptage par couvert.
+  // Proposes a la composition : ceux de l'onglet courant
   const menusGroupables = useMemo(
     () => (activeCategory === "Menu" ? visibleItems.filter(menuGroupable) : []),
     [visibleItems, activeCategory]
   );
+  // Mais le parcours lui-meme doit retrouver ses menus quel que soit l'onglet
+  // affiche : en reprenant une commande, on n'est pas forcement sur « Menu ».
+  const tousMenusGroupables = useMemo(
+    () => menuData.flatMap((sec) => sec.items).filter(menuGroupable),
+    [menuData]
+  );
   // Les services à parcourir, dans l'ordre des menus retenus
-  const servicesGroupe = useMemo(() => {
-    if (!groupe) return [];
-    const retenus = menusGroupables.filter((it) => (groupe.compo[it.id] || 0) > 0);
+  function calculerServices(compo) {
+    const retenus = tousMenusGroupables.filter((it) => (compo[it.id] || 0) > 0);
     const cles = fusionnerOrdre(retenus.map((it) => etapesPrincipales(it).map((st) => cleService(st.label))));
     return cles.map((cle) => {
       const blocs = retenus
         .map((it) => {
           const step = etapesPrincipales(it).find((st) => cleService(st.label) === cle);
-          return step ? { item: it, step, qty: groupe.compo[it.id] } : null;
+          return step ? { item: it, step, qty: compo[it.id] } : null;
         })
         .filter(Boolean);
       return { cle, label: labelService(blocs[0].step.label), blocs };
     });
-  }, [groupe, menusGroupables]);
+  }
+  const servicesGroupe = useMemo(
+    () => (groupe ? calculerServices(groupe.compo) : []),
+    [groupe, tousMenusGroupables]
+  );
 
   // Dans une précision (boules d'une coupe, parfum, piment), « Retour » doit
   // reculer d'un cran : jeter le choix entier obligerait à retaper la coupe.
@@ -577,7 +587,7 @@ function App() {
   // éclate déjà les menus poste par poste, rien d'autre à adapter.
   function validerGroupe() {
     const ajouts = [];
-    for (const it of menusGroupables) {
+    for (const it of tousMenusGroupables) {
       const n = groupe.compo[it.id] || 0;
       for (let k = 0; k < n; k++) {
         const choices = [];
@@ -588,8 +598,9 @@ function App() {
         if (choices.length) ajouts.push({ item: it, choices });
       }
     }
+    const reprises = new Set(groupe.reprise || []);
     setOrderItems((prev) => {
-      let suite = [...prev];
+      let suite = reprises.size ? prev.filter((i) => !reprises.has(i.cartId)) : [...prev];
       for (const { item, choices } of ajouts) {
         const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
         // Un couvert laissé incomplet ne doit jamais fusionner avec un autre :
@@ -657,6 +668,48 @@ function App() {
       return prev.map((i, n) => (n === k ? { ...ligne, qty: i.qty } : i));
     });
     setFormulaPicker(null);
+  }
+
+  // Point d'entree unique : plusieurs couverts en attente se reprennent en
+  // groupe, un seul se reprend dans son menu.
+  function reprendreDepuis(articles, ligneVisee) {
+    const menus = (articles || []).filter((it) => it.isFormula && menuGroupable(it));
+    const incomplets = menus.filter((it) => etapesManquantes(it, it.formulaChoices).length > 0);
+    if (incomplets.length > 1) { reprendreGroupe(menus); return; }
+    const cible = ligneVisee && etapesManquantes(ligneVisee, ligneVisee.formulaChoices).length > 0
+      ? ligneVisee : incomplets[0];
+    if (cible) reprendreFormule(cible);
+  }
+
+  // Reprise d'une table entiere : on reconstruit le parcours par service a
+  // partir des lignes du panier, au lieu de rouvrir chaque couvert un par un.
+  function reprendreGroupe(lignes) {
+    const compo = {};
+    const picks = {};
+    for (const l of lignes) {
+      const n = l.qty || 1;
+      compo[l.id] = (compo[l.id] || 0) + n;
+      for (const st of etapesPrincipales(l)) {
+        // Un choix et ses precisions (parfum, boules, piment) forment un bloc
+        const dansLEtape = new Set(sousArbre(l, st).map((x) => x.label));
+        const pick = (l.formulaChoices || []).filter((c) => dansLEtape.has(c.label));
+        if (!pick.length) continue;
+        const cle = cleService(st.label);
+        const parMenu = picks[cle] || (picks[cle] = {});
+        const liste = parMenu[l.id] || (parMenu[l.id] = []);
+        for (let k = 0; k < n; k++) liste.push(pick);
+      }
+    }
+    // On ouvre sur le premier service ou un couvert manque a l'appel
+    const services = calculerServices(compo);
+    const premier = services.findIndex((sv) =>
+      sv.blocs.some((b) => ((picks[sv.cle] || {})[b.item.id] || []).length < b.qty)
+    );
+    setGroupe({
+      compo, picks, phase: "services", etape: premier === -1 ? 0 : premier,
+      encours: null, pendingArticle: null, pendingPrix: null, saisie: null,
+      reprise: lignes.map((l) => l.cartId),
+    });
   }
 
   // Rouvre une formule en pause à la première étape encore à choisir,
@@ -979,7 +1032,7 @@ function App() {
                   const reste = etapesManquantes(item, item.formulaChoices);
                   if (!reste.length) return null;
                   return (
-                    <button className="cart-a-completer" onClick={() => reprendreFormule(item)}>
+                    <button className="cart-a-completer" onClick={() => reprendreDepuis(orderItems, item)}>
                       <span className="cart-a-completer-puce">⏸</span>
                       À compléter : {reste.map((st) => st.label).join(", ")}
                     </button>
@@ -1138,7 +1191,7 @@ function App() {
                       const reste = etapesManquantes(item, item.formulaChoices);
                       if (!reste.length) return null;
                       return (
-                        <button className="cart-a-completer" onClick={() => reprendreFormule(item)}>
+                        <button className="cart-a-completer" onClick={() => reprendreDepuis(orderItems, item)}>
                           <span className="cart-a-completer-puce">⏸</span>
                           À compléter : {reste.map((st) => st.label).join(", ")}
                         </button>
@@ -1448,9 +1501,7 @@ function App() {
                         // On charge la table ET on ouvre le menu concerne :
                         // retrouver la ligne dans le panier pour retaper
                         // dessus etait un tap de trop en plein service.
-                        const charges = loadOrderForEdit(o) || [];
-                        const aFinir = charges.find((it) => etapesManquantes(it, it.formulaChoices).length > 0);
-                        if (aFinir) reprendreFormule(aFinir);
+                        reprendreDepuis(loadOrderForEdit(o) || []);
                       }}>
                         ⏸ À compléter : {[...new Set(reste)].join(", ")}
                       </button>
@@ -1660,7 +1711,7 @@ function App() {
               {groupe.phase === "services" && (
                 <>
                   <div className="groupe-compo-rappel">
-                    {menusGroupables.filter((it) => groupe.compo[it.id] > 0)
+                    {tousMenusGroupables.filter((it) => groupe.compo[it.id] > 0)
                       .map((it) => `${groupe.compo[it.id]}× ${it.name.replace(/^Menu /, "")}`).join("  ·  ")}
                   </div>
                   <div className="formula-picker-progress">
