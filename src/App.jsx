@@ -340,6 +340,9 @@ function App() {
   const [clotureApres, setClotureApres] = useState(null); // commande dont l'addition vient de sortir
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
   const [texteLibre, setTexteLibre] = useState("");  // plat saisi a la main (allergie, substitution)
+  const [libreCat, setLibreCat] = useState(null);  // article hors carte saisi a la main
+  const [libreNom, setLibreNom] = useState("");
+  const [librePrix, setLibrePrix] = useState("");
   const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
   const pauseRef = useRef(0);  // deux menus en pause ne doivent jamais fusionner
 
@@ -411,6 +414,20 @@ function App() {
 
   const totalQty = orderItems.reduce((s, i) => s + i.qty, 0);
   const totalPrice = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+  // Article hors carte : chaque saisie fait sa propre ligne, meme nom identique,
+  // car le prix et l'intention peuvent differer d'une fois a l'autre.
+  function ajouterLibre() {
+    const nom = libreNom.trim();
+    if (!nom) return;
+    const prix = Number(String(librePrix).replace(",", ".")) || 0;
+    const cle = `libre-${Date.now()}`;
+    setOrderItems((prev) => [...prev, {
+      id: cle, cartId: cle, name: nom, price: prix, qty: 1,
+      category: libreCat, piment: null, isFormula: false, libre: true,
+    }]);
+    setLibreCat(null); setLibreNom(""); setLibrePrix("");
+  }
 
   function addItem(item, piment = null) {
     // Formula item → open multi-step picker
@@ -1131,6 +1148,17 @@ function App() {
             </button>
           )}
           <div className="menu-grid-items">
+            {activeCategory !== "Menu" && (
+              <button
+                className="menu-btn menu-btn--libre"
+                onClick={() => { setLibreNom(""); setLibrePrix(""); setLibreCat(activeCategory); }}
+              >
+                <span className="menu-btn-name">Autre</span>
+                <span className="menu-btn-bottom">
+                  <span className="menu-btn-price menu-btn-price--libre">à saisir</span>
+                </span>
+              </button>
+            )}
             {visibleItems.map((item) => {
               const qty = getItemQty(item.id);
               const c = getSubcatColor(item.subcategory);
@@ -1933,6 +1961,40 @@ function App() {
                 );
               })()
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Article hors carte */}
+      {libreCat && (
+        <div className="numpad-overlay" onClick={() => setLibreCat(null)}>
+          <div className="formula-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="formula-picker-header">
+              <div className="formula-picker-title">Autre — {libreCat}</div>
+            </div>
+            <div className="formula-picker-step-label">Que faut-il écrire ?</div>
+            <input
+              className="formula-libre-input"
+              autoFocus
+              value={libreNom}
+              placeholder="Désignation"
+              onChange={(e) => setLibreNom(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") ajouterLibre(); }}
+            />
+            <div className="formula-picker-step-label">Prix (facultatif)</div>
+            <input
+              className="formula-libre-input"
+              type="text"
+              inputMode="decimal"
+              value={librePrix}
+              placeholder="0,00"
+              onChange={(e) => setLibrePrix(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") ajouterLibre(); }}
+            />
+            <button className="formula-picker-confirm" disabled={!libreNom.trim()} onClick={ajouterLibre}>
+              Ajouter au panier
+            </button>
+            <button className="formula-picker-cancel" onClick={() => setLibreCat(null)}>Annuler</button>
           </div>
         </div>
       )}

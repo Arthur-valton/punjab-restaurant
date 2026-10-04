@@ -3474,3 +3474,13 @@ body {
   cursor: pointer;
 }
 .orders-panel-a-completer:active { background: rgba(230,126,34,0.26); }
+
+/* ---- Article hors carte, en tête de chaque catégorie ---- */
+.menu-btn--libre {
+  border-style: dashed !important;
+  opacity: 0.92;
+}
+.menu-btn-price--libre {
+  font-style: italic;
+  opacity: 0.75;
+}
