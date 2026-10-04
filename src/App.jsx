@@ -913,6 +913,8 @@ function App() {
     }));
     setOrderItems(items);
     setTableNumber(serverOrder.tableNumber);
+    // (les articles sont rendus en fin de fonction : l'appelant peut enchainer
+    //  sur celui qui attend encore un choix)
     // Une commande a emporter garde son identite : sans ca la validation
     // redemandait le type et regenerait un numero du jour.
     setOrderType(serverOrder.orderType === "emporter" ? "emporter" : "surplace");
@@ -922,6 +924,7 @@ function App() {
     setClientPickupTime(serverOrder.clientPickupTime || "");
     setEditingOrderId(serverOrder.id);
     setShowOrders(false);
+    return items;
   }
 
   // App-level password gate
@@ -1437,7 +1440,14 @@ function App() {
                     );
                     if (!reste.length) return null;
                     return (
-                      <button className="orders-panel-a-completer" onClick={() => loadOrderForEdit(o)}>
+                      <button className="orders-panel-a-completer" onClick={() => {
+                        // On charge la table ET on ouvre le menu concerne :
+                        // retrouver la ligne dans le panier pour retaper
+                        // dessus etait un tap de trop en plein service.
+                        const charges = loadOrderForEdit(o) || [];
+                        const aFinir = charges.find((it) => etapesManquantes(it, it.formulaChoices).length > 0);
+                        if (aFinir) reprendreFormule(aFinir);
+                      }}>
                         ⏸ À compléter : {[...new Set(reste)].join(", ")}
                       </button>
                     );
