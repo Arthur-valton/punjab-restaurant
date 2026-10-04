@@ -1859,11 +1859,21 @@ function App() {
                       {manque > 0 ? `Il reste ${manque} couvert${manque > 1 ? "s" : ""}`
                                   : dernier ? "Ajouter au panier" : "Service suivant"}
                     </button>
-                    {faits > 0 && manque > 0 && (
-                      <button className="formula-picker-pause" onClick={validerGroupe}>
-                        Mettre en pause — envoyer ce qui est choisi
-                      </button>
-                    )}
+                    {(() => {
+                      // La pause ne depend pas du service en cours : on peut
+                      // vouloir s'arreter alors qu'il est complet mais que les
+                      // suivants ne le sont pas, ou arriver sur un service ou
+                      // personne n'a encore choisi. Seul compte : a-t-on
+                      // quelque chose a envoyer, et resterait-il a completer ?
+                      const aDesChoix = Object.values(groupe.picks || {})
+                        .some((parMenu) => Object.values(parMenu).some((l) => l.length > 0));
+                      if (!aDesChoix || (dernier && manque === 0)) return null;
+                      return (
+                        <button className="formula-picker-pause" onClick={validerGroupe}>
+                          Mettre en pause — envoyer ce qui est choisi
+                        </button>
+                      );
+                    })()}
                     <button className="formula-picker-cancel" onClick={() =>
                       groupe.etape > 0 ? setGroupe((g) => ({ ...g, etape: g.etape - 1 }))
                                        : setGroupe((g) => ({ ...g, phase: "compo" }))
