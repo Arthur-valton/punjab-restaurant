@@ -53,7 +53,65 @@ const IP_RANGE_PRINTER = {
 };
 const PRINTER_IP_DEFAULT = "192.168.110.21";
 
+// Mode essai : on peut derouler toute la prise de commande sans qu'une
+// seule ligne n'atteigne l'imprimante du restaurant. Le ticket est decode
+// et affiche dans le terminal a la place.
+const DRY_RUN = process.env.PUNJAB_DRY_RUN === "1";
+
+// Rend lisible un flux ESC/POS : un seul passage, en suivant l'etat de
+// l'imprimante (taille, video inverse) plutot que ligne par ligne.
+function apercuTicket(data) {
+  const SIZES = { 0x00: "", 0x11: "DOUBLE", 0x33: "QUAD", 0x22: "TRIPLE" };
+  let taille = "", inverse = false, gras = false;
+  const lignes = [];
+  let courant = "", marque = "";
+  const pousser = () => {
+    if (courant.trim() || marque) lignes.push(("   " + marque + courant).trimEnd());
+    courant = ""; marque = "";
+  };
+  const etiquette = () => {
+    const e = [inverse ? "NOIR" : null, taille || null].filter(Boolean);
+    return e.length ? "[" + e.join(" ") + "] " : "";
+  };
+  for (let i = 0; i < data.length; i++) {
+    const c = data[i], o = data.charCodeAt(i);
+    if (o === 0x1d) {                       // GS
+      const cmd = data[i + 1];
+      if (cmd === "!") { taille = SIZES[data.charCodeAt(i + 2)] ?? "?"; i += 2; }
+      else if (cmd === "B") { inverse = data.charCodeAt(i + 2) !== 0; i += 2; }
+      else if (cmd === "V") { pousser(); lignes.push("   --- COUPE ---"); i += 2 + (data.charCodeAt(i + 2) === 0x42 ? 1 : 0); }
+      else i += 1;
+      if (!courant.trim()) marque = etiquette();
+      continue;
+    }
+    if (o === 0x1b) {                       // ESC
+      const cmd = data[i + 1];
+      // ESC @ et ESC 2 ne font que deux octets ; les autres en font trois.
+      // En avaler un de trop decale tout le flux et orpheline la commande
+      // suivante (on voyait « ! » et « B » trainer dans l'apercu).
+      if (cmd === "@" || cmd === "2") { i += 1; }
+      else if (cmd === "E") { gras = data.charCodeAt(i + 2) !== 0; i += 2; }
+      else i += 2;
+      continue;
+    }
+    if (c === "\n") { pousser(); continue; }
+    if (o < 0x20) continue;                 // autres caracteres de controle
+    if (!courant && !marque) marque = etiquette();
+    courant += c;
+  }
+  pousser();
+  // Une bande noire est faite de deux lignes pleines autour du titre :
+  // on les remplace par un trait, plus lisible qu'une ligne d'espaces.
+  return lignes
+    .map((l) => (/^\s*\[NOIR[^\]]*\]\s*$/.test(l) ? "   [NOIR] " + "█".repeat(40) : l))
+    .join("\n");
+}
+
 function getPrinterIp() {
+  if (DRY_RUN) {
+    console.log("MODE ESSAI — aucune impression reelle");
+    return "(mode essai)";
+  }
   try {
     const ssid = execSync("iwgetid -r 2>/dev/null").toString().trim();
     if (ssid && PRINTER_IPS[ssid]) {
@@ -735,6 +793,14 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
 }
 
 function sendToPrinter(data) {
+  if (DRY_RUN) {
+    console.log("\n" + "=".repeat(52));
+    console.log("TICKET (mode essai — non imprime)");
+    console.log("=".repeat(52));
+    console.log(apercuTicket(data));
+    console.log("=".repeat(52) + "\n");
+    return Promise.resolve();
+  }
   return new Promise((resolve, reject) => {
     const client = new net.Socket();
     const timeout = setTimeout(() => {

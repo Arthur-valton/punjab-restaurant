@@ -3370,3 +3370,89 @@ body {
   font-family: inherit; font-size: 1.25rem; line-height: 1;
   padding: 0 8px; cursor: pointer;
 }
+
+/* ---- Formule mise en pause : le client n'a pas fini de choisir ---- */
+.formula-picker-pause {
+  margin: 8px 12px 0;
+  padding: 12px;
+  background: rgba(230,126,34,0.10);
+  border: 1.5px dashed rgba(230,126,34,0.55);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #b35f10;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.formula-picker-pause:active { background: rgba(230,126,34,0.2); }
+
+.cart-a-completer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin: 4px 0 2px;
+  padding: 7px 10px;
+  border: 1px dashed rgba(230,126,34,0.6);
+  border-radius: 8px;
+  background: rgba(230,126,34,0.10);
+  color: #d07a16;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cart-a-completer:active { background: rgba(230,126,34,0.2); }
+.cart-a-completer-puce { font-size: 0.78rem; }
+
+/* ---- Formule mise en pause : le client n'a pas fini de choisir ---- */
+.formula-picker-pause {
+  margin: 8px 12px 0;
+  padding: 12px;
+  background: rgba(230,126,34,0.10);
+  border: 1.5px dashed rgba(230,126,34,0.55);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #b35f10;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.formula-picker-pause:active { background: rgba(230,126,34,0.2); }
+
+.cart-a-completer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 5px 0 2px;
+  padding: 7px 10px;
+  border: 1px dashed rgba(230,126,34,0.6);
+  border-radius: 8px;
+  background: rgba(230,126,34,0.10);
+  color: #d07a16;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cart-a-completer:active { background: rgba(230,126,34,0.2); }
+.cart-a-completer-puce { font-size: 0.78rem; }
+
+/* ---- Repère visible : on n'est pas sur la caisse du restaurant ---- */
+.badge-essai {
+  margin-left: 10px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #e67e22;
+  color: #1a1a1a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}

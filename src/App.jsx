@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import defaultMenu from "./data/menu";
 import Ticket from "./components/Ticket";
 import MenuSettings from "./components/MenuSettings";
@@ -7,6 +7,40 @@ import "./App.css";
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
 const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
+
+// En developpement, l'app parle a la MEME base de commandes que la caisse du
+// restaurant : valider y creait une vraie commande. On isole donc les essais
+// dans le navigateur, et le serveur d'impression local tourne en mode essai.
+const MODE_ESSAI = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+  || window.location.hostname.startsWith("192.168.");
+const CLE_COMMANDES_ESSAI = "punjab_commandes_essai";
+
+function lireCommandesEssai() {
+  try { return JSON.parse(localStorage.getItem(CLE_COMMANDES_ESSAI) || "[]"); }
+  catch { return []; }
+}
+function ecrireCommandesEssai(liste) {
+  try { localStorage.setItem(CLE_COMMANDES_ESSAI, JSON.stringify(liste)); } catch { /* navigation privee */ }
+}
+// Meme contrat que /api/orders : GET rend la liste, POST { action, order }
+function fetchCommandes(url, options) {
+  if (!MODE_ESSAI) return fetch(url, options);
+  if (!options || !options.method || options.method === "GET") {
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(lireCommandesEssai()) });
+  }
+  let liste = lireCommandesEssai();
+  try {
+    const { action, order } = JSON.parse(options.body || "{}");
+    if (action === "save") {
+      const k = liste.findIndex((o) => o.id === order.id);
+      liste = k < 0 ? [...liste, order] : liste.map((o, n) => (n === k ? { ...o, ...order } : o));
+    } else if (action === "delete") {
+      liste = liste.filter((o) => o.id !== order.id);
+    }
+    ecrireCommandesEssai(liste);
+  } catch { /* corps illisible : on ne touche a rien */ }
+  return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
+}
 
 function getPrintUrl() {
   const host = window.location.hostname;
@@ -127,6 +161,15 @@ function fusionnerOrdre(listes) {
     }
   }
   return res;
+}
+
+// Étapes encore à choisir sur une formule laissée en pause. Une étape
+// conditionnelle dont le parent n'est pas tranché n'est pas réclamée.
+function etapesManquantes(item, choices) {
+  const faites = new Set((choices || []).map((c) => c.label));
+  return (item.formulaSteps || []).filter(
+    (st) => !faites.has(st.label) && etapeApplicable(st, choices || [])
+  );
 }
 
 // Repère visuel sur le bouton : rien pour un article simple, le nombre de
@@ -250,7 +293,7 @@ function App() {
 
     // Chargement commandes actives (stockées sur Vercel)
     function fetchOrders() {
-      fetch(ORDERS_API_URL)
+      fetchCommandes(ORDERS_API_URL)
         .then((r) => r.json())
         .then((data) => setServerOrders(Array.isArray(data) ? data : []))
         .catch(() => {});
@@ -298,6 +341,7 @@ function App() {
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
   const [texteLibre, setTexteLibre] = useState("");  // plat saisi a la main (allergie, substitution)
   const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
+  const pauseRef = useRef(0);  // deux menus en pause ne doivent jamais fusionner
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -567,10 +611,13 @@ function App() {
     const cartId = `${item.id}-f${sig}`;
     // Un choix peut porter son propre tarif : il remplace celui du produit
     const prix = choices.find((c) => c.prix != null)?.prix;
+    // Une formule reprise remplace sa ligne en pause au lieu d'en créer une
+    const reprise = formulaPicker?.reprise;
     setOrderItems((prev) => {
-      const existing = prev.find((i) => i.cartId === cartId);
-      if (existing) return prev.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
-      return [...prev, { ...item, cartId, qty: 1, formulaChoices: choices,
+      const base = reprise ? prev.filter((i) => i.cartId !== reprise) : prev;
+      const existing = base.find((i) => i.cartId === cartId);
+      if (existing) return base.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
+      return [...base, { ...item, cartId, qty: 1, formulaChoices: choices,
                          ...(prix != null ? { price: prix } : {}) }];
     });
     setFormulaPicker(null);
@@ -589,6 +636,39 @@ function App() {
       setFormulaPicker(rest);
       pickFormulaItem(nom, null, saisie.prix ?? null);
     }
+  }
+
+  // Le client n'a pas encore choisi son dessert : on pose le menu au panier
+  // avec ce qui est décidé, le ticket part, et on revient compléter après.
+  function mettreEnPause() {
+    const { item, choices, reprise } = formulaPicker;
+    if (!choices.length) return;
+    const prix = choices.find((c) => c.prix != null)?.prix;
+    const cartId = reprise || `${item.id}-pause${++pauseRef.current}`;
+    setOrderItems((prev) => {
+      const ligne = { ...item, cartId, qty: 1, formulaChoices: choices,
+                      ...(prix != null ? { price: prix } : {}) };
+      const k = prev.findIndex((i) => i.cartId === cartId);
+      if (k === -1) return [...prev, ligne];
+      return prev.map((i, n) => (n === k ? { ...ligne, qty: i.qty } : i));
+    });
+    setFormulaPicker(null);
+  }
+
+  // Rouvre une formule en pause à la première étape encore à choisir,
+  // réponses précédentes conservées.
+  function reprendreFormule(ligne) {
+    const manquantes = etapesManquantes(ligne, ligne.formulaChoices);
+    if (!manquantes.length) return;
+    const steps = ligne.formulaSteps || [];
+    const choices = ligne.formulaChoices || [];
+    const faites = new Set(choices.map((c) => c.label));
+    const parcours = steps.map((st, k) => (faites.has(st.label) ? k : -1)).filter((k) => k >= 0);
+    // On repart du produit, pas de la ligne de panier : son cartId et sa
+    // quantité ne doivent pas se recopier dans la formule complétée.
+    const { cartId, qty, formulaChoices, ...produit } = ligne;
+    setFormulaPicker({ item: produit, currentStep: steps.indexOf(manquantes[0]),
+                       choices, parcours, reprise: cartId });
   }
 
   function pickFormulaItem(articleName, piment = null, prix = null) {
@@ -615,10 +695,10 @@ function App() {
       if (!estFormuleMenu(item)) {
         addFormula(item, newChoices);
       } else {
-        setFormulaPicker({ item, currentStep, choices: newChoices, parcours, showSummary: true });
+        setFormulaPicker({ item, currentStep, choices: newChoices, parcours, showSummary: true, reprise: formulaPicker.reprise });
       }
     } else {
-      setFormulaPicker({ item, currentStep: suivante, choices: newChoices, parcours });
+      setFormulaPicker({ item, currentStep: suivante, choices: newChoices, parcours, reprise: formulaPicker.reprise });
     }
   }
 
@@ -724,7 +804,7 @@ function App() {
       items: [...orderItems],
       receivedAt: Date.now(),
     };
-    fetch(ORDERS_API_URL, {
+    fetchCommandes(ORDERS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "save", order: orderData }),
@@ -798,7 +878,7 @@ function App() {
 
   async function closeTable(orderId) {
     // Supprimer de Vercel (source de vérité)
-    fetch(ORDERS_API_URL, {
+    fetchCommandes(ORDERS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", order: { id: orderId } }),
@@ -881,6 +961,16 @@ function App() {
                 {choixVisibles(item).map((choice, ci) => (
                   <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
                 ))}
+                {(() => {
+                  const reste = etapesManquantes(item, item.formulaChoices);
+                  if (!reste.length) return null;
+                  return (
+                    <button className="cart-a-completer" onClick={() => reprendreFormule(item)}>
+                      <span className="cart-a-completer-puce">⏸</span>
+                      À compléter : {reste.map((st) => st.label).join(", ")}
+                    </button>
+                  );
+                })()}
               </div>
             ))}
             <div className="cart-detail-actions">
@@ -911,6 +1001,7 @@ function App() {
 
         <header className="app-header">
           <h1>PUNJAB</h1>
+          {MODE_ESSAI && <span className="badge-essai">MODE ESSAI</span>}
           <div className="header-right">
             <button className="settings-btn" onClick={() => setShowSettingsPwd(true)}>⚙</button>
             <button className="orders-btn" onClick={() => setShowOrders(true)}>
@@ -1029,6 +1120,16 @@ function App() {
                     {choixVisibles(item).map((choice, ci) => (
                       <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
                     ))}
+                    {(() => {
+                      const reste = etapesManquantes(item, item.formulaChoices);
+                      if (!reste.length) return null;
+                      return (
+                        <button className="cart-a-completer" onClick={() => reprendreFormule(item)}>
+                          <span className="cart-a-completer-puce">⏸</span>
+                          À compléter : {reste.map((st) => st.label).join(", ")}
+                        </button>
+                      );
+                    })()}
                   </div>
                 ))}
                 <div className="cart-detail-actions">
@@ -1276,6 +1377,11 @@ function App() {
                       : <p className="formula-picker-empty">Aucun article configuré pour cette étape</p>;
                   })()}
                 </div>
+                {formulaPicker.choices.length > 0 && (
+                  <button className="formula-picker-pause" onClick={mettreEnPause}>
+                    Mettre en pause — {etapesManquantes(formulaPicker.item, formulaPicker.choices).length} à choisir
+                  </button>
+                )}
                 <button className="formula-picker-cancel" onClick={(formulaPicker.parcours || []).length > 0 ? goBackFormula : () => setFormulaPicker(null)}>
                   {(formulaPicker.parcours || []).length > 0 ? "← Retour" : "Annuler"}
                 </button>
@@ -1748,7 +1854,7 @@ function App() {
               prev.map((o) => o.id === vercelId ? { ...o, tcOrderId } : o)
             );
             // Persister tcOrderId dans Vercel
-            fetch(ORDERS_API_URL, {
+            fetchCommandes(ORDERS_API_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ action: "save", order: { ...ticketData.orderData, tcOrderId } }),
