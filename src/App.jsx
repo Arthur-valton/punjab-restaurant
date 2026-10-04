@@ -592,7 +592,11 @@ function App() {
       let suite = [...prev];
       for (const { item, choices } of ajouts) {
         const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
-        const cartId = `${item.id}-f${sig}`;
+        // Un couvert laissé incomplet ne doit jamais fusionner avec un autre :
+        // compléter l'un compléterait les deux, et leurs clients n'ont pas
+        // forcément choisi la même chose.
+        const incomplet = etapesManquantes(item, choices).length > 0;
+        const cartId = incomplet ? `${item.id}-pause${++pauseRef.current}` : `${item.id}-f${sig}`;
         const prix = choices.find((c) => c.prix != null)?.prix;
         const existing = suite.find((i) => i.cartId === cartId);
         if (existing) suite = suite.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
@@ -1855,6 +1859,11 @@ function App() {
                       {manque > 0 ? `Il reste ${manque} couvert${manque > 1 ? "s" : ""}`
                                   : dernier ? "Ajouter au panier" : "Service suivant"}
                     </button>
+                    {faits > 0 && manque > 0 && (
+                      <button className="formula-picker-pause" onClick={validerGroupe}>
+                        Mettre en pause — envoyer ce qui est choisi
+                      </button>
+                    )}
                     <button className="formula-picker-cancel" onClick={() =>
                       groupe.etape > 0 ? setGroupe((g) => ({ ...g, etape: g.etape - 1 }))
                                        : setGroupe((g) => ({ ...g, phase: "compo" }))
