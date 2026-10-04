@@ -565,271 +565,6 @@
     ]
   },
   {
-    "category": "Vins",
-    "items": [
-      {
-        "id": 123,
-        "name": "Chinon",
-        "price": 14,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Format",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Chinon 37,5",
-                "piment": false,
-                "price": 14
-              },
-              {
-                "name": "Chinon 75cl",
-                "piment": false,
-                "price": 25
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 143,
-        "name": "St Nicolas de bourg",
-        "price": 17,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Format",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "St Nicolas de bourg 37,5",
-                "piment": false,
-                "price": 17
-              },
-              {
-                "name": "St Nicolas de bourg 75cl",
-                "piment": false,
-                "price": 31
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 145,
-        "name": "Saumur champ",
-        "price": 15,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Format",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Saumur champ 37,5",
-                "piment": false,
-                "price": 15
-              },
-              {
-                "name": "Saumur champ 75cl",
-                "piment": false,
-                "price": 28
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 180,
-        "name": "Côte du Rhône",
-        "price": 13,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Format",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Côte du Rhône 37,5",
-                "piment": false,
-                "price": 13
-              },
-              {
-                "name": "Côte du Rhône 75cl",
-                "piment": false,
-                "price": 22
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 182,
-        "name": "Syrah",
-        "price": 22,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 199,
-        "name": "Verre Rouge",
-        "price": 4,
-        "category": "Vins",
-        "subcategory": "Rouge",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 205,
-        "name": "Chardonnay",
-        "price": 23,
-        "category": "Vins",
-        "subcategory": "Blanc"
-      },
-      {
-        "id": 206,
-        "name": "Sauvignon",
-        "price": 23,
-        "category": "Vins",
-        "subcategory": "Blanc"
-      },
-      {
-        "id": 269,
-        "name": "Verre Blanc",
-        "price": 4,
-        "category": "Vins",
-        "subcategory": "Blanc",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 201,
-        "name": "Côte de Provence",
-        "price": 17,
-        "category": "Vins",
-        "subcategory": "Rosé",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Format",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Côte de Provence 37,5cl",
-                "piment": false,
-                "price": 17
-              },
-              {
-                "name": "Côte de Provence 75cl",
-                "piment": false,
-                "price": 30
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 270,
-        "name": "Verre Rosé",
-        "price": 4,
-        "category": "Vins",
-        "subcategory": "Rosé",
-        "piment": false,
-        "isFormula": false
-      },
-      {
-        "id": 203,
-        "name": "Armunia",
-        "price": 25,
-        "category": "Vins",
-        "subcategory": "Rosé"
-      },
-      {
-        "id": 204,
-        "name": "Terre Brune",
-        "price": 30,
-        "category": "Vins",
-        "subcategory": "Rosé"
-      },
-      {
-        "id": 208,
-        "name": "Pichet",
-        "price": 6,
-        "category": "Vins",
-        "subcategory": "Vin",
-        "piment": false,
-        "isFormula": true,
-        "formulaSteps": [
-          {
-            "label": "Couleur",
-            "articles": [
-              {
-                "name": "Rouge",
-                "piment": false
-              },
-              {
-                "name": "Rosé",
-                "piment": false
-              }
-            ]
-          },
-          {
-            "label": "Boisson",
-            "remplaceNom": true,
-            "articles": [
-              {
-                "name": "Pichet 25",
-                "piment": false,
-                "price": 6
-              },
-              {
-                "name": "Pichet 50cl",
-                "piment": false,
-                "price": 11
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": 220,
-        "name": "Long duc ville de ange",
-        "price": 25,
-        "category": "Vins",
-        "subcategory": "Vin"
-      },
-      {
-        "id": 222,
-        "name": "Vin mousseux",
-        "price": 35,
-        "category": "Vins",
-        "subcategory": "Vin"
-      },
-      {
-        "id": 253,
-        "name": "Saumur Champ",
-        "price": 28,
-        "category": "Vins",
-        "subcategory": "Vin"
-      }
-    ]
-  },
-  {
     "category": "Naans",
     "items": [
       {
@@ -3732,6 +3467,271 @@
             ]
           }
         ]
+      }
+    ]
+  },
+  {
+    "category": "Vins",
+    "items": [
+      {
+        "id": 123,
+        "name": "Chinon",
+        "price": 14,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Chinon 37,5",
+                "piment": false,
+                "price": 14
+              },
+              {
+                "name": "Chinon 75cl",
+                "piment": false,
+                "price": 25
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 143,
+        "name": "St Nicolas de bourg",
+        "price": 17,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "St Nicolas de bourg 37,5",
+                "piment": false,
+                "price": 17
+              },
+              {
+                "name": "St Nicolas de bourg 75cl",
+                "piment": false,
+                "price": 31
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 145,
+        "name": "Saumur champ",
+        "price": 15,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Saumur champ 37,5",
+                "piment": false,
+                "price": 15
+              },
+              {
+                "name": "Saumur champ 75cl",
+                "piment": false,
+                "price": 28
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 180,
+        "name": "Côte du Rhône",
+        "price": 13,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Côte du Rhône 37,5",
+                "piment": false,
+                "price": 13
+              },
+              {
+                "name": "Côte du Rhône 75cl",
+                "piment": false,
+                "price": 22
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 182,
+        "name": "Syrah",
+        "price": 22,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": false
+      },
+      {
+        "id": 199,
+        "name": "Verre Rouge",
+        "price": 4,
+        "category": "Vins",
+        "subcategory": "Rouge",
+        "piment": false,
+        "isFormula": false
+      },
+      {
+        "id": 205,
+        "name": "Chardonnay",
+        "price": 23,
+        "category": "Vins",
+        "subcategory": "Blanc"
+      },
+      {
+        "id": 206,
+        "name": "Sauvignon",
+        "price": 23,
+        "category": "Vins",
+        "subcategory": "Blanc"
+      },
+      {
+        "id": 269,
+        "name": "Verre Blanc",
+        "price": 4,
+        "category": "Vins",
+        "subcategory": "Blanc",
+        "piment": false,
+        "isFormula": false
+      },
+      {
+        "id": 201,
+        "name": "Côte de Provence",
+        "price": 17,
+        "category": "Vins",
+        "subcategory": "Rosé",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Format",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Côte de Provence 37,5cl",
+                "piment": false,
+                "price": 17
+              },
+              {
+                "name": "Côte de Provence 75cl",
+                "piment": false,
+                "price": 30
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 270,
+        "name": "Verre Rosé",
+        "price": 4,
+        "category": "Vins",
+        "subcategory": "Rosé",
+        "piment": false,
+        "isFormula": false
+      },
+      {
+        "id": 203,
+        "name": "Armunia",
+        "price": 25,
+        "category": "Vins",
+        "subcategory": "Rosé"
+      },
+      {
+        "id": 204,
+        "name": "Terre Brune",
+        "price": 30,
+        "category": "Vins",
+        "subcategory": "Rosé"
+      },
+      {
+        "id": 208,
+        "name": "Pichet",
+        "price": 6,
+        "category": "Vins",
+        "subcategory": "Vin",
+        "piment": false,
+        "isFormula": true,
+        "formulaSteps": [
+          {
+            "label": "Couleur",
+            "articles": [
+              {
+                "name": "Rouge",
+                "piment": false
+              },
+              {
+                "name": "Rosé",
+                "piment": false
+              }
+            ]
+          },
+          {
+            "label": "Boisson",
+            "remplaceNom": true,
+            "articles": [
+              {
+                "name": "Pichet 25",
+                "piment": false,
+                "price": 6
+              },
+              {
+                "name": "Pichet 50cl",
+                "piment": false,
+                "price": 11
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 220,
+        "name": "Long duc ville de ange",
+        "price": 25,
+        "category": "Vins",
+        "subcategory": "Vin"
+      },
+      {
+        "id": 222,
+        "name": "Vin mousseux",
+        "price": 35,
+        "category": "Vins",
+        "subcategory": "Vin"
+      },
+      {
+        "id": 253,
+        "name": "Saumur Champ",
+        "price": 28,
+        "category": "Vins",
+        "subcategory": "Vin"
       }
     ]
   }
