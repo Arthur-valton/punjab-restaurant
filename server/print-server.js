@@ -192,10 +192,13 @@ app.put("/order/:id", async (req, res) => {
     const avant = ticketsDeCommande(existing.items || [], info, emporter);
     const apres = ticketsDeCommande(order, info, emporter);
     const POSTES = emporter ? ["COMMANDE"] : ["CUISINE", "DESSERTS", "BAR"];
+    // A la modification on ressort TOUS les postes, pas seulement celui qui a
+    // change : un poste qui ne recoit rien laisse l'equipe avec un ticket
+    // partiel et l'oblige a reconstituer la commande de tete.
     const tickets = apres.map((t, k) => {
-      if (t && t !== avant[k]) return t;                    // contenu modifie
-      if (!t && avant[k]) return ticketAnnulation(POSTES[k], info);  // poste vide
-      return "";                                            // inchange : on n'imprime pas
+      if (t) return t;                                      // ticket complet du poste
+      if (avant[k]) return ticketAnnulation(POSTES[k], info);  // poste devenu vide
+      return "";                                            // poste jamais servi
     });
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
