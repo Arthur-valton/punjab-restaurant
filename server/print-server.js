@@ -581,9 +581,13 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     if (!seenCats[cat]) seenCats[cat] = [];
     // Regroupe sur le marqueur affiche : deux lignes identiques a l'impression
     // fusionnent, mais un plat avec piment reste separe du meme plat sans piment.
+    // Sur une addition, deux articles de meme nom mais de prix differents
+    // (deux « Supplement » hors carte) ne doivent pas fusionner : les lignes
+    // ne sommeraient plus au total imprime juste en dessous.
     const existing = seenCats[cat].find(x => normName(nomAffiche(x)) === normName(nomAffiche(item))
       && pimentMark(x.piment) === pimentMark(item.piment)
-      && formulaSig(x) === formulaSig(item));
+      && formulaSig(x) === formulaSig(item)
+      && (!showTotal || x.price === item.price));
     if (existing) existing.qty += item.qty;
     else seenCats[cat].push(item);
   }

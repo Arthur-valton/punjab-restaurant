@@ -979,6 +979,11 @@ function App() {
   function resteAPayer(cmd) {
     return (cmd.items || []).reduce((s, i, k) => s + restantDe(cmd, i, k) * i.price, 0);
   }
+  // Une ligne offerte vaut 0 € mais reste a encaisser : le solde se juge sur
+  // les unites, pas sur le montant, sinon la table se cloture trop tot.
+  function unitesRestantes(cmd) {
+    return (cmd.items || []).reduce((s, i, k) => s + restantDe(cmd, i, k), 0);
+  }
 
   async function reprintBill(cmd, remise, lignes, sansDetail, nbRepas) {
     // On transmet la commande : le serveur d'impression l'oublie des que la
@@ -1721,8 +1726,13 @@ function App() {
         // reecrirait avec un instantane perime.
         const cmd = serverOrders.find((o) => o.id === remisePour.order.id) || remisePour.order;
         const parts = remisePour.parts || {};
+        // Tout est regle : la fenetre ne sert plus a repartir mais a ressortir
+        // un duplicata. On reaffiche la commande entiere sans toucher a l'encaisse.
+        const duplicata = unitesRestantes(cmd) === 0;
         const lignes = (cmd.items || []).map((i, k) => ({
-          item: i, cle: cleLigne(i, k), restant: restantDe(cmd, i, k), pris: parts[cleLigne(i, k)] || 0,
+          item: i, cle: cleLigne(i, k),
+          restant: duplicata ? i.qty : restantDe(cmd, i, k),
+          pris: duplicata ? i.qty : (parts[cleLigne(i, k)] || 0),
         })).filter((l) => l.restant > 0);
         // Le detail reste visible jusqu'au dernier article : on veut toujours
         // voir ce qu'on encaisse, meme quand il n'y a plus rien a repartir.
@@ -1752,10 +1762,13 @@ function App() {
                 <span className="remise-cible">
                   {cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`}
                 </span>
-                <span className="remise-total">{reste.toFixed(2)} &euro;</span>
-                {reste < (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) - 0.001 && (
-                  <span className="remise-deja">reste à régler</span>
-                )}
+                <span className="remise-total">
+                  {(duplicata ? (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) : reste).toFixed(2)} &euro;
+                </span>
+                {duplicata ? <span className="remise-deja">déjà réglée — duplicata</span>
+                  : reste < (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) - 0.001 && (
+                    <span className="remise-deja">reste à régler</span>
+                  )}
               </div>
 
               {lignes.length > 0 && (
@@ -1830,7 +1843,7 @@ function App() {
                 <button className="emporter-btn-cancel" disabled={remisePour.envoi}
                   onClick={() => setRemisePour(null)}>Fermer</button>
                 <button className="emporter-btn-confirm"
-                  disabled={total <= 0 || remisePour.envoi} onClick={async () => {
+                  disabled={!aRegler.some((l) => l.pris > 0) || remisePour.envoi} onClick={async () => {
                   // Un double-tap sortait deux additions identiques : on verrouille
                   // le bouton le temps de l'envoi.
                   if (envoiRef.current) return;
@@ -1845,6 +1858,10 @@ function App() {
                   if (!ok) { setRemisePour((r) => (r ? { ...r, envoi: false } : r)); return; }
                   // On note ce qui vient d'etre regle : la part suivante ne le
                   // representera pas.
+                  if (duplicata) {   // simple reimpression : on ne touche a rien
+                    setRemisePour((r) => (r ? { ...r, envoi: false } : r));
+                    return;
+                  }
                   const paye = { ...dejaPaye(cmd) };
                   for (const l of aRegler) if (l.pris > 0) paye[l.cle] = (paye[l.cle] || 0) + l.pris;
                   const maj = { ...cmd, paye };
@@ -1862,7 +1879,7 @@ function App() {
                       + "Elle reste comptée sur cette caisse — ne recharge pas la page avant la fin du service."));
                   // Il reste des parts a encaisser : on garde la fenetre ouverte,
                   // remise a zero, plutot que d'obliger a la rouvrir pour chacun.
-                  if (resteAPayer(maj) > 0.001) {
+                  if (unitesRestantes(maj) > 0) {
                     setRemisePour({ ...remisePour, order: maj, parts: toutLeReste(maj), envoi: false,
                                     type: "aucune", valeur: "", sansDetail: false, nbRepas: undefined });
                     return;
@@ -1870,7 +1887,8 @@ function App() {
                   setRemisePour(null);
                   setClotureApres(maj);
                 }}>
-                  {remisePour.envoi ? "Impression…" : toutPris ? "Imprimer" : "Imprimer cette part"}
+                  {remisePour.envoi ? "Impression…" : duplicata ? "Réimprimer l'addition"
+                    : toutPris ? "Imprimer" : "Imprimer cette part"}
                 </button>
               </div>
             </div>
