@@ -295,7 +295,10 @@ function App() {
     function fetchOrders() {
       fetchCommandes(ORDERS_API_URL)
         .then((r) => r.json())
-        .then((data) => setServerOrders(Array.isArray(data) ? data : []))
+        .then((data) => setServerOrders((Array.isArray(data) ? data : []).map((o) =>
+          payeLocal.current[o.id]
+            ? { ...o, paye: { ...(o.paye || {}), ...payeLocal.current[o.id] } }
+            : o)))
         .catch(() => {});
     }
     fetchOrders();
@@ -349,7 +352,11 @@ function App() {
   const pauseRef = useRef(0);
   // Verrou synchrone : trois taps rapides partent dans le meme cycle de rendu,
   // un etat React y serait encore a « false » pour les trois.
-  const envoiRef = useRef(false);  // deux menus en pause ne doivent jamais fusionner
+  const envoiRef = useRef(false);
+  // Ce qui a ete encaisse, garde en memoire locale : la sauvegarde distante
+  // peut echouer en silence (fetch ne rejette pas sur une 500) et le sondage
+  // des commandes reecraserait la commande toutes les quinze secondes.
+  const payeLocal = useRef({});  // deux menus en pause ne doivent jamais fusionner
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -903,6 +910,13 @@ function App() {
         ...(clientPickupTime ? { clientPickupTime } : {}),
       } : {}),
       items: [...orderItems],
+      // Une table deja entamee garde ses parts reglees : sans ca, modifier la
+      // commande remettait tout a payer et le client repassait a la caisse.
+      ...(() => {
+        const dejaLa = serverOrders.find((o) => o.id === orderId);
+        const regle = payeLocal.current[orderId] || dejaLa?.paye;
+        return regle ? { paye: regle } : {};
+      })(),
       receivedAt: Date.now(),
     };
     fetchCommandes(ORDERS_API_URL, {
@@ -1702,7 +1716,10 @@ function App() {
 
       {/* Remise avant impression de l'addition */}
       {remisePour && (() => {
-        const cmd = remisePour.order;
+        // La commande peut avoir bouge depuis l'ouverture (ajout en salle,
+        // autre part encaissee) : on repart de la version vivante, sinon on la
+        // reecrirait avec un instantane perime.
+        const cmd = serverOrders.find((o) => o.id === remisePour.order.id) || remisePour.order;
         const parts = remisePour.parts || {};
         const lignes = (cmd.items || []).map((i, k) => ({
           item: i, cle: cleLigne(i, k), restant: restantDe(cmd, i, k), pris: parts[cleLigne(i, k)] || 0,
@@ -1719,8 +1736,16 @@ function App() {
         const choisir = (type, valeur) => setRemisePour({ ...remisePour, type, valeur });
         const poser = (cle, n) => setRemisePour({ ...remisePour, parts: { ...parts, [cle]: n } });
         const toutPris = aRegler.every((l) => l.pris === l.restant);
+        // Suggestion recalculee a chaque changement de selection : figee, elle
+        // restait fausse des qu'on ajoutait un couvert apres avoir bascule.
+        const repasSuggere = Math.max(1, aRegler
+          .filter((l) => (l.item.category || "") === "Menu")
+          .reduce((n, l) => n + l.pris, 0));
+        const repas = remisePour.nbRepas ?? repasSuggere;
+        // L'overlay ne ferme plus au clic : une addition en cours de
+        // repartition represente trop de gestes pour partir sur un doigt.
         return (
-          <div className="emporter-modal-overlay" onClick={() => setRemisePour(null)}>
+          <div className="emporter-modal-overlay">
             <div className="emporter-modal emporter-modal--addition" onClick={(e) => e.stopPropagation()}>
               <div className="remise-entete">
                 <span className="remise-titre">ADDITION</span>
@@ -1765,24 +1790,17 @@ function App() {
                   <button className={`remise-btn ${!remisePour.sansDetail ? "actif" : ""}`}
                     onClick={() => setRemisePour({ ...remisePour, sansDetail: false })}>Avec détail</button>
                   <button className={`remise-btn ${remisePour.sansDetail ? "actif" : ""}`}
-                    onClick={() => setRemisePour({
-                      ...remisePour, sansDetail: true,
-                      // Suggestion : les menus de la part. Le serveur corrige
-                      // si la table a pris des plats a la carte.
-                      nbRepas: remisePour.nbRepas ?? Math.max(1, aRegler
-                        .filter((l) => (l.item.category || "") === "Menu")
-                        .reduce((n, l) => n + l.pris, 0)),
-                    })}>Sans détail</button>
+                    onClick={() => setRemisePour({ ...remisePour, sansDetail: true })}>Sans détail</button>
                 </div>
                 {remisePour.sansDetail && (
                   <div className="repas-saisie">
                     <span className="repas-libelle">Nombre de repas</span>
                     <div className="part-compteur">
-                      <button className="part-rond" disabled={(remisePour.nbRepas || 1) <= 1}
-                        onClick={() => setRemisePour({ ...remisePour, nbRepas: (remisePour.nbRepas || 1) - 1 })}>−</button>
-                      <span className="part-n">{remisePour.nbRepas || 1}</span>
+                      <button className="part-rond" disabled={repas <= 1}
+                        onClick={() => setRemisePour({ ...remisePour, nbRepas: repas - 1 })}>−</button>
+                      <span className="part-n">{repas}</span>
                       <button className="part-rond"
-                        onClick={() => setRemisePour({ ...remisePour, nbRepas: (remisePour.nbRepas || 1) + 1 })}>+</button>
+                        onClick={() => setRemisePour({ ...remisePour, nbRepas: repas + 1 })}>+</button>
                     </div>
                   </div>
                 )}
@@ -1809,7 +1827,8 @@ function App() {
               </div>
 
               <div className="emporter-modal-actions">
-                <button className="emporter-btn-cancel" onClick={() => setRemisePour(null)}>Annuler</button>
+                <button className="emporter-btn-cancel" disabled={remisePour.envoi}
+                  onClick={() => setRemisePour(null)}>Fermer</button>
                 <button className="emporter-btn-confirm"
                   disabled={total <= 0 || remisePour.envoi} onClick={async () => {
                   // Un double-tap sortait deux additions identiques : on verrouille
@@ -1821,7 +1840,7 @@ function App() {
                     .map((l) => ({ ...l.item, qty: l.pris }));
                   const ok = await reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null,
                                                aPayer, remisePour.sansDetail === true,
-                                               remisePour.sansDetail ? (remisePour.nbRepas || 1) : null);
+                                               remisePour.sansDetail ? repas : null);
                   envoiRef.current = false;
                   if (!ok) { setRemisePour((r) => (r ? { ...r, envoi: false } : r)); return; }
                   // On note ce qui vient d'etre regle : la part suivante ne le
@@ -1829,12 +1848,18 @@ function App() {
                   const paye = { ...dejaPaye(cmd) };
                   for (const l of aRegler) if (l.pris > 0) paye[l.cle] = (paye[l.cle] || 0) + l.pris;
                   const maj = { ...cmd, paye };
+                  payeLocal.current[cmd.id] = paye;
                   setServerOrders((prev) => prev.map((o) => (o.id === cmd.id ? maj : o)));
                   fetchCommandes(ORDERS_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "save", order: maj }),
-                  }).catch(() => {});
+                  })
+                    // fetch ne rejette pas sur une 500 : sans ce controle, une
+                    // sauvegarde ratee passait pour un succes.
+                    .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); })
+                    .catch(() => alert("La part est imprimée, mais l'enregistrement a échoué.\n"
+                      + "Elle reste comptée sur cette caisse — ne recharge pas la page avant la fin du service."));
                   // Il reste des parts a encaisser : on garde la fenetre ouverte,
                   // remise a zero, plutot que d'obliger a la rouvrir pour chacun.
                   if (resteAPayer(maj) > 0.001) {
