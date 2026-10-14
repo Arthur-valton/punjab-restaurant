@@ -976,6 +976,28 @@ function App() {
     });
     return parts;
   }
+  // Ressort le ticket d'une part a l'identique, sans rien changer a l'encaisse.
+  async function reimprimerPart(cmd, part) {
+    await reprintBill(cmd, part.remise, part.lignes, part.sansDetail, part.nbRepas);
+  }
+  // Remet une part dans ce qui reste a encaisser : erreur de selection, ou
+  // ticket jamais sorti qu'on prefere refaire proprement.
+  function annulerPart(cmd, part) {
+    const paye = { ...dejaPaye(cmd) };
+    for (const { cle, n } of part.cles || []) {
+      paye[cle] = Math.max(0, (paye[cle] || 0) - n);
+      if (!paye[cle]) delete paye[cle];
+    }
+    const maj = { ...cmd, paye, parts: (cmd.parts || []).filter((x) => x.id !== part.id) };
+    payeLocal.current[cmd.id] = paye;
+    setServerOrders((prev) => prev.map((o) => (o.id === cmd.id ? maj : o)));
+    fetchCommandes(ORDERS_API_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", order: maj }),
+    }).catch(() => {});
+    setRemisePour((r) => (r ? { ...r, order: maj, parts: toutLeReste(maj) } : r));
+  }
+
   function resteAPayer(cmd) {
     return (cmd.items || []).reduce((s, i, k) => s + restantDe(cmd, i, k) * i.price, 0);
   }
@@ -1798,6 +1820,28 @@ function App() {
                 </div>
               )}
 
+              {(cmd.parts || []).length > 0 && (
+                <div className="parts-faites">
+                  <div className="parts-faites-titre">Parts déjà encaissées</div>
+                  {(cmd.parts || []).map((pt) => (
+                    <div key={pt.id} className="parts-faites-ligne">
+                      <span className="parts-faites-heure">{pt.heure}</span>
+                      <span className="parts-faites-detail">
+                        {pt.lignes.reduce((n, l) => n + l.qty, 0)} article{pt.lignes.reduce((n, l) => n + l.qty, 0) > 1 ? "s" : ""}
+                        {pt.remise ? " · remise" : ""}
+                      </span>
+                      <span className="parts-faites-total">{pt.total.toFixed(2)} &euro;</span>
+                      <button className="parts-faites-btn" title="Réimprimer ce ticket"
+                        disabled={remisePour.envoi}
+                        onClick={() => reimprimerPart(cmd, pt)}>Réimprimer</button>
+                      <button className="parts-faites-btn annule" title="Remettre cette part à payer"
+                        disabled={remisePour.envoi}
+                        onClick={() => annulerPart(cmd, pt)}>Annuler</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="remise-corps">
                 <div className="remise-choix remise-choix--detail">
                   <button className={`remise-btn ${!remisePour.sansDetail ? "actif" : ""}`}
@@ -1864,7 +1908,19 @@ function App() {
                   }
                   const paye = { ...dejaPaye(cmd) };
                   for (const l of aRegler) if (l.pris > 0) paye[l.cle] = (paye[l.cle] || 0) + l.pris;
-                  const maj = { ...cmd, paye };
+                  // Historique des parts : si l'imprimante bourre, il faut
+                  // pouvoir ressortir exactement le meme ticket plus tard.
+                  const part = {
+                    id: `p${Date.now()}`,
+                    heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+                    lignes: aPayer,
+                    cles: aRegler.filter((l) => l.pris > 0).map((l) => ({ cle: l.cle, n: l.pris })),
+                    remise: montant > 0 ? { type: remisePour.type, valeur: v } : null,
+                    sansDetail: remisePour.sansDetail === true,
+                    nbRepas: remisePour.sansDetail ? repas : null,
+                    total: total - montant,
+                  };
+                  const maj = { ...cmd, paye, parts: [...(cmd.parts || []), part] };
                   payeLocal.current[cmd.id] = paye;
                   setServerOrders((prev) => prev.map((o) => (o.id === cmd.id ? maj : o)));
                   fetchCommandes(ORDERS_API_URL, {

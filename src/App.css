@@ -3592,3 +3592,42 @@ body {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* ---- Parts déjà encaissées : réimpression après un bourrage ---- */
+.parts-faites {
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+.parts-faites-titre {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+.parts-faites-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.8);
+}
+.parts-faites-heure { color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; }
+.parts-faites-detail { flex: 1; color: rgba(255,255,255,0.55); }
+.parts-faites-total { font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.parts-faites-btn {
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.85);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.parts-faites-btn.annule { border-color: rgba(231,76,60,0.5); color: #e8806f; }
+.parts-faites-btn:disabled { opacity: 0.35; }
