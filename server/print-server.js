@@ -255,6 +255,8 @@ app.post("/order/:id/reprint-bill", async (req, res) => {
       clientPhone: order.clientPhone,
       clientPickupTime: order.clientPickupTime,
       remise: b.remise,
+      sansDetail: b.sansDetail === true,
+      nbRepas: b.nbRepas,
     });
     await sendToPrinter(ticket);
     console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`
@@ -488,7 +490,7 @@ function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPh
   return b + CMD.LEFT;
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter, remise }) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter, remise , sansDetail = false, nbRepas}) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -588,7 +590,20 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
   const sortedCats = [...CAT_ORDER.filter(c => seenCats[c]), ...Object.keys(seenCats).filter(c => !CAT_ORDER.includes(c))];
   const groups = sortedCats.map(cat => ({ cat, items: seenCats[cat] }));
 
-  for (const group of groups) {
+  // Addition sans detail : le client veut un justificatif, pas la liste de ce
+  // qu'il a mange. On ne garde que le nombre de repas et le total.
+  const groupesAffiches = (showTotal && sansDetail) ? [] : groups;
+  if (showTotal && sansDetail) {
+    buf += CMD.CENTER + CMD.DOUBLE_ON + CMD.BOLD_ON;
+    // Le nombre de repas est saisi en caisse : un cafe n'est pas un repas,
+    // le compte des articles donnerait un chiffre faux.
+    const n = Number.isFinite(Number(nbRepas)) && Number(nbRepas) > 0 ? Number(nbRepas) : nbArticles;
+    buf += `${n} repas\n`;
+    buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.LEFT;
+    buf += "\n";
+  }
+
+  for (const group of groupesAffiches) {
     // Bande noire de categorie — tickets de production (cuisine / desserts / bar)
     if (!showTotal) buf += bandeNoire(group.cat);
 

@@ -346,7 +346,10 @@ function App() {
   const [groupe, setGroupe] = useState(null);  // prise de commande par service pour toute la table
   const [envoyerApresPause, setEnvoyerApresPause] = useState(false);
   const [imprimerAuto, setImprimerAuto] = useState(false);
-  const pauseRef = useRef(0);  // deux menus en pause ne doivent jamais fusionner
+  const pauseRef = useRef(0);
+  // Verrou synchrone : trois taps rapides partent dans le meme cycle de rendu,
+  // un etat React y serait encore a « false » pour les trois.
+  const envoiRef = useRef(false);  // deux menus en pause ne doivent jamais fusionner
 
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
@@ -944,11 +947,30 @@ function App() {
     setEditingOrderId(null);
   }
 
-  async function reprintBill(cmd, remise) {
+  // Addition partagee : une grande table paie en plusieurs fois, chacun ce
+  // qu'il a pris. On retient ce qui est deja regle pour ne pas le representer.
+  function cleLigne(item, idx) { return item.cartId || `l${idx}`; }
+  function dejaPaye(cmd) { return cmd.paye || {}; }
+  function restantDe(cmd, item, idx) {
+    return item.qty - (dejaPaye(cmd)[cleLigne(item, idx)] || 0);
+  }
+  function toutLeReste(cmd) {
+    const parts = {};
+    (cmd.items || []).forEach((i, k) => {
+      const r = restantDe(cmd, i, k);
+      if (r > 0) parts[cleLigne(i, k)] = r;
+    });
+    return parts;
+  }
+  function resteAPayer(cmd) {
+    return (cmd.items || []).reduce((s, i, k) => s + restantDe(cmd, i, k) * i.price, 0);
+  }
+
+  async function reprintBill(cmd, remise, lignes, sansDetail, nbRepas) {
     // On transmet la commande : le serveur d'impression l'oublie des que la
     // cuisine a termine, alors que l'addition se demande apres.
     const corps = {
-      order: cmd.items,
+      order: lignes || cmd.items,
       tableNumber: cmd.tableNumber,
       orderNum: cmd.orderNum,
       date: cmd.date || new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }),
@@ -958,6 +980,7 @@ function App() {
       clientPhone: cmd.clientPhone,
       clientPickupTime: cmd.clientPickupTime,
       ...(remise ? { remise } : {}),
+      ...(sansDetail ? { sansDetail: true, ...(nbRepas ? { nbRepas } : {}) } : {}),
     };
     try {
       const res = await fetch(`${getPrintUrl()}/order/${encodeURIComponent(cmd.id)}/reprint-bill`, {
@@ -1537,6 +1560,18 @@ function App() {
                       <strong>Table {o.tableNumber}</strong>
                     )}
                     <span className="orders-panel-num">#{o.orderNum}</span>
+                    {(() => {
+                      // Une table deja entamee doit se voir depuis la liste :
+                      // sinon il faut ouvrir l'addition pour s'en apercevoir.
+                      const total = (o.items || []).reduce((s, i) => s + i.price * i.qty, 0);
+                      const reste = resteAPayer(o);
+                      if (reste >= total - 0.001) return null;
+                      return (
+                        <span className="orders-panel-regle">
+                          {reste < 0.001 ? "Réglée" : `Reste ${reste.toFixed(2)} €`}
+                        </span>
+                      );
+                    })()}
                   </div>
                   {(() => {
                     // Un menu laisse en pause doit sauter aux yeux ici :
@@ -1567,7 +1602,7 @@ function App() {
                   </div>
                   <div className="orders-panel-actions">
                     <button className="orders-panel-edit-btn" onClick={() => loadOrderForEdit(o)}>Modifier</button>
-                    <button className="orders-panel-bill-btn" onClick={() => setRemisePour({ order: o, type: "aucune", valeur: "" })}>Addition</button>
+                    <button className="orders-panel-bill-btn" onClick={() => setRemisePour({ order: o, type: "aucune", valeur: "", parts: toutLeReste(o) })}>Addition</button>
                     <button className="orders-panel-close-btn" onClick={() => closeTable(o.id)}>Clôturer</button>
                   </div>
                 </div>
@@ -1668,23 +1703,89 @@ function App() {
       {/* Remise avant impression de l'addition */}
       {remisePour && (() => {
         const cmd = remisePour.order;
-        const total = (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0);
+        const parts = remisePour.parts || {};
+        const lignes = (cmd.items || []).map((i, k) => ({
+          item: i, cle: cleLigne(i, k), restant: restantDe(cmd, i, k), pris: parts[cleLigne(i, k)] || 0,
+        })).filter((l) => l.restant > 0);
+        // Le detail reste visible jusqu'au dernier article : on veut toujours
+        // voir ce qu'on encaisse, meme quand il n'y a plus rien a repartir.
+        const aRegler = lignes;
+        const total = aRegler.reduce((s, l) => s + l.item.price * l.pris, 0);
+        const reste = resteAPayer(cmd);
         const v = parseFloat(String(remisePour.valeur).replace(",", "."));
         const brut = remisePour.type === "aucune" || !Number.isFinite(v) || v <= 0 ? 0
           : remisePour.type === "euro" ? v : total * v / 100;
         const montant = Math.min(Math.max(brut, 0), total);
         const choisir = (type, valeur) => setRemisePour({ ...remisePour, type, valeur });
+        const poser = (cle, n) => setRemisePour({ ...remisePour, parts: { ...parts, [cle]: n } });
+        const toutPris = aRegler.every((l) => l.pris === l.restant);
         return (
           <div className="emporter-modal-overlay" onClick={() => setRemisePour(null)}>
-            <div className="emporter-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="emporter-modal emporter-modal--addition" onClick={(e) => e.stopPropagation()}>
               <div className="remise-entete">
                 <span className="remise-titre">ADDITION</span>
                 <span className="remise-cible">
                   {cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`}
                 </span>
-                <span className="remise-total">{total.toFixed(2)} &euro;</span>
+                <span className="remise-total">{reste.toFixed(2)} &euro;</span>
+                {reste < (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) - 0.001 && (
+                  <span className="remise-deja">reste à régler</span>
+                )}
               </div>
+
+              {lignes.length > 0 && (
+                <div className="part-liste">
+                  <div className="part-entete">
+                    <span>Qui paie quoi ?</span>
+                    <button className="part-tout" onClick={() =>
+                      setRemisePour({ ...remisePour, parts: toutPris ? {} : toutLeReste(cmd) })
+                    }>{toutPris ? "Tout décocher" : "Tout le reste"}</button>
+                  </div>
+                  {lignes.map((l) => (
+                    <div key={l.cle} className={`part-ligne ${l.pris ? "actif" : ""}`}>
+                      <span className="part-nom">
+                        {nomAffiche(l.item)}
+                        {pimentMark(l.item.piment) && <span className="cart-piment">{pimentMark(l.item.piment)}</span>}
+                        <span className="part-prix">{l.item.price.toFixed(2)} &euro;</span>
+                      </span>
+                      <div className="part-compteur">
+                        <button className="part-rond" disabled={l.pris === 0}
+                          onClick={() => poser(l.cle, l.pris - 1)}>−</button>
+                        <span className="part-n">{l.pris}<span className="part-sur">/{l.restant}</span></span>
+                        <button className="part-rond" disabled={l.pris >= l.restant}
+                          onClick={() => poser(l.cle, l.pris + 1)}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="remise-corps">
+                <div className="remise-choix remise-choix--detail">
+                  <button className={`remise-btn ${!remisePour.sansDetail ? "actif" : ""}`}
+                    onClick={() => setRemisePour({ ...remisePour, sansDetail: false })}>Avec détail</button>
+                  <button className={`remise-btn ${remisePour.sansDetail ? "actif" : ""}`}
+                    onClick={() => setRemisePour({
+                      ...remisePour, sansDetail: true,
+                      // Suggestion : les menus de la part. Le serveur corrige
+                      // si la table a pris des plats a la carte.
+                      nbRepas: remisePour.nbRepas ?? Math.max(1, aRegler
+                        .filter((l) => (l.item.category || "") === "Menu")
+                        .reduce((n, l) => n + l.pris, 0)),
+                    })}>Sans détail</button>
+                </div>
+                {remisePour.sansDetail && (
+                  <div className="repas-saisie">
+                    <span className="repas-libelle">Nombre de repas</span>
+                    <div className="part-compteur">
+                      <button className="part-rond" disabled={(remisePour.nbRepas || 1) <= 1}
+                        onClick={() => setRemisePour({ ...remisePour, nbRepas: (remisePour.nbRepas || 1) - 1 })}>−</button>
+                      <span className="part-n">{remisePour.nbRepas || 1}</span>
+                      <button className="part-rond"
+                        onClick={() => setRemisePour({ ...remisePour, nbRepas: (remisePour.nbRepas || 1) + 1 })}>+</button>
+                    </div>
+                  </div>
+                )}
                 <div className="remise-choix">
                   <button className={`remise-btn ${remisePour.type === "aucune" ? "actif" : ""}`}
                     onClick={() => choisir("aucune", "")}>Aucune</button>
@@ -1701,21 +1802,51 @@ function App() {
                   <button className={`remise-unite ${remisePour.type === "euro" ? "actif" : ""}`}
                     onClick={() => choisir("euro", remisePour.valeur)}>&euro;</button>
                 </div>
-                {montant > 0 && (
-                  <div className="remise-resume">
-                    <span>Remise −{montant.toFixed(2)} &euro;</span>
-                    <strong>À payer {(total - montant).toFixed(2)} &euro;</strong>
-                  </div>
-                )}
+                <div className="remise-resume">
+                  {montant > 0 && <span>Remise −{montant.toFixed(2)} &euro;</span>}
+                  <strong>À payer {(total - montant).toFixed(2)} &euro;</strong>
+                </div>
               </div>
+
               <div className="emporter-modal-actions">
                 <button className="emporter-btn-cancel" onClick={() => setRemisePour(null)}>Annuler</button>
-                <button className="emporter-btn-confirm" onClick={async () => {
-                  const ok = await reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null);
+                <button className="emporter-btn-confirm"
+                  disabled={total <= 0 || remisePour.envoi} onClick={async () => {
+                  // Un double-tap sortait deux additions identiques : on verrouille
+                  // le bouton le temps de l'envoi.
+                  if (envoiRef.current) return;
+                  envoiRef.current = true;
+                  setRemisePour({ ...remisePour, envoi: true });
+                  const aPayer = aRegler.filter((l) => l.pris > 0)
+                    .map((l) => ({ ...l.item, qty: l.pris }));
+                  const ok = await reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null,
+                                               aPayer, remisePour.sansDetail === true,
+                                               remisePour.sansDetail ? (remisePour.nbRepas || 1) : null);
+                  envoiRef.current = false;
+                  if (!ok) { setRemisePour((r) => (r ? { ...r, envoi: false } : r)); return; }
+                  // On note ce qui vient d'etre regle : la part suivante ne le
+                  // representera pas.
+                  const paye = { ...dejaPaye(cmd) };
+                  for (const l of aRegler) if (l.pris > 0) paye[l.cle] = (paye[l.cle] || 0) + l.pris;
+                  const maj = { ...cmd, paye };
+                  setServerOrders((prev) => prev.map((o) => (o.id === cmd.id ? maj : o)));
+                  fetchCommandes(ORDERS_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "save", order: maj }),
+                  }).catch(() => {});
+                  // Il reste des parts a encaisser : on garde la fenetre ouverte,
+                  // remise a zero, plutot que d'obliger a la rouvrir pour chacun.
+                  if (resteAPayer(maj) > 0.001) {
+                    setRemisePour({ ...remisePour, order: maj, parts: toutLeReste(maj), envoi: false,
+                                    type: "aucune", valeur: "", sansDetail: false, nbRepas: undefined });
+                    return;
+                  }
                   setRemisePour(null);
-                  // On ne propose la cloture que si l'addition est bien sortie
-                  if (ok) setClotureApres(cmd);
-                }}>Imprimer</button>
+                  setClotureApres(maj);
+                }}>
+                  {remisePour.envoi ? "Impression…" : toutPris ? "Imprimer" : "Imprimer cette part"}
+                </button>
               </div>
             </div>
           </div>
