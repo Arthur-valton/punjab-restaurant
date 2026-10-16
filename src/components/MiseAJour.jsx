@@ -6,10 +6,10 @@ import { RefreshCw } from "lucide-react";
 // JAMAIS d'elle-même : en plein service, c'est le personnel qui choisit le
 // moment (une commande en cours de saisie serait perdue).
 //
-// La version de la page est gravée à la construction (vite.config.js) et
-// publiée dans /version.json. En développement il n'y en a pas : la première
-// réponse sert de référence (démonstration : fichier .version.local).
-const VERSION_PAGE = import.meta.env.DEV ? null : import.meta.env.VITE_PUNJAB_VERSION || null;
+// /version.json porte l'empreinte du code (vite.config.js) : la réponse lue à
+// l'ouverture de la page sert de référence, et seul un nouveau code la fait
+// changer (pas les commandes, qui relancent pourtant une construction Vercel).
+// En développement : fichier .version.local.
 const INTERVALLE = import.meta.env.DEV ? 5000 : 60000;
 
 async function versionEnLigne() {
@@ -23,7 +23,7 @@ export default function MiseAJour({ commandeEnCours }) {
   const [nouvelle, setNouvelle] = useState(false);
 
   useEffect(() => {
-    let reference = VERSION_PAGE;
+    let reference = null;
     let arret = false;
     async function verifier() {
       try {

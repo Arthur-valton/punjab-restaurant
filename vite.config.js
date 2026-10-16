@@ -1,18 +1,22 @@
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Version de la caisse : un numéro par construction (donc par mise en ligne).
-// Il est gravé dans la page et publié dans /version.json : une caisse restée
-// ouverte sur l'ancienne version voit la différence et affiche « Nouvelle mise
-// à jour » (src/components/MiseAJour.jsx). Elle ne recharge jamais seule.
-const VERSION = String(Date.now())
-
+// Version de la caisse : l'empreinte du code construit (les fichiers JS et CSS
+// portent déjà l'empreinte de leur contenu). Elle ne change donc que quand le
+// code change : les commandes enregistrées sur GitHub relancent une
+// construction Vercel, mais le code et la version restent les mêmes.
+// Publiée dans /version.json : une caisse restée ouverte sur l'ancien code
+// affiche « Nouvelle mise à jour » (src/components/MiseAJour.jsx). Elle ne
+// recharge jamais seule.
 function versionCaisse() {
   return {
     name: 'punjab-version',
-    generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version: VERSION }) })
+    generateBundle(_options, bundle) {
+      const code = Object.keys(bundle).filter((f) => /\.(js|css)$/.test(f)).sort().join('|')
+      const version = crypto.createHash('sha1').update(code).digest('hex').slice(0, 12)
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version }) })
     },
     // En développement, /version.json lit le fichier .version.local (ignoré
     // par git) : en changer le contenu simule une mise en ligne.
@@ -31,7 +35,6 @@ function versionCaisse() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), versionCaisse()],
-  define: { 'import.meta.env.VITE_PUNJAB_VERSION': JSON.stringify(VERSION) },
   server: {
     host: '0.0.0.0',
     port: 5173,
