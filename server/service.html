@@ -3,352 +3,260 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUNJAB — Service</title>
+  <title>PUNJAB · Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* ══ DA douce (même DA que la caisse) : gris clair, cartes très arrondies,
+       sans bordure ; couleurs réservées aux états (appel, en cours, prêt, piment).
+       Suit le thème clair / sombre de l'appareil. ══ */
     :root {
-      --bg:        #000;
-      --bg2:       #1c1c1e;
-      --bg3:       #2c2c2e;
-      --bg4:       #3a3a3c;
-      --sep:       rgba(84,84,88,0.55);
-      --label:     #ffffff;
-      --label2:    rgba(235,235,245,0.6);
-      --label3:    rgba(235,235,245,0.3);
-      --green:     #34c759;
-      --orange:    #ff9f0a;
-      --red:       #ff3b30;
-      --blue:      #0a84ff;
+      color-scheme: light dark;
+      --fond: #eeeef0; --carte: #e1e1e4; --carte-2: #d4d4d8; --clair: #f7f7f8;
+      --texte: #1c1c1e; --texte-2: #58585e;
+      --noir: #1c1c1e; --sur-noir: #ffffff;
+      --rouge: #b3261e; --rouge-fond: #f6dcda;
+      --ambre: #7a4f00; --ambre-fond: #f3ead6; --ambre-vif: #e8a317;
+      --vert: #1a6b35; --vert-fond: #dcefe2; --vert-vif: #34c759;
+      --bleu: #1554b3; --bleu-fond: #dbe7fb; --bleu-vif: #1d6fe0;
+      --sur-vif: #1c1c1e;   /* texte sur ambre / vert vifs (≥ 7:1) */
+      --vert-pose: #dcefe2; --sur-vert: #ffffff;   /* section servie / prête, texte sur vert plein */
+      --rouge-plein: #c5221f;   /* allergie : texte blanc dessus à 5,8:1 */
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fond: #111113; --carte: #1e1e21; --carte-2: #34343a; --clair: #29292d;
+        --texte: #f2f2f4; --texte-2: #a4a4aa;
+        --noir: #f2f2f4; --sur-noir: #111113;
+        --rouge: #ff8a80; --rouge-fond: #3a1d1b;
+        --ambre: #f0c46a; --ambre-fond: #2e2717;
+        --vert: #7fd69a; --vert-fond: #17301f;
+        --bleu: #8fb8ff; --bleu-fond: #16243a;
+        --vert-pose: #1c3a26; --sur-vert: #111113;   /* un cran plus clair que la carte */
+        --rouge-plein: #dc3328;   /* texte blanc à 4,6:1, et 3,1:1 au moins sur les fonds sombres */
+      }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      background: var(--bg);
-      color: var(--label);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
+      background: var(--fond); color: var(--texte);
+      font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── */
+    /* ── En-tête ── */
     header {
-      background: rgba(28,28,30,0.85);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid var(--sep);
-      height: 52px;
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 20px; background: var(--fond);
     }
-
-    .header-left { display: flex; flex-direction: column; gap: 1px; }
-
-    header h1 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--label);
-    }
-
-    #counter {
-      font-size: 0.62rem;
-      color: var(--label3);
-      font-weight: 500;
-    }
-
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    header h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; }
+    #counter { font-size: 14px; font-weight: 500; color: var(--texte-2); }
     #status {
-      font-size: 0.68rem;
-      padding: 5px 12px;
-      border-radius: 100px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+      border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap;
     }
-    #status::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    #status.connected    { background: rgba(52,199,89,0.15);  color: var(--green);  }
-    #status.connected::before { background: var(--green); }
-    #status.disconnected { background: rgba(255,59,48,0.12);  color: var(--red);    }
-    #status.disconnected::before { background: var(--red); }
+    #status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+    #status.connected    { background: var(--vert-fond);  color: var(--vert); }
+    #status.connected::before { background: var(--vert); }
+    #status.disconnected { background: var(--rouge-fond); color: var(--rouge); }
+    #status.disconnected::before { background: var(--rouge); }
 
-    /* ── Empty ── */
+    /* ── Aucune commande ── */
     #empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: calc(100vh - 52px);
-      color: rgba(235,235,245,0.15);
-      gap: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    #empty span { font-size: 2.6rem; opacity: 0.35; }
-
-    /* ── Grid commandes ── */
-    #orders {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 12px;
-      padding: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      height: calc(100vh - 80px); color: var(--texte-2); font-size: 18px; font-weight: 500;
     }
 
+    /* ── Grille ── */
+    #orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 4px 16px 20px; }
     @media (min-width: 768px) {
-      #orders {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
-        padding: 20px;
-      }
+      #orders { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 4px 20px 24px; }
     }
 
-    @media (min-width: 1024px) {
-      #orders {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-        padding: 24px;
-      }
-    }
-
-    /* ── Card ── */
+    /* ── Carte d'une commande ── */
     .order-card {
-      background: var(--bg2);
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      background: var(--carte); border-radius: 24px; overflow: hidden;
+      display: flex; flex-direction: column;
       animation: spring-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
-
-    @keyframes spring-in {
-      from { transform: scale(0.92) translateY(-10px); opacity: 0; }
-      to   { transform: scale(1) translateY(0);        opacity: 1; }
-    }
-
-    @keyframes spring-out {
-      to { transform: scale(0.88); opacity: 0; }
-    }
+    @keyframes spring-in { from { transform: scale(0.94) translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes spring-out { to { transform: scale(0.9); opacity: 0; } }
     .order-card.removing { animation: spring-out 0.22s ease forwards; }
 
-    /* ── Card header ── */
-    .card-header {
-      padding: 12px 14px 10px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      border-bottom: 0.5px solid rgba(84,84,88,0.3);
-    }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px 18px 10px; }
+    .table-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .table-label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texte-2); }
+    .table-num { font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+    .order-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
+    .order-num { font-size: 14px; font-weight: 500; color: var(--texte-2); }
 
-    .table-info { display: flex; flex-direction: column; gap: 1px; }
-
-    .table-label {
-      font-size: 0.58rem;
-      color: var(--label3);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-weight: 600;
-    }
-
-    .table-num {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--label);
-      letter-spacing: -1px;
-      line-height: 1;
-    }
-
-    .order-meta { text-align: right; display: flex; flex-direction: column; gap: 3px; }
-
-    .order-num {
-      font-size: 0.65rem;
-      color: var(--label3);
-      font-weight: 500;
-    }
-
-    /* ── Card body ── */
-    .card-body {
-      padding: 8px 10px 10px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    /* ── Section catégorie (même style que KDS) ── */
-    .cat-section {
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--bg3);
-      transition: opacity 0.4s ease;
-    }
-
-    /* Flash vert quand la cuisine a terminé — même style que le bleu KDS */
-    @keyframes pulse-done {
-      0%   { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
-      49%  { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
-      50%  { background: var(--bg3); box-shadow: none; }
-      99%  { background: var(--bg3); box-shadow: none; }
-      100% { background: rgba(52,199,89,0.9); box-shadow: 0 0 0 2px rgba(52,199,89,1), 0 0 24px 6px rgba(52,199,89,0.6); }
-    }
-    .cat-section.done      { animation: pulse-done 0.6s steps(1) infinite; cursor: pointer; }
-    .cat-section.delivered { opacity: 0.22; }
-
-    .cat-header {
-      padding: 6px 11px 5px;
-      border-bottom: 0.5px solid rgba(84,84,88,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .cat-label {
-      font-size: 0.6rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--label3);
-    }
-
-    .cat-status-pill {
-      font-size: 0.6rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 100px;
-    }
-    .cat-status-pill.waiting    { background: rgba(84,84,88,0.2);    color: var(--label3); }
-    .cat-status-pill.called     { background: rgba(10,132,255,0.18); color: var(--blue); }
-    .cat-status-pill.in_progress{ background: rgba(255,159,10,0.18); color: var(--orange); }
-    .cat-status-pill.done       { background: rgba(52,199,89,0.15);  color: var(--green); }
-    .cat-status-pill.delivered  { background: rgba(52,199,89,0.08);  color: rgba(52,199,89,0.5); }
-
-    /* ── Items ── */
-    .cat-items {
-      padding: 7px 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .item-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    /* ── Articles ── */
+    .item-row { display: flex; align-items: flex-start; gap: 10px; }
     .item-qty {
-      background: var(--bg4);
-      color: var(--label2);
-      font-weight: 600;
-      font-size: 0.68rem;
-      padding: 2px 7px;
-      border-radius: 6px;
-      flex-shrink: 0;
+      flex-shrink: 0; min-width: 40px; padding: 3px 8px; border-radius: 10px; text-align: center;
+      background: var(--carte); color: var(--texte); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .item-name { font-size: 20px; font-weight: 500; line-height: 1.25; color: var(--texte); overflow-wrap: anywhere; }
+    .item-detail { display: block; margin-top: 1px; font-size: 16px; font-weight: 500; color: var(--texte-2); }
+    /* piment comme sur le ticket : + / ++ / +++ */
+    .item-piment {
+      display: inline-block; margin-left: 8px; padding: 0 9px; border-radius: 999px; vertical-align: 2px;
+      background: var(--rouge-fond); color: var(--rouge); font-size: 16px; font-weight: 800; letter-spacing: 1px;
+    }
+    /* note de la caisse (« Sans oignon ») : pastille grise sous le plat */
+    .item-note {
+      display: block; width: fit-content; max-width: 100%; margin-top: 5px; padding: 2px 9px; border-radius: 8px;
+      background: var(--carte); color: var(--texte); font-size: 17px; font-weight: 600;
+    }
+    /* allergie : bloc rouge plein, blanc, en majuscules ; on sait à qui porter l'assiette */
+    .item-allergie {
+      display: block; width: fit-content; max-width: 100%; margin-top: 5px; padding: 3px 9px; border-radius: 8px;
+      background: var(--rouge-plein); color: #fff; font-size: 17px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase;
+    }
+    /* en-tête de carte : au moins un plat de la table porte une allergie */
+    .badge-allergie {
+      padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+      background: var(--rouge-plein); color: #fff; font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
     }
 
-    .item-name {
-      font-size: 0.86rem;
-      font-weight: 400;
-      line-height: 1.3;
-      color: var(--label);
+    /* ── À emporter ── */
+    .emporter-card-header { background: var(--ambre-fond); padding-bottom: 14px; margin-bottom: 10px; }
+    .emporter-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ambre); }
+    .emporter-num { font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: var(--ambre); }
+    .emporter-client { margin-top: 4px; font-size: 16px; font-weight: 600; color: var(--texte); }
+    .emporter-phone { font-size: 14px; color: var(--texte-2); }
+    .emporter-retrait {
+      display: inline-block; align-self: flex-start; margin-top: 6px; padding: 4px 12px; border-radius: 999px;
+      background: var(--ambre-vif); color: var(--sur-vif); font-size: 16px; font-weight: 700;
     }
 
-    /* ── Bouton Envoyer (pleine largeur, bas de section) ── */
-    .btn-send {
-      width: 100%;
-      padding: 9px 11px;
-      border: none;
-      border-top: 0.5px solid rgba(84,84,88,0.3);
-      font-family: inherit;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.18s, color 0.18s;
-      text-align: center;
+    /* ── Écran service : boutons de l'en-tête ── */
+    .entete-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-entete {
+      height: 40px; padding: 0 16px; border: none; border-radius: 999px; cursor: pointer;
+      font: inherit; font-size: 15px; font-weight: 600;
     }
+    .btn-commande { background: var(--noir); color: var(--sur-noir); }
+    .btn-rafraichir { width: 40px; padding: 0; background: var(--carte); color: var(--texte); font-size: 18px; }
 
-    .btn-send.waiting    { background: rgba(10,132,255,0.18); color: var(--blue); }
-    .btn-send.waiting:hover   { background: rgba(10,132,255,0.3); }
-    .btn-send.waiting:active  { opacity: 0.7; }
-    .btn-send.called     { background: var(--bg4); color: var(--blue); cursor: default; opacity: 0.6; }
-    .btn-send.in_progress{ background: var(--bg4); color: var(--orange); cursor: default; opacity: 0.6; }
-    .btn-send.done       { background: rgba(52,199,89,0.18); color: var(--green); font-weight: 700; cursor: pointer; }
-    .btn-send.done:hover { background: rgba(52,199,89,0.30); }
-    .btn-send.delivered  { background: var(--bg3); color: rgba(52,199,89,0.4); cursor: default; }
+    /* ── Fenêtre « Nouvelle commande » (la caisse dans l'écran) ── */
+    /* plein écran : la caisse garde sa mise en page tablette (panier à droite) */
+    .modal-commande { position: fixed; inset: 0; z-index: 1000; background: var(--fond); }
+    .modal-panneau { display: flex; flex-direction: column; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: var(--fond); }
+    .modal-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 6px 20px; flex-shrink: 0; }
+    .modal-titre { font-size: 20px; font-weight: 600; }
+    .modal-fermer {
+      display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border: none; border-radius: 999px; cursor: pointer;
+      background: var(--noir); color: var(--sur-noir); font: inherit; font-size: 15px; font-weight: 600;
+    }
+    .modal-panneau iframe { flex: 1; width: 100%; border: none; }
 
-    /* ── Timer catégorie ── */
+    /* ── Sections ── */
+    .card-body { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 10px 10px; }
+    .cat-section { border-radius: 18px; overflow: hidden; background: var(--clair); transition: opacity 0.3s ease; }
+    .cat-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px 4px; }
+    .cat-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texte-2); }
+    .cat-items { display: flex; flex-direction: column; gap: 7px; padding: 4px 14px 12px; }
+    .card-body .item-name { font-size: 17px; }
+    .card-body .item-detail { font-size: 15px; }
+    .card-body .item-qty { font-size: 15px; min-width: 36px; }
+    .card-body .item-note, .card-body .item-allergie { font-size: 15px; }
+
+    /* état de la section */
+    .cat-status-pill { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .cat-status-pill.waiting     { background: var(--carte); color: var(--texte-2); }
+    .cat-status-pill.called      { background: var(--bleu-fond); color: var(--bleu); }
+    .cat-status-pill.in_progress { background: var(--ambre-fond); color: var(--ambre); }
+    .cat-status-pill.done        { background: var(--vert-fond); color: var(--vert); }
+    .cat-status-pill.delivered   { background: var(--carte); color: var(--texte-2); }
     .cat-timer {
-      font-size: 0.6rem;
-      font-weight: 700;
-      color: var(--label2);
-      background: rgba(84,84,88,0.3);
-      padding: 2px 7px;
-      border-radius: 100px;
+      padding: 3px 10px; border-radius: 999px; background: var(--carte); color: var(--texte);
+      font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
     }
-    .cat-timer.ready {
-      background: rgba(52,199,89,0.2);
-      color: var(--green);
+    .cat-timer.ready { background: var(--vert-fond); color: var(--vert); }
+
+    /* prête en cuisine : clignote en vert jusqu'à la livraison */
+    @keyframes pulse-done {
+      0%, 49%, 100% { background: var(--vert-vif); color: var(--sur-vif); }
+      50%, 99%      { background: var(--clair); color: var(--texte); }
     }
+    .cat-section.done { animation: pulse-done 0.6s steps(1) infinite; cursor: pointer; }
+    .cat-section.done .cat-label, .cat-section.done .item-name, .cat-section.done .item-detail { color: inherit; }
+    .cat-section.done .item-qty { background: rgba(127,127,127,0.25); color: inherit; }
+    .cat-section.delivered { opacity: 0.4; }
+
+    /* bouton du bas de section */
+    .btn-send { display: block; width: 100%; padding: 12px; text-align: center; font-size: 16px; font-weight: 600; letter-spacing: 0.01em; }
+    .btn-send.waiting     { background: var(--noir); color: var(--sur-noir); cursor: pointer; }
+    .btn-send.called      { background: var(--bleu-fond); color: var(--bleu); cursor: default; }
+    .btn-send.in_progress { background: var(--ambre-fond); color: var(--ambre); }
+    .btn-send.done        { background: var(--noir); color: var(--sur-noir); font-weight: 700; cursor: pointer; }
+    .btn-send.delivered   { background: transparent; color: var(--vert); cursor: default; }
 
     .btn-delete {
-      width: 100%;
-      margin: 2px 0 0;
-      padding: 9px;
-      background: rgba(255,59,48,0.08);
-      color: rgba(255,59,48,0.5);
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 0.72rem;
-      font-weight: 500;
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      transition: all 0.15s;
+      width: 100%; min-height: 44px; margin-top: 2px; border: none; border-radius: 999px; cursor: pointer;
+      background: transparent; color: var(--rouge); font: inherit; font-size: 15px; font-weight: 600;
     }
-    .btn-delete:hover { background: rgba(255,59,48,0.18); color: var(--red); }
+    .btn-delete:hover { background: var(--rouge-fond); }
 
-    /* ── À EMPORTER ── */
-    .emporter-card-header { background: rgba(255,159,10,0.10); border-bottom: 1px solid rgba(255,159,10,0.3) !important; }
-    .emporter-label { font-size: 0.58rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
-    .emporter-num { font-size: 1.8rem; font-weight: 800; color: var(--orange); letter-spacing: -1px; line-height: 1; }
-    .emporter-client { font-size: 0.75rem; color: var(--label2); font-weight: 600; margin-top: 2px; }
-    .emporter-phone { font-size: 0.68rem; color: var(--label3); margin-top: 1px; }
-    .order-card.emporter-card { border: 1px solid rgba(255,159,10,0.35); }
-    .emporter-all-items { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
-    .emporter-recupere-btn {
-      margin: 4px 12px 12px;
-      background: rgba(52,199,89,0.12);
-      border: 1px solid rgba(52,199,89,0.4);
-      color: var(--green);
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      font-family: inherit;
-      width: calc(100% - 24px);
-    }
+    /* ── À emporter ── */
+    .emporter-all-items { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 18px; background: var(--clair); }
+    .emporter-attente { padding: 4px 14px; font-size: 15px; font-weight: 500; color: var(--texte-2); }
+    .emporter-pret-ligne { padding: 2px 4px; }
     .emporter-pret-badge {
-      display: inline-block;
-      background: rgba(52,199,89,0.18);
-      color: var(--green);
-      border-radius: 100px;
-      padding: 3px 10px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
+      display: inline-block; padding: 6px 14px; border-radius: 999px;
+      background: var(--vert-vif); color: var(--sur-vif); font-size: 15px; font-weight: 700;
+    }
+    .emporter-recupere-btn {
+      width: 100%; min-height: 52px; margin-top: 4px; border: none; border-radius: 999px; cursor: pointer;
+      background: var(--noir); color: var(--sur-noir); font: inherit; font-size: 17px; font-weight: 700;
+    }
+    /* boutons d'en-tête à 44 px */
+    .btn-entete { height: 44px; flex-shrink: 0; white-space: nowrap; }
+    .btn-rafraichir { width: 44px; }
+    /* section livrée : fond vert pâle, pastille et bandeau vert plein « Livré ✓ »,
+       visible en clair comme en sombre (fixe, alors que « Prêt » clignote) */
+    .cat-section.delivered { opacity: 1; background: var(--vert-pose); }
+    .cat-section.delivered .cat-label { color: var(--vert); }
+    .cat-section.delivered .item-name, .cat-section.delivered .item-detail { color: var(--texte-2); }
+    .cat-section.delivered .item-qty { background: transparent; color: var(--texte-2); }
+    /* la note s'efface avec le plat servi ; l'allergie reste en rouge plein */
+    .cat-section.delivered .item-note, .emporter-remis .item-note { color: var(--texte-2); }
+    .cat-status-pill.delivered { background: var(--vert); color: var(--sur-vert); }
+    .btn-send.delivered { background: var(--vert); color: var(--sur-vert); font-weight: 700; }
+    .emporter-remis { background: var(--vert-pose); }
+    .emporter-remis .item-name, .emporter-remis .item-detail { color: var(--texte-2); }
+    .emporter-remis .item-qty { background: transparent; color: var(--texte-2); }
+    .emporter-pret-ligne .cat-status-pill.delivered { display: inline-block; padding: 6px 14px; font-size: 15px; font-weight: 700; }
+    /* téléphone : l'en-tête tient sur une ligne, « Connecté » devient un point */
+    @media (max-width: 480px) {
+      header { padding: 12px 16px; gap: 8px; }
+      header h1 { font-size: 18px; }
+      #counter { white-space: nowrap; }
+      .btn-entete { padding: 0 14px; }
+      .btn-rafraichir { padding: 0; }
+      #status { font-size: 0; gap: 0; padding: 0; width: 44px; height: 44px; justify-content: center; }
+      #status::before { width: 12px; height: 12px; }
+    }
+    /* appui refusé hors connexion : la pastille « Déconnecté » se signale */
+    #status.secoue { animation: secoue 0.4s ease; }
+    @keyframes secoue { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    /* Nouvelle mise à jour : bandeau en bas, il reste jusqu'à ce qu'on touche
+       « Recharger » (jamais de rechargement automatique en plein service) */
+    .maj-bandeau {
+      position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 500;
+      display: flex; align-items: center; gap: 14px; width: max-content; max-width: calc(100vw - 32px);
+      padding: 10px 10px 10px 20px; border-radius: 999px;
+      background: var(--noir); color: var(--sur-noir); box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-size: 17px; font-weight: 700;
+    }
+    .maj-bandeau[hidden] { display: none; }
+    .maj-bandeau button {
+      min-height: 44px; padding: 0 20px; border: none; border-radius: 999px; cursor: pointer;
+      background: var(--sur-noir); color: var(--noir); font: inherit; font-size: 17px; font-weight: 700;
     }
   </style>
 </head>
@@ -359,26 +267,26 @@
     <h1>SERVICE</h1>
     <div id="counter">0 table(s)</div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <button onclick="openOrderApp()" style="background:rgba(10,132,255,0.18);border:none;color:#0a84ff;font-size:0.72rem;font-weight:600;padding:0 12px;height:32px;border-radius:100px;cursor:pointer;" title="Nouvelle commande">+ Commande</button>
-    <button onclick="location.reload()" style="background:rgba(84,84,88,0.2);border:none;color:rgba(235,235,245,0.5);font-size:1rem;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Rafraîchir">↺</button>
+  <div class="entete-actions">
+    <button class="btn-entete btn-commande" onclick="openOrderApp()" title="Nouvelle commande">+ Commande</button>
+    <button class="btn-entete btn-rafraichir" onclick="location.reload()" title="Rafraîchir" aria-label="Rafraîchir">↺</button>
     <div id="status" class="disconnected">Déconnecté</div>
   </div>
 </header>
 
 <!-- Popup app de commande -->
-<div id="order-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;">
-  <div style="background:#1c1c1e;border-radius:20px;overflow:hidden;width:min(420px,94vw);height:min(780px,92vh);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.6);">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:0.5px solid rgba(84,84,88,0.4);">
-      <span style="font-size:0.9rem;font-weight:700;color:#fff;">Nouvelle commande</span>
-      <button onclick="closeOrderApp()" style="background:rgba(84,84,88,0.3);border:none;color:rgba(235,235,245,0.7);font-size:1.1rem;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+<div id="order-modal" class="modal-commande" style="display:none;">
+  <div class="modal-panneau">
+    <div class="modal-entete">
+      <span class="modal-titre">Nouvelle commande</span>
+      <button class="modal-fermer" onclick="closeOrderApp()">✕ Fermer</button>
     </div>
-    <iframe id="order-iframe" src="https://punjab-restaurant.vercel.app?autoLogin=1" style="flex:1;border:none;width:100%;"></iframe>
+    <iframe id="order-iframe" title="Caisse"></iframe>
   </div>
 </div>
 
 <div id="empty">
-  <span>🍽️</span>
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
   Aucune commande en cours
 </div>
 
@@ -395,6 +303,15 @@
   let ws;
   let pingInterval;
 
+  // La caisse affichée par « + Commande » : la vraie en production, la caisse
+  // d'essai (même machine, port 5173) quand le serveur d'impression tourne en
+  // essai — sinon un test local passerait de vraies commandes
+  const CAISSE_PROD = "https://punjab-restaurant.vercel.app";
+  fetch("/mode").then((r) => r.json()).catch(() => ({ essai: false })).then((m) => {
+    document.getElementById("order-iframe").src = m && m.essai
+      ? `http://${location.hostname}:5173/` : CAISSE_PROD;
+  });
+
   function openOrderApp() {
     const modal = document.getElementById("order-modal");
     modal.style.display = "flex";
@@ -402,12 +319,17 @@
   function closeOrderApp() {
     document.getElementById("order-modal").style.display = "none";
   }
+  // Échap ferme aussi la fenêtre
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("order-modal").style.display !== "none") closeOrderApp();
+  });
   // Fermer en cliquant en dehors
   document.getElementById("order-modal").addEventListener("click", function(e) {
     if (e.target === this) closeOrderApp();
   });
 
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Boissons", "Menu Midi"];
+  // Même ordre que les tickets, l'écran cuisine et le serveur
+  const CAT_ORDER = ["Naans", "Entrees", "Plats", "Desserts", "Boissons", "Menu Midi"];
   const CAT_LABELS = { Entrees: "Entrées", Plats: "Plats", Naans: "Naans", Desserts: "Desserts", Boissons: "Boissons", "Menu Midi": "Menu Midi" };
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
 
@@ -425,6 +347,42 @@
   function normName(s) {
     return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0153/g, "oe").replace(/\u0152/g, "Oe").replace(/\u00e6/g, "ae").replace(/\u00c6/g, "Ae").toLowerCase();
   }
+  // Piment comme sur le ticket : 2 = +, 3 = ++, 4 = +++ (1 = sans, rien)
+  const PIMENT_MARKS = { 2: "+", 3: "++", 4: "+++" };
+  function pimentHtml(level) {
+    const m = PIMENT_MARKS[level];
+    return m ? `<span class="item-piment" title="Piment">${m}</span>` : "";
+  }
+
+  // Les textes des commandes (noms, notes, allergies, client) sont tapés à la
+  // caisse : échappés avant d'entrer dans le HTML de l'écran
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  // Note et allergie d'un article ou d'un choix de menu (absentes quand vides,
+  // comme dans le panier)
+  function noteEtAllergie(src) {
+    const r = {};
+    if (src && src.note) r.note = src.note;
+    if (src && src.allergie) r.allergie = src.allergie;
+    return r;
+  }
+  // Deux articles ne se regroupent que s'ils sont pareils pour la cuisine :
+  // même nom, même piment, même note, même allergie
+  function cleArticle(nom, a) {
+    const n = (s) => normName(s).replace(/\s+/g, " ").trim();
+    return [n(nom), a.piment || 0, n(a.note), n(a.allergie)].join("|");
+  }
+  // Une ligne d'article, la même partout : quantité, nom, piment, précision,
+  // puis la note (pastille grise) et l'allergie (bloc rouge plein)
+  function ligneArticle(i) {
+    return `<div class="item-row"><span class="item-qty">${esc(i.qty)}×</span><span class="item-name">${esc(i.name)}${pimentHtml(i.piment)}`
+      + (i.detail ? `<span class="item-detail">${esc(i.detail)}</span>` : "")
+      + (i.note ? `<span class="item-note">${esc(i.note)}</span>` : "")
+      + (i.allergie ? `<span class="item-allergie">⚠&#xFE0E; Allergie ${esc(i.allergie)}</span>` : "")
+      + `</span></div>`;
+  }
+  const BADGE_ALLERGIE = `<span class="badge-allergie">⚠&#xFE0E; ALLERGIE</span>`;
   const STATUS_LABELS = { waiting: "En attente", called: "Demandé…", in_progress: "En cours", done: "Prêt ✓", delivered: "Livré ✓" };
   const BTN_LABELS   = { waiting: "Appeler cuisine", called: "Demandé…", in_progress: "En cours…", done: "✓ Confirmer livraison", delivered: "Livré ✓" };
 
@@ -433,8 +391,10 @@
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
+      verifierVersion();
       statusEl.textContent = "Connecté";
       statusEl.className = "connected";
+      statusEl.title = "Connecté"; statusEl.setAttribute("aria-label", "Connecté");
       clearInterval(pingInterval);
       pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -449,6 +409,7 @@
     ws.onclose = () => {
       statusEl.textContent = "Déconnecté";
       statusEl.className = "disconnected";
+      statusEl.title = "Déconnecté"; statusEl.setAttribute("aria-label", "Déconnecté");
       clearInterval(pingInterval);
       setTimeout(connect, 1000);
     };
@@ -458,33 +419,57 @@
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        if (msg.type === "new_order")    addOrder(msg.order);
-        if (msg.type === "update_order") { removeOrder(msg.order.id); addOrder(msg.order); }
+        // une commande déjà affichée (renvoyée à la reconnexion, ou modifiée)
+        // est refaite à sa place au lieu d'être ignorée
+        if (msg.type === "new_order")    remplacerCommande(msg.order, false);
+        if (msg.type === "update_order") remplacerCommande(msg.order, true);
         if (msg.type === "order_ready")  removeOrder(msg.orderId);
         if (msg.type === "cat_status")   updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
+        // fin de l'envoi complet du serveur : ce qu'il ne connaît plus a été
+        // terminé ou supprimé pendant une coupure
+        if (msg.type === "etat_complet") {
+          const garder = new Set(msg.ids || []);
+          for (const id of [...orders.keys()]) if (!garder.has(id)) removeOrder(id);
+        }
       } catch (err) {
         console.error("WS message error:", err.message);
       }
     };
   }
 
-  const CAT_NO_KITCHEN = ["Boissons"];
+  // Boissons, vins, apéritifs, bières… : préparés par le bar, pas par la cuisine
+  const CAT_NO_KITCHEN = ["Boissons", "Vins", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"];
+
+  // Envoi au serveur. Hors connexion, l'appui est refusé et la pastille
+  // « Déconnecté » se signale, au lieu d'un appui perdu en silence.
+  function envoyer(msg) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      statusEl.classList.remove("secoue");
+      void statusEl.offsetWidth;
+      statusEl.classList.add("secoue");
+      return false;
+    }
+    ws.send(JSON.stringify(msg));
+    return true;
+  }
 
   function sendServiceCall(orderId, catName) {
     if (CAT_NO_KITCHEN.includes(catName)) {
       // Boissons : passe directement en in_progress (bar gère sans cuisine)
-      ws.send(JSON.stringify({ type: "cat_in_progress", orderId, catName }));
+      envoyer({ type: "cat_in_progress", orderId, catName });
     } else {
-      ws.send(JSON.stringify({ type: "service_call", orderId, catName }));
+      envoyer({ type: "service_call", orderId, catName });
     }
   }
 
+  // « Marquer servi » : le serveur a servi les boissons lui-même, c'est livré
+  // (avant, la section repassait « prête » et attendait une 2e confirmation)
   function markBoissonsReady(orderId, catName) {
-    ws.send(JSON.stringify({ type: "cat_ready", orderId, catName }));
+    markDelivered(orderId, catName);
   }
 
   function markDelivered(orderId, catName) {
-    ws.send(JSON.stringify({ type: "cat_delivered", orderId, catName }));
+    if (!envoyer({ type: "cat_delivered", orderId, catName })) return;
     updateCatStatus(orderId, catName, "delivered"); // mise à jour locale immédiate (l'order peut déjà être supprimé côté serveur)
   }
 
@@ -495,35 +480,46 @@
     } catch {}
   }
 
+  // Éléments d'une section (avec expansion des formules + agrégation)
+  function articlesDeSection(order, cat) {
+    const catItemsMap = {};
+    // Sections calculees par le serveur (memes noms que catStatus) quand la
+    // commande en porte ; sinon l'ancien calcul pour les commandes deja ouvertes.
+    // La note et l'allergie sont recopiées : sans elles, la salle ne voit rien.
+    const groupe = (order.groupes || []).find((g) => g.cat === cat);
+    if (groupe) {
+      groupe.items.forEach((i, n) => {
+        catItemsMap[n] = { name: i.name, detail: i.detail || "", qty: i.qty, piment: i.piment || null, ...noteEtAllergie(i) };
+      });
+    }
+    for (const i of (order.groupes ? [] : (order.items || []))) {
+      if (i.formulaChoices && i.formulaChoices.length > 0) {
+        for (const choice of i.formulaChoices) {
+          const choiceCat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
+          if (choiceCat !== cat) continue;
+          const key = cleArticle(choice.itemName, choice);
+          if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
+          else catItemsMap[key] = { name: choice.itemName, qty: i.qty, piment: choice.piment || null, ...noteEtAllergie(choice) };
+        }
+      } else {
+        // « poste » : section du ticket choisie dans l'admin pour la categorie
+        const itemCat = i.poste || CAT_MERGE[i.category] || i.category;
+        if (itemCat !== cat) continue;
+        const key = cleArticle(i.name, i);
+        if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
+        else catItemsMap[key] = { name: i.name, qty: i.qty, piment: i.piment || null, ...noteEtAllergie(i) };
+      }
+    }
+    return Object.values(catItemsMap);
+  }
+
   function buildCatSection(order, cat, status) {
     const label    = CAT_LABELS[cat] || cat;
     const catKey   = cat.replace(/\s/g, '_');
     const oid      = order.id;
     const noKitchen = CAT_NO_KITCHEN.includes(cat);
 
-    // Éléments de la catégorie (avec expansion des formules + agrégation)
-    const catItemsMap = {};
-    for (const i of (order.items || [])) {
-      if (i.formulaChoices && i.formulaChoices.length > 0) {
-        for (const choice of i.formulaChoices) {
-          const choiceCat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
-          if (choiceCat !== cat) continue;
-          const key = normName(choice.itemName) + "|" + (choice.piment || 0);
-          if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
-          else catItemsMap[key] = { name: choice.itemName, qty: i.qty, piment: choice.piment || null };
-        }
-      } else {
-        const itemCat = CAT_MERGE[i.category] || i.category;
-        if (itemCat !== cat) continue;
-        const key = normName(i.name) + "|" + (i.piment || 0);
-        if (catItemsMap[key]) catItemsMap[key].qty += i.qty;
-        else catItemsMap[key] = { name: i.name, qty: i.qty, piment: i.piment || null };
-      }
-    }
-    const catItems = Object.values(catItemsMap);
-    const itemsHtml = catItems.map(i =>
-      `<div class="item-row"><span class="item-qty">${i.qty}×</span><span class="item-name">${i.name}</span></div>`
-    ).join("");
+    const itemsHtml = articlesDeSection(order, cat).map(ligneArticle).join("");
 
     // Onclick sur la section entière
     let onclickAttr = "";
@@ -552,7 +548,7 @@
 
     return `<div class="cat-section ${sectionClass}" id="cat-row-${oid}-${catKey}" ${onclickAttr}>
         <div class="cat-header">
-          <span class="cat-label">${label}</span>
+          <span class="cat-label">${esc(label)}</span>
           <div style="display:flex;align-items:center;gap:5px;">
             ${showCallTimer  ? `<span class="cat-timer" id="svc-cat-timer-${oid}-${catKey}">0s</span>` : ""}
             ${showReadyTimer ? `<span class="cat-timer ready" id="svc-ready-timer-${oid}-${catKey}">0s</span>` : ""}
@@ -560,28 +556,33 @@
           </div>
         </div>
         <div class="cat-items">${itemsHtml}</div>
-        <div class="btn-send ${status}">${btnLabel}</div>
+        <div class="btn-send ${noKitchen && status === "in_progress" ? "waiting" : status}">${btnLabel}</div>
       </div>`;
   }
 
   function buildCatRows(order) {
     const catStatus = order.catStatus || {};
     const cats = Object.keys(catStatus);
-    const sorted = [...CAT_ORDER.filter(c => cats.includes(c)), ...cats.filter(c => !CAT_ORDER.includes(c))];
+    const ordre = order.groupes ? order.groupes.map((g) => g.cat) : CAT_ORDER;
+    const sorted = [...ordre.filter(c => cats.includes(c)), ...cats.filter(c => !ordre.includes(c))];
     return sorted.map(cat => buildCatSection(order, cat, catStatus[cat] || "waiting")).join("");
   }
 
   function buildEmporterItems(order) {
+    if (order.groupes) return order.groupes.flatMap((g) => g.items);
+    // (même nom mais autre piment, autre note ou autre allergie : deux lignes)
     const flat = {};
     for (const i of (order.items || [])) {
       if (i.formulaChoices && i.formulaChoices.length > 0) {
         for (const c of i.formulaChoices) {
-          if (flat[c.itemName]) flat[c.itemName].qty += i.qty;
-          else flat[c.itemName] = { name: c.itemName, qty: i.qty };
+          const k = cleArticle(c.itemName, c);
+          if (flat[k]) flat[k].qty += i.qty;
+          else flat[k] = { name: c.itemName, qty: i.qty, piment: c.piment || null, ...noteEtAllergie(c) };
         }
       } else {
-        if (flat[i.name]) flat[i.name].qty += i.qty;
-        else flat[i.name] = { name: i.name, qty: i.qty };
+        const k = cleArticle(i.name, i);
+        if (flat[k]) flat[k].qty += i.qty;
+        else flat[k] = { name: i.name, qty: i.qty, piment: i.piment || null, ...noteEtAllergie(i) };
       }
     }
     return Object.values(flat);
@@ -589,47 +590,56 @@
 
   function buildEmporterSection(order) {
     const status = (order.catStatus || {})["A emporter"] || "waiting";
-    const isDone = status === "done" || status === "delivered";
+    const isDone = status === "done";
     const items = buildEmporterItems(order);
-    const itemsHtml = items.map(i =>
-      `<div class="item-row"><span class="item-qty">${i.qty}×</span><span class="item-name">${i.name}</span></div>`
-    ).join("");
+    const itemsHtml = items.map(ligneArticle).join("");
+    if (status === "delivered") {
+      return `<div class="emporter-all-items emporter-remis">${itemsHtml}</div>
+        <div class="emporter-pret-ligne"><span class="cat-status-pill delivered">Remis au client ✓</span></div>`;
+    }
     if (isDone) {
       return `<div class="emporter-all-items">${itemsHtml}</div>
-        <div style="padding:0 12px 12px;"><span class="emporter-pret-badge">✓ PRÊT — À REMETTRE AU CLIENT</span></div>
+        <div class="emporter-pret-ligne"><span class="emporter-pret-badge">✓ Prêt, à remettre au client</span></div>
         <button class="emporter-recupere-btn" onclick="markEmporterRecupere('${order.id}')">Remis au client ✓</button>`;
     }
     return `<div class="emporter-all-items">${itemsHtml}</div>
-      <div style="padding:8px 12px;color:rgba(235,235,245,0.3);font-size:0.75rem;">En attente cuisine…</div>`;
+      <div class="emporter-attente">En attente cuisine…</div>`;
   }
 
   function markEmporterRecupere(orderId) {
     markDelivered(orderId, "A emporter");
   }
 
-  function addOrder(order) {
+  function addOrder(order, place = null, anime = true) {
     if (orders.has(order.id)) return;
     const isEmporter = order.orderType === "emporter";
     const card = document.createElement("div");
     card.className = `order-card${isEmporter ? " emporter-card" : ""}`;
     card.id = `order-${order.id}`;
+    if (!anime) card.style.animation = "none";
     const headerInfo = isEmporter
       ? `<div class="table-info">
           <div class="emporter-label">À EMPORTER</div>
-          <div class="emporter-num">#${order.emporterNum || order.tableNumber}</div>
-          ${order.clientName ? `<div class="emporter-client">${order.clientName}</div>` : ""}
-          ${order.clientPhone ? `<div class="emporter-phone">${order.clientPhone}</div>` : ""}
-          ${order.clientPickupTime ? `<div class="emporter-phone" style="color:var(--orange);font-weight:700;">⏰ ${order.clientPickupTime}</div>` : ""}
+          <div class="emporter-num">#${esc(order.emporterNum || order.tableNumber)}</div>
+          ${order.clientName ? `<div class="emporter-client">${esc(order.clientName)}</div>` : ""}
+          ${order.clientPhone ? `<div class="emporter-phone">${esc(order.clientPhone)}</div>` : ""}
+          ${order.clientPickupTime ? `<div class="emporter-retrait">Retrait ${esc(order.clientPickupTime)}</div>` : ""}
         </div>`
       : `<div class="table-info">
           <div class="table-label">Table</div>
-          <div class="table-num">${order.tableNumber}</div>
+          <div class="table-num">${esc(order.tableNumber)}</div>
         </div>`;
+    // un plat montré sur la carte porte une allergie : mêmes articles que ceux
+    // affichés (sections de catStatus, ou bloc à emporter)
+    const montres = isEmporter ? buildEmporterItems(order)
+      : Object.keys(order.catStatus || {}).flatMap((cat) => articlesDeSection(order, cat));
+    const allergie = montres.some((i) => i.allergie);
     card.innerHTML = `
       <div class="card-header${isEmporter ? " emporter-card-header" : ""}">
         ${headerInfo}
         <div class="order-meta">
-          <div class="order-num">#${order.orderNum}</div>
+          ${allergie ? BADGE_ALLERGIE : ""}
+          <div class="order-num">#${esc(order.orderNum)}</div>
         </div>
       </div>
       <div class="card-body" id="body-${order.id}">
@@ -637,7 +647,9 @@
         <button class="btn-delete" onclick="deleteOrder('${order.id}')">Supprimer la commande</button>
       </div>
     `;
-    ordersEl.prepend(card);
+    // une table modifiée garde sa place dans la grille
+    if (place) place.replaceWith(card);
+    else ordersEl.prepend(card);
 
     const catStartTimes = {};
     const catReadyTimes = {};
@@ -668,6 +680,22 @@
     const interval = setInterval(tickSvc, 1000);
 
     orders.set(order.id, { ...order, _catStartTimes: catStartTimes, _catReadyTimes: catReadyTimes, _interval: interval });
+    updateCounter();
+  }
+
+  // Commande renvoyée par le serveur (modification, ou envoi complet à la
+  // reconnexion) : la carte est refaite à la même place
+  function remplacerCommande(order, anime) {
+    const ancienne = orders.get(order.id);
+    if (!ancienne) { addOrder(order); return; }
+    if (ancienne._interval) clearInterval(ancienne._interval);
+    orders.delete(order.id);
+    const place = document.getElementById(`order-${order.id}`);
+    if (place) {
+      place.removeAttribute("id");
+      place.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+    }
+    addOrder(order, place, anime);
     updateCounter();
   }
 
@@ -711,9 +739,7 @@
         const newSection = buildEmporterSection(order);
         // Retirer tout sauf le bouton supprimer
         while (body.firstChild && body.firstChild !== deleteBtn) body.removeChild(body.firstChild);
-        const tmp = document.createElement("div");
-        tmp.innerHTML = newSection;
-        body.insertBefore(tmp, deleteBtn);
+        deleteBtn.insertAdjacentHTML("beforebegin", newSection);
       }
       return;
     }
@@ -733,6 +759,10 @@
     if (entry && entry._interval) clearInterval(entry._interval);
     const card = document.getElementById(`order-${orderId}`);
     if (card) {
+      // la carte qui part en fondu lâche ses id : une commande modifiée
+      // (retirer puis remettre) ne doit pas viser l'ancienne carte
+      card.removeAttribute("id");
+      card.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
       card.classList.add("removing");
       setTimeout(() => card.remove(), 250);
     }
@@ -748,7 +778,29 @@
   }
 
   updateCounter();
+  // ── Nouvelle mise à jour ──
+  // Le serveur d'impression donne sa version (GET /version). Si elle change
+  // pendant que l'écran est ouvert, le bandeau s'affiche ; seul un appui sur
+  // « Recharger » recharge la page, jamais l'écran tout seul.
+  let versionEcran = null;
+  async function verifierVersion() {
+    try {
+      const r = await fetch(`/version?t=${Date.now()}`, { cache: "no-store" });
+      if (!r.ok) return;
+      const { version } = await r.json();
+      if (!version) return;
+      if (versionEcran === null) versionEcran = version;
+      else if (version !== versionEcran) document.getElementById("maj-bandeau").hidden = false;
+    } catch { /* serveur injoignable : on réessaiera */ }
+  }
+  verifierVersion();
+  setInterval(verifierVersion, 20000);
+
   connect();
 </script>
+  <div id="maj-bandeau" class="maj-bandeau" role="status" aria-live="polite" hidden>
+    <span>Nouvelle mise à jour</span>
+    <button type="button" onclick="location.reload()">Recharger</button>
+  </div>
 </body>
 </html>

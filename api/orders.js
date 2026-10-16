@@ -1,6 +1,10 @@
 const OWNER = "Arthur-valton";
 const REPO = "punjab-restaurant";
-const PATH = "public/active-orders-live.json";
+// Les commandes (noms, téléphones, allergies) ne sont plus dans public/ :
+// le site ne les sert plus à qui connaît l'adresse. L'ancien fichier n'est
+// relu que tant que le nouveau n'existe pas encore (passage sans perte).
+const PATH = "data/active-orders-live.json";
+const ANCIEN_PATH = "public/active-orders-live.json";
 
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -9,10 +13,12 @@ function setCors(res) {
   res.setHeader("Cache-Control", "no-store");
 }
 
-async function readOrders(token) {
-  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`, {
+async function readOrders(token, chemin = PATH) {
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${chemin}`, {
     headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" },
   });
+  // nouveau fichier pas encore créé : on part de l'ancien (sha null = création)
+  if (r.status === 404 && chemin === PATH) return { ...(await readOrders(token, ANCIEN_PATH)), sha: null };
   if (r.status === 404) return { orders: [], sha: null };
   if (!r.ok) throw new Error(`GitHub GET ${r.status}`);
   const file = await r.json();

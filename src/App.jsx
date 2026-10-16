@@ -2,8 +2,42 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import defaultMenu from "./data/menu";
 import Ticket from "./components/Ticket";
 import MenuSettings from "./components/MenuSettings";
+import NoteArticle from "./components/NoteArticle";
+import MiseAJour from "./components/MiseAJour";
+import { posterArticles } from "./components/postes";
+import { aUneNote, ligneANote, sansNote, sansNotes, signatureChoix, ligneNotee, choixCibles, allergieDeLigne,
+         texteAllergie, resumeNote, avecAllergieDuMenu, allergenesDeclares } from "./components/notes";
+import { getSubcatColor } from "./components/couleurs";
 import PasswordGate, { isAppUnlocked, unlockApp, getDefaultPasswords } from "./components/PasswordGate";
+import { Settings, Plus, Minus, X, Trash2, ShoppingBasket, Pause, ChevronUp, ChevronDown, ArrowLeft,
+         Check, UtensilsCrossed, ShoppingBag, Clock, Users, Delete, Flame, Printer, CookingPot, IceCreamCone,
+         CupSoda, ReceiptText, Pencil, MessageSquarePlus, MessageSquareText, TriangleAlert } from "lucide-react";
 import "./App.css";
+
+// Ce que la cuisine prépare, sans tenir compte de l'ordre du panier ni de la
+// forme des objets (mêmes champs que cleArticle côté serveur). La note et
+// l'allergie n'entrent que si la ligne en porte : sans note, rien ne change.
+function signatureArticles(items) {
+  return JSON.stringify((items || []).map((i) => JSON.stringify([i.category, i.poste || null, i.name, i.qty,
+    i.piment || null, i.formulaChoices || null, ...(aUneNote(i) ? [i.note || null, i.allergie || null] : [])])).sort());
+}
+// Une modification enregistrée mais pas encore imprimée (la cuisine ne l'a pas)
+function modifNonEnvoyee(o) {
+  const p = o.imprime;
+  if (!p) return false;
+  if (signatureArticles(p.items) !== signatureArticles(o.items)) return true;
+  if (String(p.tableNumber ?? "") !== String(o.tableNumber ?? "")) return true;
+  return o.orderType === "emporter"
+    && ["clientName", "clientPhone", "clientPickupTime"].some((k) => (p[k] || "") !== (o[k] || ""));
+}
+
+// Date telle qu'imprimée sur les tickets (« 15/10/2026 22:30 »)
+function dateTicket(d = new Date()) {
+  return `${d.toLocaleDateString("fr-FR")} ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+// Icônes de la caisse : même trait que l'admin
+const ICO = { size: 18, strokeWidth: 1.8, "aria-hidden": "true" };
 
 const GET_MENU_URL = "https://punjab-restaurant.vercel.app/api/get-menu";
 const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
@@ -11,8 +45,12 @@ const ORDERS_API_URL = "https://punjab-restaurant.vercel.app/api/orders";
 // En developpement, l'app parle a la MEME base de commandes que la caisse du
 // restaurant : valider y creait une vraie commande. On isole donc les essais
 // dans le navigateur, et le serveur d'impression local tourne en mode essai.
-const MODE_ESSAI = ["localhost", "127.0.0.1"].includes(window.location.hostname)
-  || window.location.hostname.startsWith("192.168.");
+// Vrai des que l'app tourne sur le serveur de developpement, quelle que soit
+// l'adresse utilisee pour l'ouvrir (localhost, IP Tailscale, nom .local...).
+// Se fier au nom de la machine laissait passer ces adresses-la, et l'admin
+// local ecrivait alors la carte de production. Le build de production, lui,
+// n'est jamais en essai.
+const MODE_ESSAI = import.meta.env.DEV === true;
 const CLE_COMMANDES_ESSAI = "punjab_commandes_essai";
 
 function lireCommandesEssai() {
@@ -33,7 +71,7 @@ function fetchCommandes(url, options) {
     const { action, order } = JSON.parse(options.body || "{}");
     if (action === "save") {
       const k = liste.findIndex((o) => o.id === order.id);
-      liste = k < 0 ? [...liste, order] : liste.map((o, n) => (n === k ? { ...o, ...order } : o));
+      liste = k < 0 ? [...liste, order] : liste.map((o, n) => (n === k ? order : o));
     } else if (action === "delete") {
       liste = liste.filter((o) => o.id !== order.id);
     }
@@ -44,7 +82,9 @@ function fetchCommandes(url, options) {
 
 function getPrintUrl() {
   const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
+  // En essai (ouvert par l'IP Tailscale ou un nom .local aussi), jamais
+  // l'imprimante du restaurant : le serveur d'essai du Mac.
+  if (MODE_ESSAI || host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
     return `http://${host}:3001`;
   }
   const saved = localStorage.getItem("punjab_print_url");
@@ -54,7 +94,7 @@ function getPrintUrl() {
 
 // Niveaux de piment : 1 = recette normale (rien d'affiche), puis + / ++ / +++
 const PIMENT_LEVELS = [
-  { level: 1, label: "Sans piment", emoji: "—" },
+  { level: 1, label: "Sans piment", emoji: "0" },
   { level: 2, label: "Doux",        emoji: "+" },
   { level: 3, label: "Moyen",       emoji: "++" },
   { level: 4, label: "Fort",        emoji: "+++" },
@@ -200,73 +240,75 @@ function prixDepart(item) {
 // Un choix de formule peut remplacer le nom du produit : le bouton
 // s'appelle "Sirop à l'eau", le choix "Sirop à la menthe", et la ligne
 // affichée devient "Sirop à la menthe".
+// Si ce choix a lui-même été remplacé par un détail (« Jus de fruits » cède
+// à « Jus orange »), c'est le détail qui donne son nom à la ligne.
+// ⚠ Même règle que choixTitre dans server/print-server.js.
+function choixTitre(choices) {
+  let c = (choices || []).find((x) => x.remplaceNom);
+  for (let garde = 0; c && garde < 10; garde++) {
+    const detail = choices.find((x) => x.remplaceParent === c.label);
+    if (!detail) break;
+    c = detail;
+  }
+  return c || null;
+}
 function nomAffiche(item) {
-  const c = (item.formulaChoices || []).find((x) => x.remplaceNom);
+  const c = choixTitre(item.formulaChoices);
   return c ? c.itemName : item.name;
+}
+// Le piment demandé sur le choix qui donne le nom s'affiche sur la ligne
+function pimentLigne(item) {
+  if (pimentMark(item.piment)) return item.piment;
+  return choixTitre(item.formulaChoices)?.piment || null;
 }
 // Les choix qui remplacent le nom ne sont pas répétés en sous-ligne
 function choixVisibles(item) {
   const choices = item.formulaChoices || [];
   // Un choix generique (« Jus de fruits ») disparaît au profit du detail
   const remplaces = new Set(choices.map((c) => c.remplaceParent).filter(Boolean));
-  return choices.filter((c) => !c.remplaceNom && !remplaces.has(c.label));
+  const titre = choixTitre(choices);
+  return choices.filter((c) => !c.remplaceNom && !remplaces.has(c.label) && c !== titre);
+}
+// Supplément d'une réponse (Cassis +0,50 €, Agneau +2 € dans un menu) : il
+// s'ajoute au prix. Lu sur la réponse choisie, ou sur la réponse « écrite à
+// la main » quand le nom tapé n'est pas dans la liste.
+function supplementDe(step, nom) {
+  const arts = (step?.articles || []).filter((a) => a && typeof a === "object");
+  const art = arts.find((a) => a.name === nom) || arts.find((a) => a.libre);
+  const s = Number(art?.supplement);
+  return Number.isFinite(s) && s > 0 ? s : 0;
+}
+// Prix d'une formule : le tarif de la réponse qui en porte un (Kir royal 7 €),
+// sinon celui du produit, plus les suppléments. « prixBase » garde le prix du
+// produit sur la ligne : reprendre un menu en pause ne recompte rien deux fois.
+function prixFormule(item, choices) {
+  const base = item.prixBase ?? item.price;
+  const tarif = choices.find((c) => c.prix != null)?.prix;
+  const supp = choices.reduce((s, c) => s + (Number(c.supplement) || 0), 0);
+  return { prixBase: base, price: Math.round(((tarif ?? base) + supp) * 100) / 100 };
 }
 
-// Pastel Apple colors par sous-catégorie (couleurs manuelles prioritaires)
-const SUBCAT_COLORS = {
-  "Grillades":       { bg: "rgba(255,149,0,0.12)",   active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"   },
-  "Salade / Soupe":  { bg: "rgba(52,199,89,0.10)",   active: "rgba(52,199,89,0.22)",   text: "#1e7a3a", border: "rgba(52,199,89,0.4)"    },
-  "Salade":          { bg: "rgba(52,199,89,0.10)",   active: "rgba(52,199,89,0.22)",   text: "#1e7a3a", border: "rgba(52,199,89,0.4)"    },
-  "Soupe":           { bg: "rgba(10,132,255,0.10)",  active: "rgba(10,132,255,0.22)",  text: "#005bcc", border: "rgba(10,132,255,0.4)"   },
-  "Beignets":        { bg: "rgba(255,214,10,0.12)",   active: "rgba(255,214,10,0.25)",  text: "#8a6800", border: "rgba(255,214,10,0.5)"   },
-  "Naans":           { bg: "rgba(175,82,222,0.10)",   active: "rgba(175,82,222,0.22)",  text: "#7a38bb", border: "rgba(175,82,222,0.4)"   },
-  "Poulet":          { bg: "rgba(255,149,0,0.10)",    active: "rgba(255,149,0,0.22)",   text: "#b36200", border: "rgba(255,149,0,0.4)"    },
-  "Agneau":          { bg: "rgba(255,59,48,0.08)",    active: "rgba(255,59,48,0.18)",   text: "#c0271e", border: "rgba(255,59,48,0.35)"   },
-  "Boeuf":           { bg: "rgba(94,92,230,0.10)",    active: "rgba(94,92,230,0.22)",   text: "#3c3aaa", border: "rgba(94,92,230,0.4)"    },
-  "Poisson":         { bg: "rgba(10,132,255,0.10)",   active: "rgba(10,132,255,0.22)",  text: "#005bcc", border: "rgba(10,132,255,0.4)"   },
-  "Végétarien":      { bg: "rgba(0,199,190,0.10)",    active: "rgba(0,199,190,0.22)",   text: "#007a74", border: "rgba(0,199,190,0.4)"    },
-  "Riz":             { bg: "rgba(255,204,0,0.12)",    active: "rgba(255,204,0,0.25)",   text: "#806000", border: "rgba(255,204,0,0.45)"   },
-  "Entrée":          { bg: "rgba(255,45,85,0.08)",    active: "rgba(255,45,85,0.18)",   text: "#c0003a", border: "rgba(255,45,85,0.35)"   },
-  "Biryani":         { bg: "rgba(180,120,60,0.10)",   active: "rgba(180,120,60,0.22)",  text: "#7a4e1a", border: "rgba(180,120,60,0.4)"   },
-  "Desserts":        { bg: "rgba(255,45,85,0.08)",    active: "rgba(255,45,85,0.18)",   text: "#c0003a", border: "rgba(255,45,85,0.35)"   },
-  "Menu Midi":       { bg: "rgba(48,209,88,0.10)",    active: "rgba(48,209,88,0.22)",   text: "#1a6e35", border: "rgba(48,209,88,0.4)"    },
-  "Formules":        { bg: "rgba(48,209,88,0.10)",    active: "rgba(48,209,88,0.22)",   text: "#1a6e35", border: "rgba(48,209,88,0.4)"    },
-
-  // ---- Boissons ----
-  "Rouge":           { bg: "rgba(200,20,45,0.22)", active: "rgba(200,20,45,0.38)", text: "#8f1020", border: "rgba(200,20,45,0.65)" },  // vin rouge — impose
-  "Blanc":           { bg: "rgba(240,200,0,0.28)", active: "rgba(240,200,0,0.45)", text: "#7a6600", border: "rgba(240,200,0,0.7)" },  // vin blanc — impose
-  "Rosé":            { bg: "rgba(255,105,175,0.22)", active: "rgba(255,105,175,0.38)", text: "#a8175e", border: "rgba(255,105,175,0.65)" },  // rose — impose
-  "Vin":             { bg: "rgba(155,70,150,0.12)", active: "rgba(155,70,150,0.26)", text: "#853280", border: "rgba(155,70,150,0.45)" },  // autres vins : prune
-  "Apéritifs":       { bg: "rgba(130,80,225,0.12)", active: "rgba(130,80,225,0.26)", text: "#481b9d", border: "rgba(130,80,225,0.45)" },  // violet
-  "Digestif":        { bg: "rgba(70,105,200,0.12)", active: "rgba(70,105,200,0.26)", text: "#2a458e", border: "rgba(70,105,200,0.45)" },  // bleu indigo
-  "Eaux":            { bg: "rgba(30,150,235,0.12)", active: "rgba(30,150,235,0.26)", text: "#0f69a9", border: "rgba(30,150,235,0.45)" },  // bleu
-  "Boisson Maison":  { bg: "rgba(0,175,170,0.12)", active: "rgba(0,175,170,0.26)", text: "#00afaa", border: "rgba(0,175,170,0.45)" },  // turquoise
-  "Bière":           { bg: "rgba(60,165,75,0.12)", active: "rgba(60,165,75,0.26)", text: "#31873d", border: "rgba(60,165,75,0.45)" },  // vert
-  "Sirop":           { bg: "rgba(140,200,50,0.12)", active: "rgba(140,200,50,0.26)", text: "#679325", border: "rgba(140,200,50,0.45)" },  // vert anis
-  "Jus & Soda":      { bg: "rgba(255,140,20,0.12)", active: "rgba(255,140,20,0.26)", text: "#b85e00", border: "rgba(255,140,20,0.45)" },  // orange vif
-  "Whisky":          { bg: "rgba(150,105,60,0.12)", active: "rgba(150,105,60,0.26)", text: "#855c32", border: "rgba(150,105,60,0.45)" },  // brun clair
-  "Café/Thé":        { bg: "rgba(90,65,50,0.12)", active: "rgba(90,65,50,0.26)", text: "#663e27", border: "rgba(90,65,50,0.45)" },  // brun cafe fonce
-};
-
-// Génère automatiquement une couleur pastel déterministe pour toute sous-catégorie inconnue
-function getSubcatColor(subcategory) {
-  if (!subcategory) return null;
-  if (SUBCAT_COLORS[subcategory]) return SUBCAT_COLORS[subcategory];
-  let hash = 0;
-  for (let i = 0; i < subcategory.length; i++) {
-    hash = (subcategory.charCodeAt(i) + ((hash << 5) - hash)) | 0;
-  }
-  const hue = Math.abs(hash) % 360;
-  return {
-    bg:     `hsla(${hue},55%,94%,1)`,
-    active: `hsla(${hue},55%,85%,1)`,
-    text:   `hsl(${hue},50%,32%)`,
-    border: `hsla(${hue},55%,65%,0.7)`,
-  };
+// Le détail qui remplace un plat (« Biryani » → « Biryani agneau ») garde le
+// piment choisi sur le plat : sinon il disparaissait du ticket cuisine.
+function heriterPiment(choice, choices) {
+  if (!choice.remplaceParent || choice.piment) return choice;
+  const parent = [...choices].reverse().find((c) => c.label === choice.remplaceParent);
+  if (parent && parent.piment) choice.piment = parent.piment;
+  return choice;
 }
+
 const SAVE_API_URL = "https://punjab-restaurant.vercel.app/api/save-menu";
 
+// En mode essai la carte vit dans le navigateur : l'admin y ecrit, et le
+// chargement de la carte de production ne vient plus l'ecraser.
+const CLE_CARTE_ESSAI = "punjab_carte_essai";
+function lireCarteEssai() {
+  try { const c = localStorage.getItem(CLE_CARTE_ESSAI); return c ? JSON.parse(c) : null; }
+  catch { return null; }
+}
+
 function getCachedMenu() {
+  if (MODE_ESSAI) { const c = lireCarteEssai(); if (c) return c; }
   try {
     const saved = localStorage.getItem("punjab_menu_github");
     return saved ? JSON.parse(saved) : defaultMenu;
@@ -281,15 +323,22 @@ function App() {
   // Fetch latest menu from GitHub on every load
   useEffect(() => {
     // Chargement menu
-    fetch(GET_MENU_URL)
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setMenuData(data);
-          localStorage.setItem("punjab_menu_github", JSON.stringify(data));
-        }
-      })
-      .catch(() => {});
+    // Lecture seule de la carte de production. En essai, si une copie locale
+    // existe deja on la garde : sinon chaque rechargement effacerait le travail.
+    if (MODE_ESSAI && lireCarteEssai()) {
+      setMenuData(lireCarteEssai());
+    } else {
+      fetch(GET_MENU_URL)
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setMenuData(data);
+            localStorage.setItem("punjab_menu_github", JSON.stringify(data));
+            if (MODE_ESSAI) localStorage.setItem(CLE_CARTE_ESSAI, JSON.stringify(data));
+          }
+        })
+        .catch(() => {});
+    }
 
     // Chargement commandes actives (stockées sur Vercel)
     function fetchOrders() {
@@ -304,13 +353,16 @@ function App() {
     fetchOrders();
     const ordersInterval = setInterval(fetchOrders, 15000);
 
-    // Chargement config (printUrl)
-    fetch("https://punjab-restaurant.vercel.app/api/get-config")
-      .then((r) => r.json())
-      .then((cfg) => {
-        if (cfg.printUrl) localStorage.setItem("punjab_print_url", cfg.printUrl);
-      })
-      .catch(() => {});
+    // Chargement config (printUrl). En essai, rien n'est demandé en ligne :
+    // l'impression part toujours vers le serveur d'essai local.
+    if (!MODE_ESSAI) {
+      fetch("https://punjab-restaurant.vercel.app/api/get-config")
+        .then((r) => r.json())
+        .then((cfg) => {
+          if (cfg.printUrl) localStorage.setItem("punjab_print_url", cfg.printUrl);
+        })
+        .catch(() => {});
+    }
 
     return () => clearInterval(ordersInterval);
   }, []);
@@ -339,7 +391,16 @@ function App() {
   const [showOrders, setShowOrders] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [pimentPicker, setPimentPicker] = useState(null); // { item } | null
+  const [noteOuverte, setNoteOuverte] = useState(null); // cartId de la ligne dont on écrit la note | null
+  // Le bouton « note » n'apparaît que si le serveur d'impression sait les
+  // imprimer (/mode → notes: true) : un serveur pas à jour ne perd jamais de note.
+  const [notesActives, setNotesActives] = useState(false);
   const [remisePour, setRemisePour] = useState(null); // { order, type, valeur } | null
+  // Tickets de production à ressortir (papier jeté ou perdu)
+  const [reimpression, setReimpression] = useState(null); // { order, postes, connue, envoi, message, erreur } | null
+  const envoiTicketRef = useRef(0);   // chaque envoi remonte l'aperçu du ticket
+  const verrouTickets = useRef(false);   // un double appui ne sort pas deux fois le ticket
+  const sauvegardeRef = useRef(null);    // dernière sauvegarde de commande : les suivantes l'attendent
   const [clotureApres, setClotureApres] = useState(null); // commande dont l'addition vient de sortir
   const [formulaPicker, setFormulaPicker] = useState(null); // { item, currentStep, choices } | null
   const [texteLibre, setTexteLibre] = useState("");  // plat saisi a la main (allergie, substitution)
@@ -358,8 +419,30 @@ function App() {
   // des commandes reecraserait la commande toutes les quinze secondes.
   const payeLocal = useRef({});  // deux menus en pause ne doivent jamais fusionner
 
+  // Redemandé toutes les 30 s : le serveur d'impression peut être relancé (mis
+  // à jour) en plein service. Injoignable un instant : on garde la dernière réponse.
+  useEffect(() => {
+    let fini = false;
+    function verifierNotes() {
+      fetch(`${getPrintUrl()}/mode`)
+        .then((r) => r.json())
+        .then((m) => { if (!fini) setNotesActives(m?.notes === true); })
+        .catch(() => {});
+    }
+    verifierNotes();
+    const t = setInterval(verifierNotes, 30000);
+    return () => { fini = true; clearInterval(t); };
+  }, []);
+
   async function updateMenu(newMenu) {
     setMenuData(newMenu);
+    // Garde-fou : en local, l'admin n'ecrit JAMAIS la carte du restaurant.
+    if (MODE_ESSAI) {
+      localStorage.setItem(CLE_CARTE_ESSAI, JSON.stringify(newMenu));
+      setSaveStatus("ok");
+      setTimeout(() => setSaveStatus(null), 2500);
+      return;
+    }
     localStorage.setItem("punjab_menu_github", JSON.stringify(newMenu));
     setSaveStatus("saving");
     try {
@@ -403,26 +486,32 @@ function App() {
     if (numpadOnConfirm) { numpadOnConfirm(numpadValue); setNumpadOnConfirm(null); }
   }
 
+  // Une catégorie ou une famille renommée (ou supprimée) dans l'admin : la
+  // caisse retombe sur une catégorie existante au lieu d'afficher une grille vide.
+  const categorie = menuData.some((s) => s.category === activeCategory) ? activeCategory : menuData[0]?.category;
   const activeItems = useMemo(
-    () => menuData.find((s) => s.category === activeCategory)?.items || [],
-    [activeCategory, menuData]
+    () => menuData.find((s) => s.category === categorie)?.items || [],
+    [categorie, menuData]
   );
 
   const subcategories = useMemo(
     () => [...new Set(activeItems.filter((i) => i.subcategory).map((i) => i.subcategory))],
     [activeItems]
   );
+  // couleurs de famille choisies dans l'admin pour cette catégorie
+  const couleursFamilles = menuData.find((s) => s.category === categorie)?.couleurs;
+  const sousCat = subcategories.includes(activeSubcategory) ? activeSubcategory : null;
 
   const visibleItems = useMemo(() => {
-    const items = activeSubcategory
-      ? activeItems.filter((i) => i.subcategory === activeSubcategory)
+    const items = sousCat
+      ? activeItems.filter((i) => i.subcategory === sousCat)
       : activeItems;
     return [...items].sort((a, b) => {
       const ia = a.subcategory ? subcategories.indexOf(a.subcategory) : 999;
       const ib = b.subcategory ? subcategories.indexOf(b.subcategory) : 999;
       return ia - ib;
     });
-  }, [activeItems, activeSubcategory, subcategories]);
+  }, [activeItems, sousCat, subcategories]);
 
   const totalQty = orderItems.reduce((s, i) => s + i.qty, 0);
   const totalPrice = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
@@ -453,11 +542,13 @@ function App() {
       setPimentPicker({ item });
       return;
     }
+    // Toucher la tuile ajoute toujours un plat SANS note : il ne rejoint pas
+    // une ligne notée (autre cartId) et n'hérite de rien du produit.
     const cartId = piment ? `${item.id}-p${piment}` : String(item.id);
     setOrderItems((prev) => {
       const existing = prev.find((i) => i.cartId === cartId);
       if (existing) return prev.map((i) => i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...item, cartId, qty: 1, ...(piment ? { piment } : {}) }];
+      return [...prev, { ...sansNote(item), cartId, qty: 1, ...(piment ? { piment } : {}) }];
     });
   }
 
@@ -473,6 +564,7 @@ function App() {
       const seul = arts[0];
       const nom = typeof seul === "string" ? seul : seul.name;
       if (typeof seul === "object" && seul.piment) break;   // il faut demander le piment
+      if (typeof seul === "object" && seul.libre) break;    // il faut taper le nom
       const c = { label: st.label, itemName: nom };
       if (st.remplaceNom) c.remplaceNom = true;
       if (st.siEtape) {
@@ -480,6 +572,9 @@ function App() {
         else c.sousChoixDe = st.siEtape;
       }
       if (typeof seul === "object" && seul.price != null) c.prix = Number(seul.price);
+      const supSeul = supplementDe(st, nom);
+      if (supSeul) c.supplement = supSeul;
+      heriterPiment(c, choices);
       choices = [...choices, c];
       parcours = [...parcours, idx];
       idx = prochaineEtape(item, choices, idx);
@@ -493,8 +588,8 @@ function App() {
   // n'a aucun sens, et leurs etapes ne se pretent pas au comptage par couvert.
   // Proposes a la composition : ceux de l'onglet courant
   const menusGroupables = useMemo(
-    () => (activeCategory === "Menu" ? visibleItems.filter(menuGroupable) : []),
-    [visibleItems, activeCategory]
+    () => (categorie === "Menu" ? visibleItems.filter(menuGroupable) : []),
+    [visibleItems, categorie]
   );
   // Mais le parcours lui-meme doit retrouver ses menus quel que soit l'onglet
   // affiche : en reprenant une commande, on n'est pas forcement sur « Menu ».
@@ -558,7 +653,7 @@ function App() {
     if (gardes.length === 0) return "";
     const mk = pimentMark(gardes[0].piment);
     const suite = gardes.slice(1).map((c) => c.itemName);
-    return gardes[0].itemName + (mk ? " " + mk : "") + (suite.length ? " — " + suite.join(" / ") : "");
+    return gardes[0].itemName + (mk ? " " + mk : "") + (suite.length ? " · " + suite.join(" / ") : "");
   }
   function retirerPick(cle, itemId, libelle) {
     setGroupe((g) => {
@@ -625,6 +720,9 @@ function App() {
     }
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
+    const supGroupe = supplementDe(step, nom);
+    if (supGroupe) choice.supplement = supGroupe;
+    heriterPiment(choice, ctx.choices);
     suiteGroupe(ctx, [...ctx.choices, choice], [...ctx.parcours, ctx.currentStep], ctx.currentStep);
   }
 
@@ -647,18 +745,19 @@ function App() {
     const reprises = new Set(groupe.reprise || []);
     setOrderItems((prev) => {
       let suite = reprises.size ? prev.filter((i) => !reprises.has(i.cartId)) : [...prev];
-      for (const { item, choices } of ajouts) {
-        const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
+      for (const { item, choices: choisis } of ajouts) {
+        // l'allergie d'un couvert repris passe à tous ses choix, et les notes
+        // reprises entrent dans sa signature
+        const choices = avecAllergieDuMenu(choisis);
+        const sig = signatureChoix(choices);
         // Un couvert laissé incomplet ne doit jamais fusionner avec un autre :
         // compléter l'un compléterait les deux, et leurs clients n'ont pas
         // forcément choisi la même chose.
         const incomplet = etapesManquantes(item, choices).length > 0;
         const cartId = incomplet ? `${item.id}-pause${++pauseRef.current}` : `${item.id}-f${sig}`;
-        const prix = choices.find((c) => c.prix != null)?.prix;
         const existing = suite.find((i) => i.cartId === cartId);
         if (existing) suite = suite.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
-        else suite = [...suite, { ...item, cartId, qty: 1, formulaChoices: choices,
-                                  ...(prix != null ? { price: prix } : {}) }];
+        else suite = [...suite, { ...sansNote(item), cartId, qty: 1, formulaChoices: choices, ...prixFormule(item, choices) }];
       }
       return suite;
     });
@@ -668,19 +767,21 @@ function App() {
 
   // Ajoute une formule au panier. Deux sélections identiques se regroupent
   // sur une seule ligne, comme un article normal.
-  function addFormula(item, choices) {
-    const sig = choices.map((c) => `${c.label}:${c.itemName}${c.piment || ""}`).join("|");
-    const cartId = `${item.id}-f${sig}`;
-    // Un choix peut porter son propre tarif : il remplace celui du produit
-    const prix = choices.find((c) => c.prix != null)?.prix;
+  function addFormula(item, choisis) {
+    // Menu en pause complété : l'allergie déjà posée passe aux plats choisis
+    // ensuite. Un choix noté change la signature : le menu noté ne fusionne
+    // pas avec le même sans note
+    const choices = avecAllergieDuMenu(choisis);
+    const cartId = `${item.id}-f${signatureChoix(choices)}`;
+    // Un choix peut porter son propre tarif (il remplace celui du produit) et
+    // des suppléments (ils s'y ajoutent) : prixFormule
     // Une formule reprise remplace sa ligne en pause au lieu d'en créer une
     const reprise = formulaPicker?.reprise;
     setOrderItems((prev) => {
       const base = reprise ? prev.filter((i) => i.cartId !== reprise) : prev;
       const existing = base.find((i) => i.cartId === cartId);
       if (existing) return base.map((i) => (i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i));
-      return [...base, { ...item, cartId, qty: 1, formulaChoices: choices,
-                         ...(prix != null ? { price: prix } : {}) }];
+      return [...base, { ...sansNote(item), cartId, qty: 1, formulaChoices: choices, ...prixFormule(item, choices) }];
     });
     setFormulaPicker(null);
     // Completer une commande deja envoyee doit ressortir le ticket : sinon le
@@ -706,13 +807,12 @@ function App() {
   // Le client n'a pas encore choisi son dessert : on pose le menu au panier
   // avec ce qui est décidé, le ticket part, et on revient compléter après.
   function mettreEnPause() {
-    const { item, choices, reprise } = formulaPicker;
+    const { item, reprise } = formulaPicker;
+    const choices = avecAllergieDuMenu(formulaPicker.choices);
     if (!choices.length) return;
-    const prix = choices.find((c) => c.prix != null)?.prix;
     const cartId = reprise || `${item.id}-pause${++pauseRef.current}`;
     setOrderItems((prev) => {
-      const ligne = { ...item, cartId, qty: 1, formulaChoices: choices,
-                      ...(prix != null ? { price: prix } : {}) };
+      const ligne = { ...sansNote(item), cartId, qty: 1, formulaChoices: choices, ...prixFormule(item, choices) };
       const k = prev.findIndex((i) => i.cartId === cartId);
       if (k === -1) return [...prev, ligne];
       return prev.map((i, n) => (n === k ? { ...ligne, qty: i.qty } : i));
@@ -793,6 +893,9 @@ function App() {
     }
     if (prix != null) choice.prix = prix;
     if (piment && piment > 1) choice.piment = piment;
+    const sup = supplementDe(step, articleName);
+    if (sup) choice.supplement = sup;
+    heriterPiment(choice, choices);
     let newChoices = [...choices, choice];
     const base = [...(formulaPicker.parcours || []), currentStep];
     const { idx: suivante, choices: apresAuto, parcours } = avancer(item, newChoices, base, currentStep);
@@ -828,6 +931,30 @@ function App() {
 
   function confirmFormulaOrder() {
     addFormula(formulaPicker.item, formulaPicker.choices);
+  }
+
+  // Pose (ou retire) la note d'une ligne. « une » : pour une seule assiette
+  // d'une ligne qui en compte plusieurs ; la ligne se coupe alors en deux, la
+  // notée juste dessous. Une ligne devenue identique à une autre (même
+  // cartId) s'y regroupe : « Effacer la note » retrouve la ligne sans note.
+  function poserNote(cartId, modif, une) {
+    setOrderItems((prev) => {
+      const k = prev.findIndex((i) => i.cartId === cartId);
+      if (k < 0) return prev;
+      const ligne = prev[k];
+      const seule = une && ligne.qty > 1;
+      const notee = { ...ligneNotee(ligne, modif), qty: seule ? 1 : ligne.qty };
+      let suite = seule
+        ? [...prev.slice(0, k), { ...ligne, qty: ligne.qty - 1 }, notee, ...prev.slice(k + 1)]
+        : prev.map((i, n) => (n === k ? notee : i));
+      const pos = suite.indexOf(notee);
+      const jumelle = suite.findIndex((i, n) => n !== pos && i.cartId === notee.cartId);
+      if (jumelle >= 0) {
+        suite = suite.filter((_, n) => n !== pos)
+          .map((i) => (i.cartId === notee.cartId ? { ...i, qty: i.qty + notee.qty } : i));
+      }
+      return suite;
+    });
   }
 
   function updateQty(cartId, qty) {
@@ -870,6 +997,13 @@ function App() {
     // En modification on ne repose pas la question du type : la commande
     // existe deja, son numero et sa table sont fixes.
     if (editingOrderId) {
+      // Panier vidé puis rempli pour une autre table : ce n'est plus une
+      // modification, on demande avant d'écraser la commande d'origine
+      const origine = serverOrders.find((o) => o.id === editingOrderId);
+      const ids = new Set((origine?.items || []).map((i) => i.id));
+      if (origine && orderType !== "emporter" && String(origine.tableNumber) !== String(tableNumber)
+          && !orderItems.some((i) => ids.has(i.id))
+          && !window.confirm(`Ce panier ne contient plus rien de la table ${origine.tableNumber}. L'enregistrer à sa place ?`)) return;
       if (orderType === "emporter") setShowEmporterModal(true);  // numero conserve
       else submitOrder();
       return;
@@ -881,11 +1015,13 @@ function App() {
     setOrderType(type);
     setShowOrderTypeModal(false);
     if (type === "surplace") {
+      // Le type est passé tel quel : l'état n'est pas encore à jour ici, et un
+      // « À emporter » annulé juste avant faisait partir la table en à emporter.
       if (!tableNumber) {
-        openNumpad((table) => submitOrder(undefined, table));
+        openNumpad((table) => submitOrder(undefined, table, "surplace"));
         return;
       }
-      submitOrder();
+      submitOrder(undefined, undefined, "surplace");
     } else {
       const num = generateEmporterNum();
       setEmporterNum(num);
@@ -893,23 +1029,38 @@ function App() {
     }
   }
 
-  function submitOrder(overrideEmporterNum, overrideTable) {
+  function submitOrder(overrideEmporterNum, overrideTable, typeChoisi) {
+    const type = typeChoisi || orderType;
     const num = overrideEmporterNum || emporterNum;
-    const effectiveTable = orderType === "emporter" ? num : (overrideTable || tableNumber);
-    const orderNum = Math.floor(Math.random() * 9000) + 1000;
+    const effectiveTable = type === "emporter" ? num : (overrideTable || tableNumber);
+    // En modification la commande garde son numéro, sa date d'origine, son lien
+    // avec le serveur d'impression (tcOrderId) et l'historique de ses parts
+    const precedente = editingOrderId ? serverOrders.find((o) => o.id === editingOrderId) : null;
+    const orderNum = precedente?.orderNum ?? Math.floor(Math.random() * 9000) + 1000;
     const orderId = editingOrderId || `order-${orderNum}-${Date.now()}`;
+    const maintenant = dateTicket();
+    const dateOrigine = precedente?.dateOrigine || maintenant;
+    // Chaque article emporte la section du ticket reglee pour sa categorie
+    const articles = posterArticles(orderItems, menuData);
+    // Ce que la cuisine a réellement reçu : le dernier envoi imprimé (les
+    // commandes d'avant ce suivi : la version enregistrée, si elle est partie)
+    const dejaImprime = precedente?.imprime || (precedente?.tcOrderId ? precedente : null);
     const orderData = {
+      ...(precedente?.tcOrderId ? { tcOrderId: precedente.tcOrderId } : {}),
+      ...(precedente?.parts ? { parts: precedente.parts } : {}),
+      ...(precedente?.imprime ? { imprime: precedente.imprime } : {}),
       id: orderId,
       orderNum,
+      dateOrigine,
       tableNumber: effectiveTable,
-      orderType,
-      ...(orderType === "emporter" ? {
+      orderType: type,
+      ...(type === "emporter" ? {
         emporterNum: num,
         ...(clientName ? { clientName } : {}),
         ...(clientPhone ? { clientPhone } : {}),
         ...(clientPickupTime ? { clientPickupTime } : {}),
       } : {}),
-      items: [...orderItems],
+      items: [...articles],
       // Une table deja entamee garde ses parts reglees : sans ca, modifier la
       // commande remettait tout a payer et le client repassait a la caisse.
       ...(() => {
@@ -919,27 +1070,45 @@ function App() {
       })(),
       receivedAt: Date.now(),
     };
-    fetchCommandes(ORDERS_API_URL, {
+    const sauvegarde = fetchCommandes(ORDERS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "save", order: orderData }),
-    })
+    });
+    sauvegardeRef.current = sauvegarde.catch(() => {});
+    sauvegarde
       .then(() => setServerOrders((prev) => {
         const idx = prev.findIndex((o) => o.id === orderId);
-        return idx >= 0 ? prev.map((o, i) => (i === idx ? orderData : o)) : [...prev, orderData];
+        if (idx < 0) return [...prev, orderData];
+        // l'impression (automatique) a pu répondre avant : on garde ce qu'elle a noté
+        return prev.map((o, i) => (i === idx ? {
+          ...orderData,
+          ...(o.imprime && o.imprime !== orderData.imprime ? { imprime: o.imprime } : {}),
+          ...(o.tcOrderId ? { tcOrderId: o.tcOrderId } : {}),
+        } : o));
       }))
       .catch(() => {});
     setTicketData({
-      items: [...orderItems],
+      envoi: ++envoiTicketRef.current,
+      items: [...articles],
       table: effectiveTable,
       orderNum,
       orderId,
       orderData,
-      orderType,
+      orderType: type,
       emporterNum: num,
-      clientName,
-      clientPhone,
-      clientPickupTime,
+      // un « À emporter » annulé ne laisse pas son heure sur un ticket sur place
+      ...(type === "emporter" ? { clientName, clientPhone, clientPickupTime } : {}),
+      // date imprimée : celle du premier envoi, l'heure de la modification sinon
+      dateEnvoi: precedente ? maintenant : dateOrigine,
+      dateOrigine,
+      // dernière version imprimée : le serveur compare même s'il a oublié la
+      // commande. Jamais imprimée : rien, et l'envoi part en entier.
+      avant: dejaImprime ? {
+        items: dejaImprime.items, tableNumber: dejaImprime.tableNumber, orderNum: dejaImprime.orderNum ?? precedente.orderNum,
+        dateOrigine: dejaImprime.dateOrigine || precedente.dateOrigine, clientName: dejaImprime.clientName,
+        clientPhone: dejaImprime.clientPhone, clientPickupTime: dejaImprime.clientPickupTime,
+      } : null,
     });
     setShowTicket(true);
     setCartOpen(false);
@@ -995,7 +1164,9 @@ function App() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "save", order: maj }),
     }).catch(() => {});
-    setRemisePour((r) => (r ? { ...r, order: maj, parts: toutLeReste(maj) } : r));
+    // une part n'existe qu'en addition séparée : on y reste (un choix
+    // « Une seule addition » fait exprès est gardé)
+    setRemisePour((r) => (r ? { ...r, separee: r.separee ?? true, order: maj, parts: {} } : r));
   }
 
   function resteAPayer(cmd) {
@@ -1007,11 +1178,64 @@ function App() {
     return (cmd.items || []).reduce((s, i, k) => s + restantDe(cmd, i, k), 0);
   }
 
-  async function reprintBill(cmd, remise, lignes, sansDetail, nbRepas) {
+  // ── Écran client (server/client.html) ──
+  // Ce que voit la table sur l'écran tourné vers elle : l'addition dès que la
+  // fenêtre Addition est ouverte, et en addition séparée seulement ce qui est
+  // en train d'être payé, en direct. Fenêtre fermée : retour aux vidéos.
+  // ⚠ Mêmes calculs que la fenêtre Addition (plus bas, « remisePour && »).
+  function ecranClient() {
+    if (!remisePour) return { etat: "repos" };
+    const cmd = serverOrders.find((o) => o.id === remisePour.order.id) || remisePour.order;
+    const duplicata = unitesRestantes(cmd) === 0;
+    const separee = !duplicata && (remisePour.separee ?? (cmd.parts || []).length > 0);
+    const partsEff = separee ? (remisePour.parts || {}) : toutLeReste(cmd);
+    const lignes = (cmd.items || []).map((i, k) => ({
+      item: i,
+      restant: duplicata ? i.qty : restantDe(cmd, i, k),
+      pris: duplicata ? i.qty : (partsEff[cleLigne(i, k)] || 0),
+    })).filter((l) => l.restant > 0 && l.pris > 0);
+    const total = lignes.reduce((s, l) => s + l.item.price * l.pris, 0);
+    const v = parseFloat(String(remisePour.valeur).replace(",", "."));
+    const centsTotal = Math.round(total * 100);
+    const centsRemise = remisePour.type === "aucune" || !Number.isFinite(v) || v <= 0 ? 0
+      : remisePour.type === "euro" ? Math.round(v * 100) : Math.round(centsTotal * v / 100);
+    const remise = Math.min(Math.max(centsRemise, 0), centsTotal) / 100;
+    const encaisse = (cmd.parts || []).length
+      ? Math.round((cmd.parts || []).reduce((s, p) => s + (Number(p.total) || 0), 0) * 100) / 100
+      : total;
+    return {
+      etat: "addition",
+      titre: cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`,
+      mode: duplicata ? "reglee" : separee ? "part" : "complete",
+      lignes: lignes.map((l) => ({
+        qte: l.pris,
+        nom: nomAffiche(l.item),
+        detail: choixVisibles(l.item).map((c) => c.itemName).join(" · "),
+        montant: Math.round(l.item.price * l.pris * 100) / 100,
+      })),
+      sousTotal: Math.round(total * 100) / 100,
+      remise: !duplicata && remise > 0 ? { libelle: remisePour.type === "euro" ? "" : `${v} %`, montant: remise } : null,
+      total: duplicata ? encaisse : Math.round((total - remise) * 100) / 100,
+    };
+  }
+  // envoyé au serveur d'impression seulement quand l'affichage change ; une
+  // caisse qui s'ouvre ne remet pas au repos l'addition d'une autre caisse
+  const ecranClientEnvoye = useRef(JSON.stringify({ etat: "repos" }));
+  const etatEcranClient = JSON.stringify(ecranClient());
+  useEffect(() => {
+    if (etatEcranClient === ecranClientEnvoye.current) return;
+    ecranClientEnvoye.current = etatEcranClient;
+    fetch(`${getPrintUrl()}/ecran-client`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: etatEcranClient,
+    }).catch(() => {});
+  }, [etatEcranClient]);
+
+  async function reprintBill(cmd, remise, lignes, sansDetail, nbRepas, duplicata = false) {
     // On transmet la commande : le serveur d'impression l'oublie des que la
     // cuisine a termine, alors que l'addition se demande apres.
+    // L'addition est pour le client : ni note ni allergie dessus
     const corps = {
-      order: lignes || cmd.items,
+      order: (lignes || cmd.items || []).map(sansNotes),
       tableNumber: cmd.tableNumber,
       orderNum: cmd.orderNum,
       date: cmd.date || new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }),
@@ -1022,6 +1246,7 @@ function App() {
       clientPickupTime: cmd.clientPickupTime,
       ...(remise ? { remise } : {}),
       ...(sansDetail ? { sansDetail: true, ...(nbRepas ? { nbRepas } : {}) } : {}),
+      ...(duplicata ? { duplicata: true } : {}),
     };
     try {
       const res = await fetch(`${getPrintUrl()}/order/${encodeURIComponent(cmd.id)}/reprint-bill`, {
@@ -1038,6 +1263,106 @@ function App() {
     }
   }
 
+  // Ressortir les tickets de production d'une commande déjà envoyée. La
+  // commande part avec la demande (le serveur l'a peut-être déjà oubliée).
+  async function demanderTickets(commande, options) {
+    // Un duplicata montre ce que la cuisine a réellement reçu, pas une
+    // modification enregistrée mais jamais imprimée
+    const p = commande.imprime;
+    const cmd = p ? { ...commande, items: p.items, tableNumber: p.tableNumber ?? commande.tableNumber,
+                      clientName: p.clientName, clientPhone: p.clientPhone, clientPickupTime: p.clientPickupTime } : commande;
+    const res = await fetch(`${getPrintUrl()}/order/${encodeURIComponent(cmd.tcOrderId || cmd.id)}/reprint-tickets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order: cmd.items,
+        tableNumber: cmd.tableNumber,
+        orderNum: cmd.orderNum,
+        date: cmd.dateOrigine || cmd.date || dateTicket(new Date(cmd.receivedAt || Date.now())),
+        dateOrigine: cmd.dateOrigine,
+        orderType: cmd.orderType,
+        emporterNum: cmd.emporterNum,
+        clientName: cmd.clientName,
+        clientPhone: cmd.clientPhone,
+        clientPickupTime: cmd.clientPickupTime,
+        ...options,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  function ouvrirReimpression(cmd) {
+    setReimpression({ order: cmd, postes: null, connue: false, envoi: false, message: "", erreur: false });
+    // Seuls les postes qui ont quelque chose à imprimer sont proposés
+    demanderTickets(cmd, { apercu: true })
+      .then((d) => setReimpression((r) => (r && r.order.id === cmd.id ? { ...r, postes: d.postes || [], connue: !!d.connue } : r)))
+      .catch(() => setReimpression((r) => (r && r.order.id === cmd.id
+        ? { ...r, postes: cmd.orderType === "emporter" ? ["COMMANDE"] : ["CUISINE", "DESSERTS", "BAR"] } : r)));
+  }
+
+  // Un appui de plus pendant l'envoi ou juste après ne repart pas
+  function relacherTickets() {
+    setTimeout(() => {
+      verrouTickets.current = false;
+      setReimpression((r) => (r ? { ...r, pause: false } : r));
+    }, 900);
+  }
+
+  async function ressortirTickets(postes, libelle) {
+    const cmd = reimpression?.order;
+    if (!cmd || reimpression.envoi || verrouTickets.current) return;
+    verrouTickets.current = true;
+    setReimpression((r) => ({ ...r, envoi: true, pause: true, message: "", erreur: false }));
+    try {
+      // déjà partie en cuisine (lien d'impression, ou connue du serveur) : DUPLICATA
+      await demanderTickets(cmd, { postes, duplicata: Boolean(cmd.tcOrderId || reimpression.connue) });
+      setReimpression((r) => (r ? { ...r, envoi: false, message: `${libelle} : ressorti`, erreur: false } : r));
+    } catch (err) {
+      setReimpression((r) => (r ? { ...r, envoi: false, message: `Pas imprimé : ${err.message}`, erreur: true } : r));
+    }
+    relacherTickets();
+  }
+
+  async function envoyerEnCuisine() {
+    const cmd = reimpression?.order;
+    if (!cmd || reimpression.envoi || verrouTickets.current) return;
+    // dernier garde-fou : si elle est en fait déjà en cuisine, elle serait préparée deux fois
+    if (!window.confirm("Envoyer toute la commande en cuisine ?\nSi elle y est déjà, elle sera préparée deux fois.")) return;
+    verrouTickets.current = true;
+    setReimpression((r) => ({ ...r, envoi: true, pause: true, message: "", erreur: false }));
+    try {
+      const res = await fetch(`${getPrintUrl()}/print-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order: cmd.items, tableNumber: cmd.tableNumber, orderNum: cmd.orderNum,
+          date: cmd.dateOrigine || dateTicket(), orderId: cmd.id, orderType: cmd.orderType,
+          emporterNum: cmd.emporterNum, clientName: cmd.clientName, clientPhone: cmd.clientPhone,
+          clientPickupTime: cmd.clientPickupTime,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      const maj = { ...cmd, tcOrderId: data.orderId || cmd.id, imprime: {
+        items: cmd.items, tableNumber: cmd.tableNumber, orderNum: cmd.orderNum, dateOrigine: cmd.dateOrigine,
+        clientName: cmd.clientName, clientPhone: cmd.clientPhone, clientPickupTime: cmd.clientPickupTime,
+      } };
+      setServerOrders((prev) => prev.map((o) => (o.id === cmd.id ? maj : o)));
+      fetchCommandes(ORDERS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save", order: maj }),
+      }).catch(() => {});
+      // l'envoi est fait : on n'offre pas de duplicata dans la même ouverture
+      setReimpression((r) => (r ? { ...r, order: maj, connue: true, envoyee: true, envoi: false, message: "Envoyée en cuisine", erreur: false } : r));
+    } catch (err) {
+      setReimpression((r) => (r ? { ...r, envoi: false, message: `Pas imprimé : ${err.message}`, erreur: true } : r));
+    }
+    relacherTickets();
+  }
+
   async function closeTable(orderId) {
     // Supprimer de Vercel (source de vérité)
     fetchCommandes(ORDERS_API_URL, {
@@ -1047,7 +1372,7 @@ function App() {
     }).catch(() => {});
     // Notifier le ThinkCentre pour que le KDS/service retirent la commande
     const serverOrder = serverOrders.find((o) => o.id === orderId);
-    const tcId = serverOrder?.tcOrderId;
+    const tcId = serverOrder?.tcOrderId || orderId;
     if (tcId) {
       fetch(`${getPrintUrl()}/order/${encodeURIComponent(tcId)}`, { method: "DELETE" }).catch(() => {});
     }
@@ -1063,7 +1388,11 @@ function App() {
       subcategory: i.subcategory || null,
       qty: i.qty,
       piment: i.piment || null,
+      // les notes des choix d'un menu restent dans formulaChoices
       formulaChoices: i.formulaChoices || null,
+      ...(i.note ? { note: i.note } : {}),
+      ...(i.allergie ? { allergie: i.allergie } : {}),
+      ...(i.prixBase != null ? { prixBase: i.prixBase } : {}),
       // Sans les etapes, on ne peut plus savoir ce qui reste a choisir sur
       // un menu mis en pause : le bouton « A completer » disparaissait des
       // qu'on rouvrait la commande. Repli sur la carte pour les anciennes.
@@ -1106,47 +1435,84 @@ function App() {
     );
   }
 
+  // Lignes déjà en partie encaissées de la commande en modification : leur
+  // note ne se change plus (l'encaissé est rangé sous leur cartId)
+  const payeEnCours = (editingOrderId && serverOrders.find((o) => o.id === editingOrderId)?.paye) || {};
+
+  // Une ligne du panier, la même dans la colonne et dans le tiroir. Toucher
+  // le nom ouvre la fenêtre « Note » ; la note s'écrit dessous en gris,
+  // l'allergie en rouge plein (une seule fois pour un menu).
+  function ligneDuPanier(item) {
+    const nom = nomAffiche(item);
+    const mk = pimentMark(pimentLigne(item));
+    const menu = (item.formulaChoices || []).length > 0;
+    const visibles = choixVisibles(item);
+    // un choix sans sous-ligne (celui qui donne son nom) : sa note sous le nom
+    const notesTete = menu ? item.formulaChoices.filter((c) => c.note && !visibles.includes(c)) : [];
+    const allergie = allergieDeLigne(item);
+    return (
+      <div key={item.cartId} className="cart-item-block">
+        <div className="cart-item">
+          {notesActives ? (
+            <button className="cart-item-name cart-item-nom-btn" aria-label={`Note : ${nom}${mk ? ` ${mk}` : ""}`}
+                    onClick={() => setNoteOuverte(item.cartId)}>
+              <span className="cart-item-nom-texte">{nom}{mk && <span className="cart-piment">{mk}</span>}</span>
+              {ligneANote(item)
+                ? <MessageSquareText className="cart-note-icone cart-note-icone--pleine" size={20} strokeWidth={2} aria-hidden="true" />
+                : <MessageSquarePlus className="cart-note-icone" size={20} strokeWidth={2} aria-hidden="true" />}
+            </button>
+          ) : (
+            <span className="cart-item-name">{nom}{mk && <span className="cart-piment">{mk}</span>}</span>
+          )}
+          <div className="cart-item-controls">
+            <button
+              className={`qty-btn ${item.qty === 1 ? "delete" : ""}`} aria-label={item.qty === 1 ? "Retirer" : "Enlever un"}
+              onClick={() => updateQty(item.cartId, item.qty - 1)}
+            >
+              {item.qty === 1 ? <X size={16} strokeWidth={2} aria-hidden="true" /> : <Minus size={16} strokeWidth={2} aria-hidden="true" />}
+            </button>
+            <span className="cart-item-qty">{item.qty}</span>
+            <button className="qty-btn" aria-label="Ajouter un" onClick={() => updateQty(item.cartId, item.qty + 1)}><Plus size={16} strokeWidth={2} aria-hidden="true" /></button>
+          </div>
+          <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
+        </div>
+        {!menu && item.note && <div className="cart-note">› {item.note}</div>}
+        {notesTete.map((c, ci) => <div key={`n${ci}`} className="cart-note">› {c.note}</div>)}
+        {visibles.map((choice, ci) => (
+          <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}{choice.supplement > 0 && <span className="cart-supplement"> +{Number(choice.supplement).toFixed(2)} €</span>}
+            {choice.note && <span className="cart-note-choix">› {choice.note}</span>}
+          </div>
+        ))}
+        {allergie && (
+          <div className="cart-allergie">
+            <TriangleAlert size={14} strokeWidth={2.4} aria-hidden="true" />
+            {texteAllergie(allergie)}{menu && choixCibles(item).length > 1 ? " · tout le menu" : ""}
+          </div>
+        )}
+        {(() => {
+          const reste = etapesManquantes(item, item.formulaChoices);
+          if (!reste.length) return null;
+          return (
+            <button className="cart-a-completer" onClick={() => reprendreDepuis(orderItems, item)}>
+              <span className="cart-a-completer-puce"><Pause size={14} strokeWidth={2.2} aria-hidden="true" /></span>
+              À compléter : {reste.map((st) => st.label).join(", ")}
+            </button>
+          );
+        })()}
+      </div>
+    );
+  }
+
   const cartContent = (
     <>
       {orderItems.length > 0 ? (
         <>
           <div className="cart-detail cart-detail--always">
-            {orderItems.map((item) => (
-              <div key={item.cartId} className="cart-item-block">
-                <div className="cart-item">
-                  <span className="cart-item-name">
-                    {nomAffiche(item)}
-                    {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
-                  </span>
-                  <div className="cart-item-controls">
-                    <button
-                      className={`qty-btn ${item.qty === 1 ? "delete" : ""}`}
-                      onClick={() => updateQty(item.cartId, item.qty - 1)}
-                    >
-                      {item.qty === 1 ? "✕" : "−"}
-                    </button>
-                    <span className="cart-item-qty">{item.qty}</span>
-                    <button className="qty-btn" onClick={() => updateQty(item.cartId, item.qty + 1)}>+</button>
-                  </div>
-                  <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
-                </div>
-                {choixVisibles(item).map((choice, ci) => (
-                  <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
-                ))}
-                {(() => {
-                  const reste = etapesManquantes(item, item.formulaChoices);
-                  if (!reste.length) return null;
-                  return (
-                    <button className="cart-a-completer" onClick={() => reprendreDepuis(orderItems, item)}>
-                      <span className="cart-a-completer-puce">⏸</span>
-                      À compléter : {reste.map((st) => st.label).join(", ")}
-                    </button>
-                  );
-                })()}
-              </div>
-            ))}
+            {orderItems.map(ligneDuPanier)}
             <div className="cart-detail-actions">
-              <button className="btn-clear" onClick={() => setOrderItems([])}>Vider</button>
+              <button className="btn-clear" onClick={() => (editingOrderId ? newOrder() : setOrderItems([]))}>
+                <Trash2 {...ICO} />{editingOrderId ? "Annuler la modification" : "Vider"}
+              </button>
             </div>
           </div>
           <div className="cart-bottom">
@@ -1158,7 +1524,7 @@ function App() {
         </>
       ) : (
         <div className="cart-empty-sidebar">
-          <span>🛒</span>
+          <ShoppingBasket size={36} strokeWidth={1.4} aria-hidden="true" />
           <p>Panier vide</p>
         </div>
       )}
@@ -1175,23 +1541,36 @@ function App() {
           <h1>PUNJAB</h1>
           {MODE_ESSAI && <span className="badge-essai">MODE ESSAI</span>}
           <div className="header-right">
-            <button className="settings-btn" onClick={() => setShowSettingsPwd(true)}>⚙</button>
+            <button className="settings-btn" aria-label="Réglages" onClick={() => setShowSettingsPwd(true)}><Settings size={20} strokeWidth={1.8} aria-hidden="true" /></button>
             <button className="orders-btn" onClick={() => setShowOrders(true)}>
               <span className="orders-btn-label">En cours</span>
               {serverOrders.length > 0 && <span className="orders-btn-count">{serverOrders.length}</span>}
             </button>
-            <button className="table-btn" onClick={openNumpad}>
+            <button className="table-btn" onClick={() => openNumpad()}>
               <span className="table-btn-label">Table</span>
               <span className="table-btn-value">{tableNumber || "--"}</span>
             </button>
           </div>
         </header>
 
+        {/* Modification en cours : visible partout, même panier vide */}
+        {editingOrderId && (() => {
+          const cmd = serverOrders.find((o) => o.id === editingOrderId);
+          const cible = cmd?.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd?.tableNumber ?? tableNumber}`;
+          return (
+            <div className="modif-bandeau" role="status">
+              <Pencil size={16} strokeWidth={2} aria-hidden="true" />
+              <span className="modif-bandeau-texte">Modification · {cible}{cmd?.orderNum ? ` · #${cmd.orderNum}` : ""}</span>
+              <button className="modif-bandeau-annuler" onClick={newOrder}>Annuler la modification</button>
+            </div>
+          );
+        })()}
+
         <div className="category-tabs">
           {menuData.map((section) => (
             <button
               key={section.category}
-              className={`category-tab ${activeCategory === section.category ? "active" : ""}`}
+              className={`category-tab ${categorie === section.category ? "active" : ""}`}
               onClick={() => { setActiveCategory(section.category); setActiveSubcategory(null); }}
             >
               {section.category}
@@ -1201,22 +1580,17 @@ function App() {
 
         {subcategories.length > 0 && (
           <div className="subcategory-tabs">
-            <button className={`subcategory-tab ${!activeSubcategory ? "active" : ""}`} onClick={() => setActiveSubcategory(null)}>Tous</button>
+            <button className={`subcategory-tab ${!sousCat ? "active" : ""}`} onClick={() => setActiveSubcategory(null)}>Tous</button>
             {subcategories.map((sub) => {
-              const c = getSubcatColor(sub);
-              const isActive = activeSubcategory === sub;
+              const c = getSubcatColor(sub, couleursFamilles);
               return (
                 <button
                   key={sub}
-                  className="subcategory-tab"
+                  className={`subcategory-tab ${sousCat === sub ? "active" : ""}${c ? " caisse-produit--famille" : ""}`}
                   onClick={() => setActiveSubcategory(sub)}
-                  style={c ? {
-                    background: isActive ? c.active : c.bg,
-                    borderColor: isActive ? c.border : "transparent",
-                    color: c.text,
-                    fontWeight: isActive ? 700 : 500,
-                  } : undefined}
+                  style={c ? { "--famille": c.vif || c.border } : undefined}
                 >
+                  {c && <span className="adm-point" style={{ background: c.vif || c.border }} aria-hidden="true" />}
                   {sub}
                 </button>
               );
@@ -1231,36 +1605,57 @@ function App() {
               onClick={() => setGroupe({ compo: {}, phase: "compo", etape: 0, picks: {},
                                          encours: null, pendingArticle: null, pendingPrix: null, saisie: null })}
             >
-              <span className="groupe-ouvrir-titre">Commande groupée</span>
-              <span className="groupe-ouvrir-aide">toute la table, un service à la fois</span>
+              <span className="groupe-ouvrir-icone"><Users size={22} strokeWidth={1.8} aria-hidden="true" /></span>
+              <span className="groupe-ouvrir-textes">
+                <span className="groupe-ouvrir-titre">Commande groupée</span>
+                <span className="groupe-ouvrir-aide">toute la table, un service à la fois</span>
+              </span>
             </button>
           )}
           <div className="menu-grid-items">
-            {activeCategory !== "Menu" && (
+            {categorie !== "Menu" && (
               <button
                 className="menu-btn menu-btn--libre"
-                onClick={() => { setLibreNom(""); setLibrePrix(""); setLibreCat(activeCategory); }}
+                onClick={() => { setLibreNom(""); setLibrePrix(""); setLibreCat(categorie); }}
               >
-                <span className="menu-btn-name">Autre</span>
-                <span className="menu-btn-bottom">
+                <span className="caisse-produit-haut">
+                  <span className="caisse-plus"><Plus size={18} strokeWidth={2} aria-hidden="true" /></span>
+                </span>
+                <span className="caisse-produit-bas">
+                  <span className="menu-btn-name">Autre</span>
                   <span className="menu-btn-price menu-btn-price--libre">à saisir</span>
                 </span>
               </button>
             )}
             {visibleItems.map((item) => {
               const qty = getItemQty(item.id);
-              const c = getSubcatColor(item.subcategory);
+              const c = getSubcatColor(item.subcategory, couleursFamilles);
               return (
                 <button
                   key={item.id}
-                  className="menu-btn"
+                  className={`menu-btn${c ? " caisse-produit--famille" : ""}`}
                   onClick={() => addItem(item)}
-                  style={c ? { borderColor: c.border, background: c.bg } : undefined}
+                  style={c ? { "--famille": c.vif || c.border } : undefined}
                 >
-                  {qty > 0 && <span className="menu-btn-badge">{qty}</span>}
-                  <span className="menu-btn-name">{item.name}</span>
-                  <span className="menu-btn-bottom">
-                    <span className="menu-btn-price" style={c ? { color: c.text } : undefined}>
+                  <span className="caisse-produit-haut">
+                    <span className="caisse-produit-reperes">
+                      {(() => {
+                        const ind = indicateurFormule(item);
+                        if (!ind) return null;
+                        // « 2 choix » : le mot disparaît sur un bouton étroit (CSS), le nombre reste
+                        const [nb, ...mot] = ind.texte.split(" ");
+                        return (
+                          <span className={`menu-btn-tag ${ind.classe}`}>
+                            {nb}<span className="menu-btn-tag-mot"> {mot.join(" ")}</span>
+                          </span>
+                        );
+                      })()}
+                      {qty > 0 && <span className="menu-btn-badge" aria-label={`${qty} dans le panier`}>{qty}</span>}
+                    </span>
+                  </span>
+                  <span className="caisse-produit-bas">
+                    <span className="menu-btn-name">{item.name}</span>
+                    <span className="menu-btn-price">
                       {(() => {
                         const depart = prixDepart(item);
                         return depart === null
@@ -1268,10 +1663,6 @@ function App() {
                           : <><span className="menu-btn-price-prefix">dès </span>{depart.toFixed(2)} &euro;</>;
                       })()}
                     </span>
-                    {(() => {
-                      const ind = indicateurFormule(item);
-                      return ind && <span className={`menu-btn-tag ${ind.classe}`}>{ind.texte}</span>;
-                    })()}
                   </span>
                 </button>
               );
@@ -1284,46 +1675,18 @@ function App() {
           <div className="cart-bar">
             {cartOpen && (
               <div className="cart-detail">
-                {orderItems.map((item) => (
-                  <div key={item.cartId} className="cart-item-block">
-                    <div className="cart-item">
-                      <span className="cart-item-name">
-                        {nomAffiche(item)}
-                        {pimentMark(item.piment) && <span className="cart-piment">{pimentMark(item.piment)}</span>}
-                      </span>
-                      <div className="cart-item-controls">
-                        <button className={`qty-btn ${item.qty === 1 ? "delete" : ""}`} onClick={() => updateQty(item.cartId, item.qty - 1)}>
-                          {item.qty === 1 ? "✕" : "−"}
-                        </button>
-                        <span className="cart-item-qty">{item.qty}</span>
-                        <button className="qty-btn" onClick={() => updateQty(item.cartId, item.qty + 1)}>+</button>
-                      </div>
-                      <span className="cart-item-subtotal">{(item.price * item.qty).toFixed(2)} &euro;</span>
-                    </div>
-                    {choixVisibles(item).map((choice, ci) => (
-                      <div key={ci} className="cart-formula-choice">↳ {choice.label} : {choice.itemName}{pimentMark(choice.piment) && <span className="cart-piment">{pimentMark(choice.piment)}</span>}</div>
-                    ))}
-                    {(() => {
-                      const reste = etapesManquantes(item, item.formulaChoices);
-                      if (!reste.length) return null;
-                      return (
-                        <button className="cart-a-completer" onClick={() => reprendreDepuis(orderItems, item)}>
-                          <span className="cart-a-completer-puce">⏸</span>
-                          À compléter : {reste.map((st) => st.label).join(", ")}
-                        </button>
-                      );
-                    })()}
-                  </div>
-                ))}
+                {orderItems.map(ligneDuPanier)}
                 <div className="cart-detail-actions">
-                  <button className="btn-clear" onClick={() => { setOrderItems([]); setCartOpen(false); }}>Vider</button>
+                  <button className="btn-clear" onClick={() => { if (editingOrderId) newOrder(); else setOrderItems([]); setCartOpen(false); }}>
+                    <Trash2 {...ICO} />{editingOrderId ? "Annuler la modification" : "Vider"}
+                  </button>
                 </div>
               </div>
             )}
             <div className="cart-bottom">
-              <button className="cart-expand" onClick={() => setCartOpen(!cartOpen)}>
+              <button className="cart-expand" aria-label={cartOpen ? "Replier le panier" : "Voir le panier"} onClick={() => setCartOpen(!cartOpen)}>
                 <span className="cart-count">{totalQty}</span>
-                <span className="cart-expand-arrow">{cartOpen ? "▼" : "▲"}</span>
+                <span className="cart-expand-arrow">{cartOpen ? <ChevronDown size={18} strokeWidth={2} aria-hidden="true" /> : <ChevronUp size={18} strokeWidth={2} aria-hidden="true" />}</span>
               </button>
               <button className="btn-validate-big" onClick={() => { setImprimerAuto(false); validateOrder(); }}>
                 <span className="btn-validate-label">{tableNumber ? "Valider" : "Entrez la table"}</span>
@@ -1337,7 +1700,7 @@ function App() {
       {/* ── SIDEBAR — desktop only ── */}
       <div className="app-sidebar">
         <div className="sidebar-header">
-          <span>Commande{tableNumber ? ` — Table ${tableNumber}` : ""}</span>
+          <span>Commande{tableNumber ? ` · Table ${tableNumber}` : ""}</span>
           {totalQty > 0 && <span className="sidebar-count">{totalQty}</span>}
         </div>
         {cartContent}
@@ -1355,7 +1718,7 @@ function App() {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                 <button key={n} className="numpad-key" onClick={() => handleNumpadKey(String(n))}>{n}</button>
               ))}
-              <button className="numpad-key numpad-key-del" onClick={() => handleNumpadKey("del")}>⌫</button>
+              <button className="numpad-key numpad-key-del" aria-label="Effacer" onClick={() => handleNumpadKey("del")}><Delete size={24} strokeWidth={1.8} aria-hidden="true" /></button>
               <button className="numpad-key" onClick={() => handleNumpadKey("0")}>0</button>
               <button className="numpad-key numpad-key-ok" onClick={confirmNumpad} disabled={!numpadValue}>OK</button>
             </div>
@@ -1366,7 +1729,7 @@ function App() {
       {/* Settings password prompt */}
       {showSettingsPwd && (
         <PasswordGate
-          title="Paramètres — mot de passe"
+          title="Mot de passe des paramètres"
           onSuccess={(pwd) => {
             if (pwd === getDefaultPasswords().settings) {
               setShowSettingsPwd(false);
@@ -1404,6 +1767,25 @@ function App() {
         </div>
       )}
 
+      {/* Note d'une ligne du panier */}
+      {noteOuverte && (() => {
+        const ligne = orderItems.find((i) => i.cartId === noteOuverte);
+        if (!ligne) return null;
+        const mk = pimentMark(pimentLigne(ligne));
+        return (
+          <NoteArticle
+            key={ligne.cartId}
+            ligne={posterArticles([ligne], menuData)[0]}
+            nom={nomAffiche(ligne)}
+            piment={mk}
+            paye={(payeEnCours[ligne.cartId] || 0) > 0}
+            allergenesPlat={allergenesDeclares(ligne, menuData)}
+            onValider={(modif, une) => { poserNote(ligne.cartId, modif, une); setNoteOuverte(null); }}
+            onFermer={() => setNoteOuverte(null)}
+          />
+        );
+      })()}
+
       {/* Formula picker */}
       {formulaPicker && (
         <div className="numpad-overlay" onClick={() => setFormulaPicker(null)}>
@@ -1421,14 +1803,14 @@ function App() {
             {formulaPicker.showSummary ? (
               /* ── Écran de confirmation ── */
               <>
-                <div className="formula-picker-step-label" style={{ color: "#27ae60" }}>✓ Récapitulatif</div>
+                <div className="formula-picker-step-label formula-picker-step-label--ok"><Check size={18} strokeWidth={2.2} aria-hidden="true" />Récapitulatif</div>
                 <div className="formula-picker-items">
                   {formulaPicker.choices.map((c, i) => (
                     <div key={i} className="formula-summary-row">
                       <span className="formula-summary-label">{c.label}</span>
                       <span className="formula-summary-name">
                         {c.itemName}
-                        {pimentMark(c.piment) && <span style={{ marginLeft: 5 }}>{pimentMark(c.piment)}</span>}
+                        {pimentMark(c.piment) && <span className="formula-recap-piment">{pimentMark(c.piment)}</span>}
                       </span>
                     </div>
                   ))}
@@ -1436,7 +1818,7 @@ function App() {
                 <button className="formula-picker-confirm" onClick={confirmFormulaOrder}>
                   Ajouter au panier
                 </button>
-                <button className="formula-picker-cancel" onClick={goBackFormula}>← Modifier</button>
+                <button className="formula-picker-cancel" onClick={goBackFormula}><ArrowLeft {...ICO} />Modifier</button>
               </>
             ) : (
             /* ── Récap des choix déjà faits (étapes précédentes) ── */
@@ -1448,7 +1830,7 @@ function App() {
                     <span className="formula-picker-recap-label">{c.label}</span>
                     <span className="formula-picker-recap-name">
                       {c.itemName}
-                      {pimentMark(c.piment) && <span style={{ marginLeft: 4 }}>{pimentMark(c.piment)}</span>}
+                      {pimentMark(c.piment) && <span className="formula-recap-piment">{pimentMark(c.piment)}</span>}
                     </span>
                   </div>
                 ))}
@@ -1474,13 +1856,13 @@ function App() {
                   setTexteLibre("");
                   const { saisie, ...rest } = formulaPicker;
                   setFormulaPicker(rest);
-                }}>← Retour</button>
+                }}><ArrowLeft {...ICO} />Retour</button>
               </>
             ) : formulaPicker.pendingArticle ? (
               /* ── Sous-étape piment ── */
               <>
                 <div className="formula-picker-step-label">
-                  🌶️ Niveau de piment — <strong>{formulaPicker.pendingArticle}</strong>
+                  <Flame size={18} strokeWidth={2} aria-hidden="true" /> Niveau de piment : <strong>{formulaPicker.pendingArticle}</strong>
                 </div>
                 <div className="formula-picker-items">
                   {PIMENT_LEVELS.map(({ level, label, emoji }) => (
@@ -1493,11 +1875,11 @@ function App() {
                         pickFormulaItem(pendingArticle, level, pendingPrix ?? null);
                       }}
                     >
-                      <span style={{ marginRight: 8 }}>{emoji}</span>{label}
+                      <span className="formula-piment-niveau">{emoji}</span>{label}
                     </button>
                   ))}
                 </div>
-                <button className="formula-picker-cancel" onClick={() => setFormulaPicker({ ...formulaPicker, pendingArticle: null })}>← Retour</button>
+                <button className="formula-picker-cancel" onClick={() => setFormulaPicker({ ...formulaPicker, pendingArticle: null })}><ArrowLeft {...ICO} />Retour</button>
               </>
             ) : (
               /* ── Liste articles ── */
@@ -1511,7 +1893,7 @@ function App() {
                     const rang = (formulaPicker.parcours || []).length + 1;
                     // « Étape 1/1 » n'apporte rien : on ne compte que s'il y en a plusieurs
                     return concernees.length > 1
-                      ? `Étape ${rang}/${concernees.length} — ${label}`
+                      ? `Étape ${rang}/${concernees.length} · ${label}`
                       : label;
                   })()}
                 </div>
@@ -1535,7 +1917,7 @@ function App() {
                           const prix = prixArticle != null
                             ? prixArticle
                             : (etapeCourante?.remplaceNom && !estFormuleMenu(formulaPicker.item)
-                                ? formulaPicker.item.price : null);
+                                ? (formulaPicker.item.prixBase ?? formulaPicker.item.price) : null);
                           return (
                             <button
                               key={ai}
@@ -1554,6 +1936,9 @@ function App() {
                               {name}
                               {libre && <span className="formula-picker-price">à saisir</span>}
                               {!libre && prix != null && <span className="formula-picker-price">{prix.toFixed(2)} €</span>}
+                              {typeof article !== "string" && article.supplement > 0 && (
+                                <span className="formula-picker-price">+{Number(article.supplement).toFixed(2)} €</span>
+                              )}
                             </button>
                           );
                         })
@@ -1562,11 +1947,11 @@ function App() {
                 </div>
                 {formulaPicker.choices.length > 0 && (
                   <button className="formula-picker-pause" onClick={mettreEnPause}>
-                    Mettre en pause — {etapesManquantes(formulaPicker.item, formulaPicker.choices).length} à choisir
+                    Mettre en pause ({etapesManquantes(formulaPicker.item, formulaPicker.choices).length} à choisir)
                   </button>
                 )}
                 <button className="formula-picker-cancel" onClick={(formulaPicker.parcours || []).length > 0 ? goBackFormula : () => setFormulaPicker(null)}>
-                  {(formulaPicker.parcours || []).length > 0 ? "← Retour" : "Annuler"}
+                  {(formulaPicker.parcours || []).length > 0 ? <><ArrowLeft {...ICO} />Retour</> : "Annuler"}
                 </button>
               </>
             )}
@@ -1582,7 +1967,7 @@ function App() {
           <div className="orders-panel" onClick={(e) => e.stopPropagation()}>
             <div className="orders-panel-header">
               <span>Commandes en cours</span>
-              <button className="orders-panel-close" onClick={() => setShowOrders(false)}>✕</button>
+              <button className="orders-panel-close" aria-label="Fermer" onClick={() => setShowOrders(false)}><X size={22} strokeWidth={1.8} aria-hidden="true" /></button>
             </div>
             {serverOrders.length === 0 ? (
               <p className="orders-panel-empty">Aucune commande active</p>
@@ -1595,12 +1980,16 @@ function App() {
                         <span className="orders-panel-emporter-badge">À EMPORTER</span>
                         <strong className="orders-panel-emporter-num">#{o.emporterNum}</strong>
                         {o.clientName && <span className="orders-panel-emporter-info">{o.clientName}</span>}
-                        {o.clientPickupTime && <span className="orders-panel-emporter-time">⏰ {o.clientPickupTime}</span>}
+                        {o.clientPickupTime && <span className="orders-panel-emporter-time"><Clock size={14} strokeWidth={2} aria-hidden="true" />{o.clientPickupTime}</span>}
                       </div>
                     ) : (
                       <strong>Table {o.tableNumber}</strong>
                     )}
                     <span className="orders-panel-num">#{o.orderNum}</span>
+                    {!o.tcOrderId && !o.imprime && <span className="orders-panel-alerte">jamais envoyée</span>}
+                    {modifNonEnvoyee(o) && (
+                      <span className="orders-panel-alerte">modif. non envoyée</span>
+                    )}
                     {(() => {
                       // Une table deja entamee doit se voir depuis la liste :
                       // sinon il faut ouvrir l'addition pour s'en apercevoir.
@@ -1631,19 +2020,28 @@ function App() {
                         // dessus etait un tap de trop en plein service.
                         reprendreDepuis(loadOrderForEdit(o) || []);
                       }}>
-                        ⏸ À compléter : {[...new Set(reste)].join(", ")}
+                        <Pause size={14} strokeWidth={2.2} aria-hidden="true" />À compléter : {[...new Set(reste)].join(", ")}
                       </button>
                     );
                   })()}
                   <div className="orders-panel-items">
                     {o.items.slice(0, 4).map((item, i) => (
-                      <span key={i} className="orders-panel-tag">{item.qty}× {item.name}</span>
+                      <span key={i} className="orders-panel-tag">
+                        {item.qty}× {item.name}
+                        {/* repère : quelle ligne porte une note, une allergie */}
+                        {allergieDeLigne(item)
+                          ? <TriangleAlert className="orders-panel-tag-allergie" size={13} strokeWidth={2.4} aria-label="allergie" />
+                          : ligneANote(item) && <MessageSquareText className="orders-panel-tag-note" size={13} strokeWidth={2.2} aria-label="note" />}
+                      </span>
                     ))}
                     {o.items.length > 4 && <span className="orders-panel-tag">+{o.items.length - 4}</span>}
                   </div>
                   <div className="orders-panel-actions">
                     <button className="orders-panel-edit-btn" onClick={() => loadOrderForEdit(o)}>Modifier</button>
-                    <button className="orders-panel-bill-btn" onClick={() => setRemisePour({ order: o, type: "aucune", valeur: "", parts: toutLeReste(o) })}>Addition</button>
+                    <button className="orders-panel-bill-btn" onClick={() => setRemisePour({ order: o, type: "aucune", valeur: "", parts: {} })}>Addition</button>
+                    <button className="orders-panel-bill-btn orders-panel-tickets-btn" onClick={() => ouvrirReimpression(o)}>
+                      <Printer size={16} strokeWidth={1.8} aria-hidden="true" />Tickets
+                    </button>
                     <button className="orders-panel-close-btn" onClick={() => closeTable(o.id)}>Clôturer</button>
                   </div>
                 </div>
@@ -1660,11 +2058,11 @@ function App() {
             <div className="order-type-modal-title">Type de commande</div>
             <div className="order-type-modal-choices">
               <button className="order-type-choice surplace" onClick={() => chooseOrderType("surplace")}>
-                <span className="order-type-choice-icon">🍽️</span>
+                <span className="order-type-choice-icon"><UtensilsCrossed size={30} strokeWidth={1.5} aria-hidden="true" /></span>
                 <span className="order-type-choice-label">Sur place</span>
               </button>
               <button className="order-type-choice emporter" onClick={() => chooseOrderType("emporter")}>
-                <span className="order-type-choice-icon">🛍️</span>
+                <span className="order-type-choice-icon"><ShoppingBag size={30} strokeWidth={1.5} aria-hidden="true" /></span>
                 <span className="order-type-choice-label">À emporter</span>
               </button>
             </div>
@@ -1704,10 +2102,10 @@ function App() {
                 return (
                   <div className="time-picker">
                     <div className="time-picker-header">
-                      <span className="time-picker-label">⏰ Heure de retrait</span>
+                      <span className="time-picker-label"><Clock size={16} strokeWidth={2} aria-hidden="true" />Heure de retrait</span>
                       <span className="time-picker-display">{clientPickupTime || "--:--"}</span>
                       {clientPickupTime && (
-                        <button className="time-picker-clear" onClick={() => setClientPickupTime("")}>✕</button>
+                        <button className="time-picker-clear" aria-label="Effacer l'heure" onClick={() => setClientPickupTime("")}><X size={16} strokeWidth={2} aria-hidden="true" /></button>
                       )}
                     </div>
                     <div className="time-picker-section-label">Heure</div>
@@ -1751,10 +2149,14 @@ function App() {
         // Tout est regle : la fenetre ne sert plus a repartir mais a ressortir
         // un duplicata. On reaffiche la commande entiere sans toucher a l'encaisse.
         const duplicata = unitesRestantes(cmd) === 0;
+        // Une seule addition (tout ce qui reste) ou addition séparée (qui paie
+        // quoi). Une table déjà en partie réglée s'ouvre en addition séparée.
+        const separee = !duplicata && (remisePour.separee ?? (cmd.parts || []).length > 0);
+        const partsEff = separee ? parts : toutLeReste(cmd);
         const lignes = (cmd.items || []).map((i, k) => ({
           item: i, cle: cleLigne(i, k),
           restant: duplicata ? i.qty : restantDe(cmd, i, k),
-          pris: duplicata ? i.qty : (parts[cleLigne(i, k)] || 0),
+          pris: duplicata ? i.qty : (partsEff[cleLigne(i, k)] || 0),
         })).filter((l) => l.restant > 0);
         // Le detail reste visible jusqu'au dernier article : on veut toujours
         // voir ce qu'on encaisse, meme quand il n'y a plus rien a repartir.
@@ -1762,12 +2164,21 @@ function App() {
         const total = aRegler.reduce((s, l) => s + l.item.price * l.pris, 0);
         const reste = resteAPayer(cmd);
         const v = parseFloat(String(remisePour.valeur).replace(",", "."));
-        const brut = remisePour.type === "aucune" || !Number.isFinite(v) || v <= 0 ? 0
-          : remisePour.type === "euro" ? v : total * v / 100;
-        const montant = Math.min(Math.max(brut, 0), total);
+        // en centimes entiers, même formule que le serveur (montantRemise) :
+        // 15 % de 8,50 € = 1,28 €, et TOTAL − REMISE = À PAYER au centime
+        const centsTotal = Math.round(total * 100);
+        const centsRemise = remisePour.type === "aucune" || !Number.isFinite(v) || v <= 0 ? 0
+          : remisePour.type === "euro" ? Math.round(v * 100) : Math.round(centsTotal * v / 100);
+        const montant = Math.min(Math.max(centsRemise, 0), centsTotal) / 100;
+        // duplicata : ce qui a réellement été encaissé (somme des parts)
+        const totalCommande = (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0);
+        const encaisse = (cmd.parts || []).length
+          ? Math.round((cmd.parts || []).reduce((s, p) => s + (Number(p.total) || 0), 0) * 100) / 100
+          : totalCommande;
         const choisir = (type, valeur) => setRemisePour({ ...remisePour, type, valeur });
         const poser = (cle, n) => setRemisePour({ ...remisePour, parts: { ...parts, [cle]: n } });
         const toutPris = aRegler.every((l) => l.pris === l.restant);
+        const rienPris = !aRegler.some((l) => l.pris > 0);
         // Suggestion recalculee a chaque changement de selection : figee, elle
         // restait fausse des qu'on ajoutait un couvert apres avoir bascule.
         const repasSuggere = Math.max(1, aRegler
@@ -1785,36 +2196,59 @@ function App() {
                   {cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`}
                 </span>
                 <span className="remise-total">
-                  {(duplicata ? (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) : reste).toFixed(2)} &euro;
+                  {(duplicata ? encaisse : reste).toFixed(2)} &euro;
                 </span>
-                {duplicata ? <span className="remise-deja">déjà réglée — duplicata</span>
+                {duplicata ? <span className="remise-deja">encaissés : l'addition est réglée (duplicata)</span>
                   : reste < (cmd.items || []).reduce((s, i) => s + i.price * i.qty, 0) - 0.001 && (
                     <span className="remise-deja">reste à régler</span>
                   )}
               </div>
 
-              {lignes.length > 0 && (
+              {!duplicata && (
+                <div className="addition-mode">
+                  <div className="remise-choix">
+                    <button className={`remise-btn ${!separee ? "actif" : ""}`} aria-pressed={!separee}
+                      disabled={remisePour.envoi}
+                      onClick={() => setRemisePour({ ...remisePour, separee: false, parts: toutLeReste(cmd) })}>
+                      Une seule addition
+                    </button>
+                    <button className={`remise-btn ${separee ? "actif" : ""}`} aria-pressed={separee}
+                      disabled={remisePour.envoi}
+                      onClick={() => setRemisePour({ ...remisePour, separee: true, parts: separee ? parts : {} })}>
+                      Addition séparée
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {lignes.length > 0 && (separee || duplicata) && (
                 <div className="part-liste">
                   <div className="part-entete">
-                    <span>Qui paie quoi ?</span>
-                    <button className="part-tout" onClick={() =>
-                      setRemisePour({ ...remisePour, parts: toutPris ? {} : toutLeReste(cmd) })
-                    }>{toutPris ? "Tout décocher" : "Tout le reste"}</button>
+                    <span>{duplicata ? "Détail de l'addition" : "Qui paie quoi ?"}</span>
+                    {!duplicata && (
+                      <button className="part-tout" onClick={() =>
+                        setRemisePour({ ...remisePour, parts: toutPris ? {} : toutLeReste(cmd) })
+                      }>{toutPris ? "Tout décocher" : "Tout le reste"}</button>
+                    )}
                   </div>
                   {lignes.map((l) => (
                     <div key={l.cle} className={`part-ligne ${l.pris ? "actif" : ""}`}>
                       <span className="part-nom">
                         {nomAffiche(l.item)}
                         {pimentMark(l.item.piment) && <span className="cart-piment">{pimentMark(l.item.piment)}</span>}
+                        {/* deux lignes du même plat se distinguent par leur note */}
+                        {resumeNote(l.item) && <span className="part-note">{resumeNote(l.item)}</span>}
                         <span className="part-prix">{l.item.price.toFixed(2)} &euro;</span>
                       </span>
-                      <div className="part-compteur">
-                        <button className="part-rond" disabled={l.pris === 0}
-                          onClick={() => poser(l.cle, l.pris - 1)}>−</button>
-                        <span className="part-n">{l.pris}<span className="part-sur">/{l.restant}</span></span>
-                        <button className="part-rond" disabled={l.pris >= l.restant}
-                          onClick={() => poser(l.cle, l.pris + 1)}>+</button>
-                      </div>
+                      {duplicata ? <span className="part-n">{l.pris}×</span> : (
+                        <div className="part-compteur">
+                          <button className="part-rond" disabled={l.pris === 0}
+                            onClick={() => poser(l.cle, l.pris - 1)}>−</button>
+                          <span className="part-n">{l.pris}<span className="part-sur">/{l.restant}</span></span>
+                          <button className="part-rond" disabled={l.pris >= l.restant}
+                            onClick={() => poser(l.cle, l.pris + 1)}>+</button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1842,7 +2276,7 @@ function App() {
                 </div>
               )}
 
-              <div className="remise-corps">
+              <div className={`remise-corps ${duplicata ? "remise-corps--duplicata" : ""}`}>
                 <div className="remise-choix remise-choix--detail">
                   <button className={`remise-btn ${!remisePour.sansDetail ? "actif" : ""}`}
                     onClick={() => setRemisePour({ ...remisePour, sansDetail: false })}>Avec détail</button>
@@ -1893,8 +2327,24 @@ function App() {
                   if (envoiRef.current) return;
                   envoiRef.current = true;
                   setRemisePour({ ...remisePour, envoi: true });
+                  if (duplicata) {
+                    // Copie de ce qui a été encaissé : une seule part → elle telle
+                    // quelle ; plusieurs → l'addition entière, avec en remise l'écart
+                    // réellement accordé. Rien n'est modifié dans les parts.
+                    const parts = cmd.parts || [];
+                    const ecart = Math.round((totalCommande - encaisse) * 100) / 100;
+                    if (parts.length === 1) {
+                      await reprintBill(cmd, parts[0].remise, parts[0].lignes, parts[0].sansDetail, parts[0].nbRepas, true);
+                    } else {
+                      await reprintBill(cmd, ecart > 0 ? { type: "euro", valeur: ecart } : null, null, false, null, true);
+                    }
+                    envoiRef.current = false;
+                    setRemisePour((r) => (r ? { ...r, envoi: false } : r));
+                    return;
+                  }
+                  // la part gardée (et réimprimable) ne porte ni note ni allergie
                   const aPayer = aRegler.filter((l) => l.pris > 0)
-                    .map((l) => ({ ...l.item, qty: l.pris }));
+                    .map((l) => ({ ...sansNotes(l.item), qty: l.pris }));
                   const ok = await reprintBill(cmd, montant > 0 ? { type: remisePour.type, valeur: v } : null,
                                                aPayer, remisePour.sansDetail === true,
                                                remisePour.sansDetail ? repas : null);
@@ -1918,7 +2368,7 @@ function App() {
                     remise: montant > 0 ? { type: remisePour.type, valeur: v } : null,
                     sansDetail: remisePour.sansDetail === true,
                     nbRepas: remisePour.sansDetail ? repas : null,
-                    total: total - montant,
+                    total: Math.round((total - montant) * 100) / 100,
                   };
                   const maj = { ...cmd, paye, parts: [...(cmd.parts || []), part] };
                   payeLocal.current[cmd.id] = paye;
@@ -1932,20 +2382,96 @@ function App() {
                     // sauvegarde ratee passait pour un succes.
                     .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); })
                     .catch(() => alert("La part est imprimée, mais l'enregistrement a échoué.\n"
-                      + "Elle reste comptée sur cette caisse — ne recharge pas la page avant la fin du service."));
+                      + "Elle reste comptée sur cette caisse. Ne recharge pas la page avant la fin du service."));
                   // Il reste des parts a encaisser : on garde la fenetre ouverte,
                   // remise a zero, plutot que d'obliger a la rouvrir pour chacun.
                   if (unitesRestantes(maj) > 0) {
-                    setRemisePour({ ...remisePour, order: maj, parts: toutLeReste(maj), envoi: false,
-                                    type: "aucune", valeur: "", sansDetail: false, nbRepas: undefined });
+                    setRemisePour({ ...remisePour, order: maj, parts: separee ? {} : toutLeReste(maj), envoi: false,
+                                    separee, type: "aucune", valeur: "", sansDetail: false, nbRepas: undefined });
                     return;
                   }
                   setRemisePour(null);
                   setClotureApres(maj);
                 }}>
                   {remisePour.envoi ? "Impression…" : duplicata ? "Réimprimer l'addition"
-                    : toutPris ? "Imprimer" : "Imprimer cette part"}
+                    : rienPris ? "Choisis ce qu'il paie"
+                    : `${!separee ? "Imprimer l'addition" : toutPris ? "Imprimer tout le reste" : "Imprimer cette part"} · ${(total - montant).toFixed(2)} €`}
                 </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Ressortir les tickets de production (papier jeté ou perdu) */}
+      {reimpression && (() => {
+        const cmd = reimpression.order;
+        const POSTES_TICKET = [
+          { cle: "CUISINE", nom: "Cuisine", Icone: CookingPot },
+          { cle: "DESSERTS", nom: "Desserts", Icone: IceCreamCone },
+          { cle: "BAR", nom: "Bar", Icone: CupSoda },
+          { cle: "COMMANDE", nom: "Ticket à emporter", Icone: ShoppingBag },
+        ].filter((p) => (reimpression.postes || []).includes(p.cle));
+        // Ni lien d'impression ni connue du serveur : elle n'est jamais partie
+        const jamaisEnvoyee = reimpression.postes !== null && !cmd.tcOrderId && !cmd.imprime && !reimpression.connue;
+        return (
+          <div className="emporter-modal-overlay" onClick={() => !reimpression.envoi && setReimpression(null)}>
+            <div className="emporter-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="remise-entete">
+                <span className="remise-titre">RESSORTIR UN TICKET</span>
+                <span className="remise-cible">
+                  {cmd.orderType === "emporter" ? `À emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`}
+                </span>
+                <span className="remise-deja">
+                  {reimpression.envoyee ? "envoyée en cuisine à l'instant"
+                    : jamaisEnvoyee ? "cette commande n'est jamais partie en cuisine"
+                    : "ticket complet, comme envoyé en cuisine, marqué DUPLICATA"}
+                </span>
+                {!reimpression.envoyee && !jamaisEnvoyee && modifNonEnvoyee(cmd) && (
+                  <span className="reimpr-avertissement">
+                    La dernière modification n'est pas encore partie : Modifier puis Imprimer pour l'envoyer.
+                  </span>
+                )}
+              </div>
+              <div className="reimpr-corps">
+                {reimpression.postes === null ? (
+                  <p className="reimpr-attente">Recherche des tickets…</p>
+                ) : reimpression.envoyee ? (
+                  <p className="reimpr-attente">La commande est partie en cuisine avec tous ses tickets.</p>
+                ) : jamaisEnvoyee ? (
+                  <button className="formula-picker-item-btn reimpr-btn" disabled={reimpression.envoi || reimpression.pause} onClick={envoyerEnCuisine}>
+                    <Printer size={20} strokeWidth={1.7} aria-hidden="true" />Envoyer en cuisine
+                  </button>
+                ) : POSTES_TICKET.length === 0 ? (
+                  <p className="reimpr-attente">Aucun ticket de préparation pour cette commande.</p>
+                ) : (
+                  <>
+                    {POSTES_TICKET.map((p) => {
+                      const Icone = p.Icone;
+                      return (
+                        <button key={p.cle} className="formula-picker-item-btn reimpr-btn" disabled={reimpression.envoi || reimpression.pause}
+                                onClick={() => ressortirTickets([p.cle], p.nom)}>
+                          <Icone size={20} strokeWidth={1.7} aria-hidden="true" />{p.nom}
+                        </button>
+                      );
+                    })}
+                    {POSTES_TICKET.length > 1 && (
+                      <button className="formula-picker-item-btn reimpr-btn" disabled={reimpression.envoi || reimpression.pause}
+                              onClick={() => ressortirTickets(POSTES_TICKET.map((p) => p.cle), "Tous les tickets")}>
+                        <ReceiptText size={20} strokeWidth={1.7} aria-hidden="true" />Tous les tickets
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="emporter-modal-actions reimpr-actions">
+                {/* place réservée : rien ne saute quand le message arrive */}
+                <p className={`reimpr-message ${reimpression.erreur ? "reimpr-message--erreur" : ""} ${reimpression.envoi || reimpression.message ? "" : "reimpr-message--vide"}`}
+                   role="status">
+                  {reimpression.envoi ? "Impression…" : reimpression.message || " "}
+                </p>
+                <button className="emporter-btn-cancel" disabled={reimpression.envoi}
+                        onClick={() => setReimpression(null)}>Fermer</button>
               </div>
             </div>
           </div>
@@ -2032,24 +2558,24 @@ function App() {
                 <button className="formula-picker-cancel" onClick={() => {
                   setTexteLibre("");
                   retourGroupe();
-                }}>← Retour</button>
+                }}><ArrowLeft {...ICO} />Retour</button>
               </>
             ) : groupe.pendingArticle ? (
               /* ── Niveau de piment ── */
               <>
                 <div className="formula-picker-step-label">
-                  🌶️ Niveau de piment — <strong>{groupe.pendingArticle}</strong>
+                  <Flame size={18} strokeWidth={2} aria-hidden="true" /> Niveau de piment : <strong>{groupe.pendingArticle}</strong>
                 </div>
                 <div className="formula-picker-items">
                   {PIMENT_LEVELS.map(({ level, label, emoji }) => (
                     <button key={level} className="formula-picker-item-btn" onClick={() => {
                       choisirGroupe(groupe.encours, groupe.pendingArticle, level, groupe.pendingPrix ?? null);
                     }}>
-                      <span style={{ marginRight: 8 }}>{emoji}</span>{label}
+                      <span className="formula-piment-niveau">{emoji}</span>{label}
                     </button>
                   ))}
                 </div>
-                <button className="formula-picker-cancel" onClick={retourGroupe}>← Retour</button>
+                <button className="formula-picker-cancel" onClick={retourGroupe}><ArrowLeft {...ICO} />Retour</button>
               </>
             ) : groupe.encours ? (
               /* ── Précision rattachée au choix en cours ── */
@@ -2059,7 +2585,7 @@ function App() {
                 return (
                   <>
                     <div className="formula-picker-step-label">
-                      {step.label} — <strong>{ctx.item.name.replace(/^Menu /, "")}</strong>
+                      {step.label} · <strong>{ctx.item.name.replace(/^Menu /, "")}</strong>
                     </div>
                     <div className="formula-picker-items">
                       {(step.articles || []).map((a, ai) => {
@@ -2067,14 +2593,20 @@ function App() {
                         const px = typeof a !== "string" && a.price != null ? Number(a.price) : null;
                         return (
                           <button key={ai} className="formula-picker-item-btn" onClick={() => {
-                            if (typeof a !== "string" && a.piment) {
+                            // « écrit à la main » : on demande le texte, comme hors groupe
+                            if (typeof a !== "string" && a.libre) {
+                              setTexteLibre("");
+                              setGroupe((g) => ({ ...g, saisie: { prix: px, piment: !!a.piment } }));
+                            } else if (typeof a !== "string" && a.piment) {
                               setGroupe((g) => ({ ...g, pendingArticle: nom, pendingPrix: px }));
                             } else choisirGroupe(ctx, nom, null, px);
-                          }}>{nom}</button>
+                          }}>{nom}{typeof a !== "string" && a.supplement > 0 && (
+                            <span className="formula-picker-price">+{Number(a.supplement).toFixed(2)} €</span>
+                          )}</button>
                         );
                       })}
                     </div>
-                    <button className="formula-picker-cancel" onClick={retourGroupe}>← Retour</button>
+                    <button className="formula-picker-cancel" onClick={retourGroupe}><ArrowLeft {...ICO} />Retour</button>
                   </>
                 );
               })()
@@ -2118,7 +2650,7 @@ function App() {
                           }
                           return { ...g, picks, phase: "services", etape: 0 };
                         })}>
-                  {couvertsGroupe() ? `Prendre la commande — ${couvertsGroupe()} couvert${couvertsGroupe() > 1 ? "s" : ""}`
+                  {couvertsGroupe() ? `Prendre la commande (${couvertsGroupe()} couvert${couvertsGroupe() > 1 ? "s" : ""})`
                                     : "Choisis au moins un menu"}
                 </button>
                 <button className="formula-picker-cancel" onClick={() => setGroupe(null)}>Annuler</button>
@@ -2137,7 +2669,7 @@ function App() {
                 return (
                   <>
                     <div className="formula-picker-step-label groupe-service-label">
-                      <span>Étape {groupe.etape + 1}/{servicesGroupe.length} — {sv.label}</span>
+                      <span>Étape {groupe.etape + 1}/{servicesGroupe.length} · {sv.label}</span>
                       <span className={`groupe-compte ${manque ? "" : "plein"}`}>{faits} / {attendus}</span>
                     </div>
                     <div className="formula-picker-items">
@@ -2167,6 +2699,9 @@ function App() {
                                         onClick={() => tapArticleGroupe(b.item, sv.cle, b.step, a)}>
                                   {nom}
                                   {libre && <span className="formula-picker-price">à saisir</span>}
+                                  {typeof a !== "string" && a.supplement > 0 && (
+                                    <span className="formula-picker-price">+{Number(a.supplement).toFixed(2)} €</span>
+                                  )}
                                 </button>
                               );
                             })}
@@ -2203,14 +2738,14 @@ function App() {
                       if (!aDesChoix || (dernier && manque === 0)) return null;
                       return (
                         <button className="formula-picker-pause" onClick={() => validerGroupe(true)}>
-                          Mettre en pause — envoyer ce qui est choisi
+                          Mettre en pause et envoyer ce qui est choisi
                         </button>
                       );
                     })()}
                     <button className="formula-picker-cancel" onClick={() =>
                       groupe.etape > 0 ? setGroupe((g) => ({ ...g, etape: g.etape - 1 }))
                                        : setGroupe((g) => ({ ...g, phase: "compo" }))
-                    }>← Retour</button>
+                    }><ArrowLeft {...ICO} />Retour</button>
                   </>
                 );
               })()
@@ -2224,7 +2759,7 @@ function App() {
         <div className="numpad-overlay" onClick={() => setLibreCat(null)}>
           <div className="formula-picker" onClick={(e) => e.stopPropagation()}>
             <div className="formula-picker-header">
-              <div className="formula-picker-title">Autre — {libreCat}</div>
+              <div className="formula-picker-title">Autre · {libreCat}</div>
             </div>
             <div className="formula-picker-step-label">Que faut-il écrire ?</div>
             <input
@@ -2255,7 +2790,11 @@ function App() {
       {/* Ticket overlay */}
       {showTicket && ticketData && (
         <Ticket
-          key={ticketData.orderNum}
+          key={ticketData.envoi}
+          envoi={ticketData.envoi}
+          dateEnvoi={ticketData.dateEnvoi}
+          dateOrigine={ticketData.dateOrigine}
+          avant={ticketData.avant}
           order={ticketData.items}
           tableNumber={ticketData.table}
           orderNum={ticketData.orderNum}
@@ -2271,19 +2810,31 @@ function App() {
           onPrintSuccess={(tcOrderId) => {
             setImprimerAuto(false);
             const vercelId = ticketData.orderId;
-            // Mettre à jour le state local
-            setServerOrders((prev) =>
-              prev.map((o) => o.id === vercelId ? { ...o, tcOrderId } : o)
-            );
-            // Persister tcOrderId dans Vercel
-            fetchCommandes(ORDERS_API_URL, {
+            // Ce que la cuisine vient de recevoir : la prochaine modification se
+            // compare à cette version, pas à une modification jamais imprimée
+            const imprime = {
+              items: ticketData.items, tableNumber: ticketData.table, orderNum: ticketData.orderNum,
+              dateOrigine: ticketData.dateOrigine, clientName: ticketData.clientName,
+              clientPhone: ticketData.clientPhone, clientPickupTime: ticketData.clientPickupTime,
+            };
+            const ajout = { ...(tcOrderId ? { tcOrderId } : {}), imprime };
+            setServerOrders((prev) => (prev.some((o) => o.id === vercelId)
+              ? prev.map((o) => (o.id === vercelId ? { ...o, ...ajout } : o))
+              : [...prev, { ...ticketData.orderData, ...ajout }]));
+            // après la sauvegarde de la commande, pas en même temps (l'API
+            // écrit un fichier : deux écritures croisées en perdaient une)
+            const donnees = { ...ticketData.orderData, ...ajout };
+            (sauvegardeRef.current || Promise.resolve()).then(() => fetchCommandes(ORDERS_API_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "save", order: { ...ticketData.orderData, tcOrderId } }),
-            }).catch(() => {});
+              body: JSON.stringify({ action: "save", order: donnees }),
+            })).catch(() => {});
           }}
         />
       )}
+
+      {/* une nouvelle version est en ligne : le personnel recharge quand il veut */}
+      <MiseAJour commandeEnCours={orderItems.length > 0 || editingOrderId !== null} />
     </div>
   );
 }

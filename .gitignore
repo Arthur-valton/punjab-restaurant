@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# vidéos de l'écran client : copiées à la main sur le serveur du restaurant (trop lourdes pour git)
+server/videos/
+
+# commandes en cours du serveur d'impression : propres a chaque machine
+server/active-orders.json
+server/active-orders.json.tmp
+# maquettes et propositions (documents de travail)
+propositions/

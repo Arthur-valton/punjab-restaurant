@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PUNJAB · Écran client</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Écran tourné vers le client ──
+       Au repos : les vidéos du dossier server/videos en boucle (ou l'accueil
+       s'il n'y en a pas). Dès que la caisse ouvre une addition : le détail et
+       le total ; en addition séparée, seulement ce que la personne paie. */
+    :root {
+      --fond: #eeeef0; --carte: #e1e1e4; --clair: #f7f7f8;
+      --texte: #1c1c1e; --texte-2: #58585e;
+      --noir: #1c1c1e; --sur-noir: #ffffff;
+      --vert: #1a6b35; --vert-fond: #dcefe2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #000; color: var(--texte); overflow: hidden;
+      font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased; cursor: none;
+    }
+
+    /* ── Repos : vidéos ── */
+    #repos { position: fixed; inset: 0; background: #000; transition: opacity 0.5s ease; }
+    #repos video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.8s ease; }
+    #repos video.visible { opacity: 1; }
+    /* lien YouTube : le lecteur officiel, recadré pour remplir l'écran, sans clic possible */
+    #yt { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+    #yt.visible { opacity: 1; }
+    /* agrandie de 25 % : le titre (en haut) et le logo (en bas) de YouTube sortent de l'écran */
+    #yt iframe { position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-width: 177.78vh; min-height: 100vh; transform: translate(-50%, -50%) scale(1.25); border: 0; }
+    /* sans vidéo : l'accueil */
+    #accueil { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 2vh;
+               background: radial-gradient(circle at 50% 40%, #2a2a2e 0%, #111113 70%); color: #fff; }
+    #accueil.visible { display: flex; }
+    .accueil-logo { font-size: clamp(48px, 9vw, 140px); font-weight: 800; letter-spacing: 0.14em; animation: respire 6s ease-in-out infinite; }
+    .accueil-texte { font-size: clamp(18px, 2.4vw, 36px); font-weight: 500; opacity: 0.75; }
+    @keyframes respire { 0%, 100% { opacity: 0.85; transform: scale(1); } 50% { opacity: 1; transform: scale(1.03); } }
+
+    /* ── Addition ── */
+    #addition {
+      position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--fond);
+      padding: clamp(20px, 4vh, 56px) clamp(20px, 5vw, 80px); gap: clamp(14px, 2.4vh, 28px);
+      opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    body.addition #addition { opacity: 1; }
+    body.addition #repos { opacity: 0; }
+    .add-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+    .add-titre { font-size: clamp(28px, 4.4vw, 64px); font-weight: 700; letter-spacing: -0.01em; }
+    .add-table { font-size: clamp(18px, 2.4vw, 34px); font-weight: 600; color: var(--texte-2); white-space: nowrap; }
+    .add-liste {
+      flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: clamp(6px, 1vh, 12px);
+      background: var(--clair); border-radius: clamp(18px, 2.4vw, 32px); padding: clamp(14px, 2.4vh, 30px) clamp(16px, 2.6vw, 40px);
+    }
+    .ligne { display: flex; align-items: baseline; gap: clamp(10px, 1.4vw, 22px); font-size: clamp(18px, 2.3vw, 34px); animation: entre 0.3s ease; }
+    .ligne-qte { flex-shrink: 0; min-width: 2.6em; padding: 2px 10px; border-radius: 12px; background: var(--carte); text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ligne-nom { flex: 1; min-width: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ligne-nom small { display: block; font-size: 0.66em; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ligne-prix { flex-shrink: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .ligne-plus { font-size: clamp(16px, 1.8vw, 26px); color: var(--texte-2); font-weight: 500; }
+    .vide { margin: auto; text-align: center; color: var(--texte-2); font-size: clamp(20px, 2.6vw, 38px); font-weight: 500; }
+    @keyframes entre { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .add-totaux { display: flex; flex-direction: column; gap: 6px; }
+    .tot-ligne { display: flex; justify-content: space-between; font-size: clamp(16px, 2vw, 30px); color: var(--texte-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tot-final {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 4px;
+      background: var(--noir); color: var(--sur-noir); border-radius: clamp(18px, 2.4vw, 32px);
+      padding: clamp(14px, 2.4vh, 28px) clamp(18px, 2.6vw, 40px);
+    }
+    .tot-final span { font-size: clamp(20px, 2.8vw, 42px); font-weight: 600; }
+    .tot-final strong { font-size: clamp(36px, 6vw, 96px); font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .tot-final.reglee { background: var(--vert-fond); color: var(--vert); }
+  </style>
+</head>
+<body>
+  <div id="repos">
+    <video id="video-a" muted autoplay playsinline preload="auto"></video>
+    <video id="video-b" muted autoplay playsinline preload="auto"></video>
+    <div id="yt"><div id="yt-lecteur"></div></div>
+    <div id="accueil"><div class="accueil-logo">PUNJAB</div><div class="accueil-texte">Bienvenue</div></div>
+  </div>
+
+  <div id="addition" aria-live="polite">
+    <div class="add-entete">
+      <div class="add-titre" id="add-titre">Votre addition</div>
+      <div class="add-table" id="add-table"></div>
+    </div>
+    <div class="add-liste" id="add-liste"></div>
+    <div class="add-totaux" id="add-totaux"></div>
+  </div>
+
+<script>
+  const WS_URL = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/kds-ws`;
+  const euros = (n) => `${(Number(n) || 0).toFixed(2).replace(".", ",")} €`;
+  const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  // ── Vidéos au repos ──
+  // Liste de lecture : les fichiers du dossier server/videos, puis les liens
+  // de server/videos/youtube.txt (lecteur officiel YouTube). Deux lecteurs
+  // vidéo se relaient en fondu ; un seul élément boucle sur lui-même.
+  let liste = [];
+  let rang = 0;
+  let lecteur = document.getElementById("video-a");
+  let suivant = document.getElementById("video-b");
+  let yt = null;          // lecteur YouTube, créé à la première vidéo YouTube
+  let ytId = null;
+  let ytPret = null;      // chargement de l'API YouTube (une seule fois)
+  const enAddition = () => document.body.classList.contains("addition");
+  const entree = () => (liste.length ? liste[rang % liste.length] : null);
+
+  async function chargerVideos() {
+    try {
+      const r = await fetch(`/videos-client?t=${Date.now()}`, { cache: "no-store" });
+      const j = await r.json();
+      const nouvelle = [...(j.videos || []).map((src) => ({ type: "fichier", src })),
+                        ...(j.youtube || []).map((id) => ({ type: "youtube", id }))];
+      if (JSON.stringify(nouvelle) !== JSON.stringify(liste)) { liste = nouvelle; rang = 0; }
+    } catch { /* serveur injoignable : on garde la liste */ }
+    document.getElementById("accueil").classList.toggle("visible", liste.length === 0);
+    jouer();
+  }
+  function jouer() {
+    const e = entree();
+    if (!e || enAddition()) return;
+    silence();
+    if (e.type === "youtube") { jouerYoutube(e.id); return; }
+    document.getElementById("yt").classList.remove("visible");
+    if (yt && yt.pauseVideo) yt.pauseVideo();
+    if (!lecteur.src.endsWith(e.src)) lecteur.src = e.src;
+    lecteur.play().then(() => document.getElementById("accueil").classList.remove("visible")).catch(lectureBloquee);
+    lecteur.classList.add("visible");
+  }
+  // Un navigateur qui refuse la lecture automatique : l'accueil reste affiché,
+  // et le premier toucher sur l'écran lance les vidéos
+  function lectureBloquee() {
+    document.getElementById("accueil").classList.add("visible");
+    document.addEventListener("pointerdown", () => jouer(), { once: true });
+  }
+  function suivante() {
+    rang += 1;
+    const e = entree();
+    if (e && e.type === "fichier") {
+      // le second lecteur prend la vidéo suivante, puis on échange les rôles (fondu)
+      [lecteur, suivant] = [suivant, lecteur];
+      lecteur.src = e.src;
+      lecteur.currentTime = 0;
+      suivant.classList.remove("visible");
+    }
+    jouer();
+  }
+  for (const v of [lecteur, suivant]) v.addEventListener("ended", (ev) => { if (ev.target === lecteur) suivante(); });
+
+  function chargerApiYoutube() {
+    if (!ytPret) ytPret = new Promise((ok) => {
+      window.onYouTubeIframeAPIReady = ok;
+      const s = document.createElement("script");
+      s.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(s);
+    });
+    return ytPret;
+  }
+  // Le lecteur YouTube montre son titre au départ d'une vidéo, ses boutons
+  // lecture / pause à chaque reprise, et ses suggestions à la fin. Pour ne
+  // jamais les voir : la vidéo n'est jamais mise en pause (elle tourne derrière
+  // l'addition), elle n'apparaît que 3,5 s après son départ (l'accueil PUNJAB
+  // couvre ce moment), et on passe à la suivante 15 s avant la fin.
+  let ytMontre = null;
+  let ytFinDemandee = false;
+  function masquerYoutube() {
+    clearTimeout(ytMontre);
+    document.getElementById("yt").classList.remove("visible");
+    document.getElementById("accueil").classList.add("visible");
+  }
+  function montrerYoutubeBientot() {
+    clearTimeout(ytMontre);
+    ytMontre = setTimeout(() => {
+      if (entree()?.type !== "youtube") return;
+      document.getElementById("yt").classList.add("visible");
+      document.getElementById("accueil").classList.remove("visible");
+    }, 3500);
+  }
+  async function jouerYoutube(id) {
+    for (const v of [lecteur, suivant]) { v.pause(); v.classList.remove("visible"); }
+    await chargerApiYoutube();
+    if (enAddition()) return;
+    if (!yt) {
+      masquerYoutube();
+      ytId = id;
+      ytFinDemandee = false;
+      yt = new YT.Player("yt-lecteur", {
+        videoId: id,
+        host: "https://www.youtube-nocookie.com",
+        playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, playsinline: 1, disablekb: 1, iv_load_policy: 3, fs: 0, modestbranding: 1 },
+        events: {
+          onReady: (ev) => { silence(); ev.target.playVideo(); },
+          onStateChange: (ev) => {
+            silence();   // jamais de son, vérifié à chaque changement
+            if (ev.data === YT.PlayerState.PLAYING && !document.getElementById("yt").classList.contains("visible")) montrerYoutubeBientot();
+            if (ev.data === YT.PlayerState.ENDED && !enAddition()) finYoutube();
+          },
+          // vidéo retirée ou intégration refusée par son auteur : on passe à la suite
+          onError: () => {
+            if (liste.length <= 1) { masquerYoutube(); }
+            else suivante();
+          },
+        },
+      });
+      return;
+    }
+    const etat = yt.getPlayerState ? yt.getPlayerState() : -1;
+    if (ytId !== id) {
+      masquerYoutube();
+      ytId = id;
+      ytFinDemandee = false;
+      yt.loadVideoById(id);
+      silence();
+    } else if (etat === YT.PlayerState.ENDED) {
+      finYoutube();   // finie pendant une addition : on passe à la suite
+    } else if (etat !== YT.PlayerState.PLAYING) {
+      masquerYoutube();
+      silence();
+      yt.playVideo();
+    }
+    // déjà en lecture (retour après une addition) : rien à faire, rien ne clignote
+  }
+  // L'écran client est muet : vidéos sans le son, toujours
+  function silence() {
+    for (const v of [lecteur, suivant]) { v.muted = true; v.volume = 0; }
+    if (yt && yt.mute) { yt.mute(); yt.setVolume(0); }
+  }
+  function finYoutube() {
+    if (liste.length === 1) {
+      masquerYoutube();
+      yt.seekTo(0);
+      yt.playVideo();
+      ytFinDemandee = false;
+      montrerYoutubeBientot();
+      return;
+    }
+    suivante();
+  }
+  // les suggestions de fin de vidéo ne s'affichent pas : on part 15 s avant
+  setInterval(() => {
+    if (!yt || !yt.getDuration || enAddition() || entree()?.type !== "youtube" || ytFinDemandee) return;
+    const duree = yt.getDuration();
+    if (duree > 40 && yt.getPlayerState() === YT.PlayerState.PLAYING && duree - yt.getCurrentTime() < 15) {
+      ytFinDemandee = true;
+      finYoutube();
+    }
+  }, 1000);
+  // pendant une addition : seules les vidéos du dossier s'arrêtent (YouTube
+  // continue derrière, sinon ses boutons lecture / pause apparaissent à la reprise)
+  function pause() {
+    for (const v of [lecteur, suivant]) v.pause();
+  }
+  // écran rallumé ou onglet revenu au premier plan : les vidéos repartent
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") jouer(); });
+
+  // ── Addition ──
+  function afficher(e) {
+    if (!e || e.etat !== "addition") {
+      document.body.classList.remove("addition");
+      jouer();
+      return;
+    }
+    pause();
+    document.body.classList.add("addition");
+    const part = e.mode === "part";
+    document.getElementById("add-titre").textContent = e.mode === "reglee" ? "Addition réglée" : part ? "Votre part" : "Votre addition";
+    document.getElementById("add-table").textContent = e.titre || "";
+    const lignes = e.lignes || [];
+    // on montre ce qui tient à l'écran, le reste est résumé
+    const max = Math.max(4, Math.floor((window.innerHeight * 0.5) / 52));
+    const visibles = lignes.slice(0, max);
+    const cachees = lignes.slice(max);
+    document.getElementById("add-liste").innerHTML = lignes.length
+      ? visibles.map((l) => `<div class="ligne">
+          <span class="ligne-qte">${esc(l.qte)}×</span>
+          <span class="ligne-nom">${esc(l.nom)}${l.detail ? `<small>${esc(l.detail)}</small>` : ""}</span>
+          <span class="ligne-prix">${euros(l.montant)}</span>
+        </div>`).join("")
+        + (cachees.length ? `<div class="ligne ligne-plus">+ ${cachees.reduce((s, l) => s + l.qte, 0)} article(s) · ${euros(cachees.reduce((s, l) => s + l.montant, 0))}</div>` : "")
+      : `<div class="vide">${part ? "Choix des plats en cours…" : "Aucun article"}</div>`;
+    const tot = [];
+    if (e.remise && e.remise.montant > 0) {
+      tot.push(`<div class="tot-ligne"><span>Sous-total</span><span>${euros(e.sousTotal)}</span></div>`);
+      tot.push(`<div class="tot-ligne"><span>Remise ${esc(e.remise.libelle || "")}</span><span>− ${euros(e.remise.montant)}</span></div>`);
+    }
+    tot.push(`<div class="tot-final${e.mode === "reglee" ? " reglee" : ""}"><span>${e.mode === "reglee" ? "Réglé" : "Total à payer"}</span><strong>${euros(e.total)}</strong></div>`);
+    document.getElementById("add-totaux").innerHTML = tot.join("");
+  }
+
+  // ── Liaison avec le serveur ──
+  async function etatActuel() {
+    try {
+      const r = await fetch(`/ecran-client?t=${Date.now()}`, { cache: "no-store" });
+      afficher(await r.json());
+    } catch { /* serveur injoignable : on garde l'affichage */ }
+  }
+  let ws;
+  function connect() {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => { etatActuel(); verifierVersion(); };
+    ws.onmessage = (m) => {
+      try {
+        const msg = JSON.parse(m.data);
+        if (msg.type === "ecran_client") afficher(msg);
+      } catch { /* message d'un autre écran */ }
+    };
+    ws.onclose = () => setTimeout(connect, 2000);
+    ws.onerror = () => ws.close();
+  }
+
+  // ── Nouvelle mise à jour : l'écran client n'a personne pour appuyer sur un
+  // bouton ; il se recharge seulement au repos (jamais pendant une addition) ──
+  let versionEcran = null;
+  let majEnAttente = false;
+  async function verifierVersion() {
+    try {
+      const r = await fetch(`/version?t=${Date.now()}`, { cache: "no-store" });
+      const { version } = await r.json();
+      if (!version) return;
+      if (versionEcran === null) versionEcran = version;
+      else if (version !== versionEcran) majEnAttente = true;
+    } catch { /* on réessaiera */ }
+    if (majEnAttente && !document.body.classList.contains("addition")) location.reload();
+  }
+  setInterval(verifierVersion, 60000);
+  setInterval(chargerVideos, 5 * 60000);   // une vidéo ajoutée au dossier arrive toute seule
+
+  chargerVideos();
+  connect();
+</script>
+</body>
+</html>

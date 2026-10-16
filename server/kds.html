@@ -3,406 +3,227 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUNJAB — Cuisine</title>
+  <title>PUNJAB · Cuisine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    /* ── Apple iOS 17 Dark Mode tokens ── */
+    /* ══ DA douce (même DA que la caisse) : gris clair, cartes très arrondies,
+       sans bordure ; couleurs réservées aux états (appel, en cours, prêt, piment).
+       Suit le thème clair / sombre de l'appareil. ══ */
     :root {
-      --bg:          #000000;
-      --bg2:         #1c1c1e;
-      --bg3:         #2c2c2e;
-      --bg4:         #3a3a3c;
-      --sep:         rgba(84,84,88,0.65);
-      --sep-light:   rgba(84,84,88,0.3);
-      --label:       #ffffff;
-      --label2:      rgba(235,235,245,0.6);
-      --label3:      rgba(235,235,245,0.3);
-      --label4:      rgba(235,235,245,0.16);
-      --green:       #34c759;
-      --green-fill:  rgba(52,199,89,0.15);
-      --orange:      #ff9f0a;
-      --red:         #ff3b30;
-      --red-fill:    rgba(255,59,48,0.15);
-      --blue:        #0a84ff;
+      color-scheme: light dark;
+      --fond: #eeeef0; --carte: #e1e1e4; --carte-2: #d4d4d8; --clair: #f7f7f8;
+      --texte: #1c1c1e; --texte-2: #58585e;
+      --noir: #1c1c1e; --sur-noir: #ffffff;
+      --rouge: #b3261e; --rouge-fond: #f6dcda;
+      --ambre: #7a4f00; --ambre-fond: #f3ead6; --ambre-vif: #e8a317;
+      --vert: #1a6b35; --vert-fond: #dcefe2; --vert-vif: #34c759;
+      --bleu: #1554b3; --bleu-fond: #dbe7fb; --bleu-vif: #1d6fe0;
+      --sur-vif: #1c1c1e;   /* texte sur ambre / vert vifs (≥ 7:1) */
+      --vert-pose: #dcefe2; --sur-vert: #ffffff;   /* section servie / prête, texte sur vert plein */
+      --rouge-plein: #c5221f;   /* allergie : texte blanc dessus à 5,8:1 */
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fond: #111113; --carte: #1e1e21; --carte-2: #34343a; --clair: #29292d;
+        --texte: #f2f2f4; --texte-2: #a4a4aa;
+        --noir: #f2f2f4; --sur-noir: #111113;
+        --rouge: #ff8a80; --rouge-fond: #3a1d1b;
+        --ambre: #f0c46a; --ambre-fond: #2e2717;
+        --vert: #7fd69a; --vert-fond: #17301f;
+        --bleu: #8fb8ff; --bleu-fond: #16243a;
+        --vert-pose: #1c3a26; --sur-vert: #111113;   /* un cran plus clair que la carte */
+        --rouge-plein: #dc3328;   /* texte blanc à 4,6:1, et 3,1:1 au moins sur les fonds sombres */
+      }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      background: var(--bg);
-      color: var(--label);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+      background: var(--fond); color: var(--texte);
+      font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Navigation bar iOS ── */
+    /* ── En-tête ── */
     header {
-      background: rgba(28,28,30,0.78);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid var(--sep);
-      padding: 0 20px;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 20px; background: var(--fond);
     }
-
-    .header-left { display: flex; flex-direction: column; gap: 1px; }
-
-    header h1 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--label);
-    }
-
-    #counter {
-      font-size: 0.65rem;
-      color: var(--label3);
-      font-weight: 500;
-    }
-
-    /* ── Status pill ── */
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    header h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; }
+    #counter { font-size: 14px; font-weight: 500; color: var(--texte-2); }
     #status {
-      font-size: 0.68rem;
-      padding: 5px 12px;
-      border-radius: 100px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+      border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap;
     }
-    #status::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    #status.connected    { background: var(--green-fill); color: var(--green); }
-    #status.connected::before { background: var(--green); }
-    #status.disconnected { background: var(--red-fill);   color: var(--red); }
-    #status.disconnected::before { background: var(--red); box-shadow: 0 0 0 2px rgba(255,59,48,0.25); }
+    #status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+    #status.connected    { background: var(--vert-fond);  color: var(--vert); }
+    #status.connected::before { background: var(--vert); }
+    #status.disconnected { background: var(--rouge-fond); color: var(--rouge); }
+    #status.disconnected::before { background: var(--rouge); }
 
-    /* ── Empty state ── */
+    /* ── Aucune commande ── */
     #empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: calc(100vh - 52px);
-      color: var(--label4);
-      font-size: 0.9rem;
-      gap: 8px;
-      font-weight: 500;
-    }
-    #empty span { font-size: 2.6rem; opacity: 0.4; }
-
-    /* ── Grid ── */
-    #orders {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 12px;
-      padding: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      height: calc(100vh - 80px); color: var(--texte-2); font-size: 18px; font-weight: 500;
     }
 
+    /* ── Grille ── */
+    #orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 4px 16px 20px; }
     @media (min-width: 768px) {
-      #orders {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
-        padding: 20px;
-      }
+      #orders { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 4px 20px 24px; }
     }
 
-    @media (min-width: 1024px) {
-      #orders {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-        padding: 24px;
-      }
-    }
-
-    /* ── Card — Grouped list style iOS ── */
+    /* ── Carte d'une commande ── */
     .order-card {
-      background: var(--bg2);
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      animation: spring-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      background: var(--carte); border-radius: 24px; overflow: hidden;
+      display: flex; flex-direction: column;
+      animation: spring-in 0.4s cubic-bezier(0.34,1.56,0.64,1) backwards;
     }
-
-    .order-card.urgent  { box-shadow: 0 0 0 1.5px var(--red),   0 8px 32px rgba(255,59,48,0.2); }
-    .order-card.warning { box-shadow: 0 0 0 1.5px var(--orange), 0 8px 32px rgba(255,159,10,0.15); }
-    .order-card.fresh   { box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
-
-    @keyframes spring-in {
-      from { transform: scale(0.92) translateY(-10px); opacity: 0; }
-      to   { transform: scale(1) translateY(0);        opacity: 1; }
-    }
-
-    @keyframes spring-out {
-      to { transform: scale(0.88); opacity: 0; }
-    }
-
+    @keyframes spring-in { from { transform: scale(0.94) translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes spring-out { to { transform: scale(0.9); opacity: 0; } }
     .order-card.removing { animation: spring-out 0.22s ease forwards; }
 
-    /* ── Card header ── */
-    .card-header {
-      padding: 12px 14px 10px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      border-bottom: 0.5px solid var(--sep-light);
-    }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px 18px 10px; }
+    .table-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .table-label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texte-2); }
+    .table-num { font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+    .order-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
+    .order-num { font-size: 14px; font-weight: 500; color: var(--texte-2); }
 
-    .table-info { display: flex; flex-direction: column; gap: 1px; }
-
-    .table-label {
-      font-size: 0.58rem;
-      color: var(--label3);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-weight: 600;
-    }
-
-    .table-num {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--label);
-      letter-spacing: -1px;
-      line-height: 1;
-    }
-
-    .order-meta { text-align: right; display: flex; flex-direction: column; gap: 3px; }
-
-    .order-num {
-      font-size: 0.65rem;
-      color: var(--label3);
-      font-weight: 500;
-    }
-
-    /* ── Timer pill global (neutre, pas de changement couleur) ── */
-    .timer {
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 100px;
-      display: inline-block;
-      align-self: flex-end;
-      background: var(--bg3);
-      color: var(--label2);
-    }
-
-    /* ── Timer par catégorie ── */
-    .cat-timer {
-      font-size: 0.6rem;
-      font-weight: 700;
-      color: var(--label2);
-      background: rgba(84,84,88,0.3);
-      padding: 2px 7px;
-      border-radius: 100px;
-    }
-
-    /* ── Card body ── */
-    .card-items {
-      padding: 8px 10px 10px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    /* ── Category group ── */
-    .category-section {
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--bg3);
-      transition: opacity 0.4s ease;
-    }
-
-    .category-section.done {
-      opacity: 0.22;
-      pointer-events: none;
-      filter: grayscale(60%);
-    }
-    .category-section.done .category-label { color: var(--green) !important; }
-
-    /* Card entière quand toutes les catégories sont prêtes */
-    .order-card.all-done {
-      opacity: 0.5;
-      box-shadow: 0 0 0 1.5px var(--green), 0 8px 24px rgba(52,199,89,0.15);
-      transition: opacity 0.4s ease, box-shadow 0.4s ease;
-    }
-
-    .category-header {
-      padding: 8px 12px 7px;
-      border-bottom: 0.5px solid var(--sep-light);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .category-label {
-      font-size: 0.6rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--label3);
-    }
-
-    .category-section.done .category-label { color: var(--green); }
-
-    .category-items {
-      padding: 7px 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    /* ── Hint action bas de section ── */
-    .cat-action-hint {
-      display: block;
-      text-align: center;
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 7px;
-      border-top: 0.5px solid rgba(84,84,88,0.3);
-      color: var(--label3);
-      letter-spacing: 0.04em;
-    }
-    .cat-action-hint.in_progress { color: var(--orange); }
-
-    /* ── Badge EN COURS ── */
-    .in-progress-badge {
-      background: var(--orange) !important;
-      box-shadow: 0 0 8px rgba(255,159,10,0.6) !important;
-    }
-
-    /* ── Section EN COURS ── */
-    .in-progress-section {
-      box-shadow: 0 0 0 1.5px var(--orange);
-    }
-
-    /* ── Badge ✓ done ── */
-    .done-badge {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: var(--green);
-    }
-
-    /* ── Section appelée par le service ── */
-    @keyframes pulse-section {
-      0%   { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
-      49%  { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
-      50%  { background: var(--bg3);            box-shadow: none; }
-      99%  { background: var(--bg3);            box-shadow: none; }
-      100% { background: rgba(10,132,255,0.9);  box-shadow: 0 0 0 2px rgba(10,132,255,1), 0 0 24px 6px rgba(10,132,255,0.6); }
-    }
-
-    .category-section.called {
-      animation: pulse-section 0.6s steps(1) infinite;
-      border-radius: 10px;
-    }
-
-    @keyframes badge-flash {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.6; transform: scale(1.08); }
-    }
-
-    .called-badge {
-      font-size: 0.62rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      color: #fff;
-      background: var(--blue);
-      padding: 3px 10px;
-      border-radius: 100px;
-      animation: badge-flash 0.7s ease-in-out infinite;
-      box-shadow: 0 0 8px rgba(10,132,255,0.6);
-    }
-
-    .category-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* ── Item row ── */
-    .item-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    /* ── Articles ── */
+    .item-row { display: flex; align-items: flex-start; gap: 10px; }
     .item-qty {
-      background: var(--bg4);
-      color: var(--label2);
-      font-weight: 600;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 6px;
-      flex-shrink: 0;
-      font-variant-numeric: tabular-nums;
+      flex-shrink: 0; min-width: 40px; padding: 3px 8px; border-radius: 10px; text-align: center;
+      background: var(--carte); color: var(--texte); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .item-name { font-size: 20px; font-weight: 500; line-height: 1.25; color: var(--texte); overflow-wrap: anywhere; }
+    .item-detail { display: block; margin-top: 1px; font-size: 16px; font-weight: 500; color: var(--texte-2); }
+    /* piment comme sur le ticket : + / ++ / +++ */
+    .item-piment {
+      display: inline-block; margin-left: 8px; padding: 0 9px; border-radius: 999px; vertical-align: 2px;
+      background: var(--rouge-fond); color: var(--rouge); font-size: 16px; font-weight: 800; letter-spacing: 1px;
+    }
+    /* note de la caisse (« Sans oignon ») : pastille grise sous le plat */
+    .item-note {
+      display: block; width: fit-content; max-width: 100%; margin-top: 5px; padding: 2px 9px; border-radius: 8px;
+      background: var(--carte); color: var(--texte); font-size: 17px; font-weight: 600;
+    }
+    /* allergie : bloc rouge plein, blanc, en majuscules ; on la voit de loin */
+    .item-allergie {
+      display: block; width: fit-content; max-width: 100%; margin-top: 5px; padding: 3px 9px; border-radius: 8px;
+      background: var(--rouge-plein); color: #fff; font-size: 17px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase;
+    }
+    /* en-tête de carte : au moins un plat de cet écran porte une allergie */
+    .badge-allergie {
+      padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+      background: var(--rouge-plein); color: #fff; font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
     }
 
-    .item-name {
-      font-size: 1rem;
-      font-weight: 400;
-      line-height: 1.3;
-      color: var(--label);
+    /* ── À emporter ── */
+    .emporter-card-header { background: var(--ambre-fond); padding-bottom: 14px; margin-bottom: 10px; }
+    .emporter-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ambre); }
+    .emporter-num { font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: var(--ambre); }
+    .emporter-client { margin-top: 4px; font-size: 16px; font-weight: 600; color: var(--texte); }
+    .emporter-phone { font-size: 14px; color: var(--texte-2); }
+    .emporter-retrait {
+      display: inline-block; align-self: flex-start; margin-top: 6px; padding: 4px 12px; border-radius: 999px;
+      background: var(--ambre-vif); color: var(--sur-vif); font-size: 16px; font-weight: 700;
     }
 
-    /* ── À EMPORTER ── */
-    .emporter-card-header {
-      background: rgba(255,159,10,0.12);
-      border-bottom: 1px solid rgba(255,159,10,0.35) !important;
+    /* ── Écran cuisine : chronos ── */
+    .timer {
+      padding: 4px 12px; border-radius: 999px; background: var(--clair); color: var(--texte);
+      font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
     }
-    .emporter-label {
-      font-size: 0.58rem;
-      color: var(--orange);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-weight: 700;
+    .cat-timer {
+      padding: 3px 10px; border-radius: 999px; background: var(--carte); color: var(--texte);
+      font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
     }
-    .emporter-num {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--orange);
-      letter-spacing: -1px;
-      line-height: 1;
+
+    /* ── Sections (Naans, Entrées, Plats, Desserts) ── */
+    .card-items { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 10px 10px; }
+    .category-section { border-radius: 18px; overflow: hidden; background: var(--clair); transition: opacity 0.3s ease; }
+    .category-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px 4px; }
+    .category-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texte-2); }
+    .category-items { display: flex; flex-direction: column; gap: 8px; padding: 4px 14px 12px; }
+
+    /* prête : fond vert pâle (--vert-pose), texte gris (5,9:1 en clair, 5,0:1 en sombre) */
+    .category-section.done { background: var(--vert-pose); pointer-events: none; }
+    .category-section.done .category-label { color: var(--vert); }
+    .category-section.done .item-name { color: var(--texte-2); }
+    .category-section.done .item-qty { background: transparent; color: var(--texte-2); }
+    /* la note s'efface avec le plat ; l'allergie reste en rouge plein */
+    .category-section.done .item-note { color: var(--texte-2); }
+    .done-badge { font-size: 18px; font-weight: 800; color: var(--vert); }
+    .order-card.all-done { opacity: 0.6; background: var(--vert-fond); box-shadow: 0 0 0 3px var(--vert-vif); transition: opacity 0.4s ease; }
+
+    /* en cours : contour ambre, bandeau « Appuyer pour valider » */
+    .in-progress-section { box-shadow: inset 0 0 0 3px var(--ambre-vif); }
+    .cat-action-hint {
+      display: block; padding: 12px; text-align: center; font-size: 16px; font-weight: 600;
+      background: var(--carte); color: var(--texte);
     }
-    .emporter-client {
-      font-size: 0.75rem;
-      color: var(--label2);
-      font-weight: 600;
-      margin-top: 2px;
+    .cat-action-hint.in_progress { background: var(--ambre-vif); color: var(--sur-vif); }
+
+    /* appelée par le service : clignote en bleu jusqu'à ce qu'on la démarre */
+    @keyframes pulse-section {
+      0%, 49%, 100% { background: var(--bleu-vif); color: #fff; }
+      50%, 99%      { background: var(--clair); color: var(--texte); }
     }
-    .emporter-phone {
-      font-size: 0.68rem;
-      color: var(--label3);
-      margin-top: 1px;
+    .category-section.called { animation: pulse-section 0.6s steps(1) infinite; cursor: pointer; }
+    .category-section.called .category-label,
+    .category-section.called .item-name,
+    .category-section.called .item-detail { color: inherit; }
+    .category-section.called .item-qty { background: rgba(127,127,127,0.25); color: inherit; }
+    .category-section.called .cat-action-hint { background: rgba(127,127,127,0.25); color: inherit; }
+    @keyframes badge-flash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .called-badge {
+      padding: 4px 12px; border-radius: 999px; background: var(--bleu-vif); color: #fff;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.08em; animation: badge-flash 0.7s ease-in-out infinite;
     }
+    .called-badge.in-progress-badge { background: var(--ambre-vif); color: var(--sur-vif); animation: none; }
+
+    /* commande signalée en retard (classes prévues par l'écran) */
+    .order-card.urgent  { box-shadow: 0 0 0 3px var(--rouge); }
+    .order-card.warning { box-shadow: 0 0 0 3px var(--ambre-vif); }
+
+    /* à emporter : un gros bouton noir */
     .emporter-pret-btn {
-      margin: 8px 10px 10px;
-      background: rgba(255,159,10,0.18);
-      border: 1px solid rgba(255,159,10,0.4);
-      color: var(--orange);
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      cursor: pointer;
+      margin: 10px 14px 14px; padding: 14px; border-radius: 999px; text-align: center; cursor: pointer;
+      background: var(--noir); color: var(--sur-noir); font-size: 17px; font-weight: 700; letter-spacing: 0.02em;
     }
-    .order-card.emporter-card {
-      box-shadow: 0 0 0 1.5px rgba(255,159,10,0.5), 0 8px 32px rgba(255,159,10,0.15);
+
+    /* titres en majuscules (TABLE, NAANS, ENTRÉES…), comme validé sur l'écran service */
+    /* en cours : la section se teinte d'ambre, sans contour */
+    .in-progress-section { box-shadow: none; background: var(--ambre-fond); }
+    /* les actions de la cuisine : une barre noire, comme les boutons de la caisse */
+    .cat-action-hint, .cat-action-hint.in_progress,
+    .category-section.called .cat-action-hint { background: var(--noir); color: var(--sur-noir); }
+    .called-badge { letter-spacing: 0; font-size: 14px; font-weight: 700; }
+    .done-badge { font-weight: 700; }
+    /* le chrono reste sur une ligne, même à côté d'un long nom de client */
+    .timer, .cat-timer { white-space: nowrap; }
+    .order-meta { flex-shrink: 0; }
+    .emporter-info-poste { padding: 10px 14px 14px; font-size: 15px; font-weight: 500; color: var(--texte-2); }
+    /* appui refusé hors connexion : la pastille « Déconnecté » se signale */
+    #status.secoue { animation: secoue 0.4s ease; }
+    @keyframes secoue { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    /* Nouvelle mise à jour : bandeau en bas, il reste jusqu'à ce qu'on touche
+       « Recharger » (jamais de rechargement automatique en plein service) */
+    .maj-bandeau {
+      position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 500;
+      display: flex; align-items: center; gap: 14px; width: max-content; max-width: calc(100vw - 32px);
+      padding: 10px 10px 10px 20px; border-radius: 999px;
+      background: var(--noir); color: var(--sur-noir); box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-size: 17px; font-weight: 700;
+    }
+    .maj-bandeau[hidden] { display: none; }
+    .maj-bandeau button {
+      min-height: 44px; padding: 0 20px; border: none; border-radius: 999px; cursor: pointer;
+      background: var(--sur-noir); color: var(--noir); font: inherit; font-size: 17px; font-weight: 700;
     }
   </style>
 </head>
@@ -417,7 +238,7 @@
 </header>
 
 <div id="empty">
-  <span>🍽️</span>
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
   En attente de commandes…
 </div>
 
@@ -434,11 +255,25 @@
   let ws;
   let pingInterval;
 
+  // Envoi au serveur. Hors connexion, l'appui est refusé et la pastille
+  // « Déconnecté » se signale, au lieu d'un appui perdu en silence.
+  function envoyer(msg) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      statusEl.classList.remove("secoue");
+      void statusEl.offsetWidth;
+      statusEl.classList.add("secoue");
+      return false;
+    }
+    ws.send(JSON.stringify(msg));
+    return true;
+  }
+
   function connect() {
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
+      verifierVersion();
       statusEl.textContent = "Connecté";
       statusEl.className = "connected";
       // Ping toutes les 10s pour garder la connexion vivante
@@ -467,10 +302,18 @@
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        if (msg.type === "new_order")    addOrder(msg.order);
-        if (msg.type === "update_order") { removeOrder(msg.order.id); addOrder(msg.order); }
+        // une commande déjà affichée (renvoyée à la reconnexion, ou modifiée)
+        // est refaite à sa place au lieu d'être ignorée
+        if (msg.type === "new_order")    remplacerCommande(msg.order, false);
+        if (msg.type === "update_order") remplacerCommande(msg.order, true);
         if (msg.type === "order_ready")  removeOrder(msg.orderId);
         if (msg.type === "cat_status")   updateCatStatus(msg.orderId, msg.catName, msg.status, msg);
+        // fin de l'envoi complet du serveur : ce qu'il ne connaît plus a été
+        // terminé ou supprimé pendant une coupure
+        if (msg.type === "etat_complet") {
+          const garder = new Set(msg.ids || []);
+          for (const id of [...orders.keys()]) if (!garder.has(id)) removeOrder(id);
+        }
       } catch (err) {
         console.error("WS message error:", err.message);
       }
@@ -490,8 +333,66 @@
     return m > 0 ? `${m}min ${ss < 10 ? "0" : ""}${ss}s` : `${ss}s`;
   }
 
-  const CAT_ORDER = ["Entrees", "Plats", "Naans", "Desserts", "Menu Midi"];
-  const CAT_EXCLUDE_KDS = ["Boissons"];
+  // Même ordre que les tickets et que le serveur (CAT_ORDER_SHARED)
+  const CAT_ORDER = ["Naans", "Entrees", "Plats", "Desserts", "Menu Midi"];
+  const CAT_LABELS = { Entrees: "Entrées" };
+  // Piment comme sur le ticket : 2 = +, 3 = ++, 4 = +++ (1 = sans, rien)
+  const PIMENT_MARKS = { 2: "+", 3: "++", 4: "+++" };
+  function pimentHtml(level) {
+    const m = PIMENT_MARKS[level];
+    return m ? `<span class="item-piment" title="Piment">${m}</span>` : "";
+  }
+
+  // Les textes des commandes (noms, notes, allergies, client) sont tapés à la
+  // caisse : échappés avant d'entrer dans le HTML de l'écran
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  // Note et allergie d'un article ou d'un choix de menu (absentes quand vides,
+  // comme dans le panier)
+  function noteEtAllergie(src) {
+    const r = {};
+    if (src && src.note) r.note = src.note;
+    if (src && src.allergie) r.allergie = src.allergie;
+    return r;
+  }
+  // Deux articles ne se regroupent que s'ils sont pareils pour la cuisine :
+  // même nom, même piment, même note, même allergie
+  function cleArticle(nom, a) {
+    const n = (s) => normName(s).replace(/\s+/g, " ").trim();
+    return [n(nom), a.piment || 0, n(a.note), n(a.allergie)].join("|");
+  }
+  // Une ligne d'article, la même partout : quantité, nom, piment, précision,
+  // puis la note (pastille grise) et l'allergie (bloc rouge plein)
+  function ligneArticle(i) {
+    return `<div class="item-row"><span class="item-qty">${esc(i.qty)}×</span><span class="item-name">${esc(i.name)}${pimentHtml(i.piment)}`
+      + (i.detail ? `<span class="item-detail">${esc(i.detail)}</span>` : "")
+      + (i.note ? `<span class="item-note">${esc(i.note)}</span>` : "")
+      + (i.allergie ? `<span class="item-allergie">⚠&#xFE0E; Allergie ${esc(i.allergie)}</span>` : "")
+      + `</span></div>`;
+  }
+  const BADGE_ALLERGIE = `<span class="badge-allergie">⚠&#xFE0E; ALLERGIE</span>`;
+
+  // ── Écran de poste : la même page sert la cuisine, les desserts et le bar ──
+  //   /kds       toute la cuisine (naans, entrées, plats, desserts), comme avant
+  //   /cuisine   la cuisine sans les desserts (quand un écran desserts est en place)
+  //   /desserts  les desserts seulement
+  //   /bar       les boissons seulement (vins, apéritifs, bières…)
+  // Quand tout ce qu'il montre est prêt, un écran masque simplement sa carte :
+  // la commande reste à l'écran service jusqu'à ce que le service ait confirmé
+  // chaque livraison (le serveur la termine alors), ou jusqu'à la clôture.
+  const BAR_CATS = new Set(["Boissons", "Vins", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"]);
+  const POSTES_ECRAN = {
+    kds:      { titre: "CUISINE",  garde: (c) => !BAR_CATS.has(c) },
+    cuisine:  { titre: "CUISINE",  garde: (c) => !BAR_CATS.has(c) && c !== "Desserts" },
+    desserts: { titre: "DESSERTS", garde: (c) => c === "Desserts" },
+    bar:      { titre: "BAR",      garde: (c) => BAR_CATS.has(c), sansAppel: true },
+  };
+  const NOM_POSTE = location.pathname.replace(/^\/+|\/+$/g, "").replace(/\.html$/, "") || "kds";
+  const POSTE = POSTES_ECRAN[NOM_POSTE] || POSTES_ECRAN.kds;
+  const ECRAN_DE_POSTE = POSTE !== POSTES_ECRAN.kds;
+  document.querySelector("header h1").textContent = POSTE.titre;
+  document.title = `PUNJAB · ${POSTE.titre.charAt(0)}${POSTE.titre.slice(1).toLowerCase()}`;
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
 
   const FORMULA_LABEL_MAP = {
@@ -515,19 +416,20 @@
       if (i.formulaChoices && i.formulaChoices.length > 0) {
         i.formulaChoices.forEach(choice => {
           const cat = CAT_MERGE[mapFormulaLabel(choice.label)] || mapFormulaLabel(choice.label);
-          if (CAT_EXCLUDE_KDS.includes(cat)) return;
+          if (!POSTE.garde(cat)) return;
           if (!seen[cat]) seen[cat] = [];
-          const existing = seen[cat].find(x => normName(x.name) === normName(choice.itemName) && (x.piment || null) === (choice.piment || null));
+          const existing = seen[cat].find(x => cleArticle(x.name, x) === cleArticle(choice.itemName, choice));
           if (existing) existing.qty += i.qty;
-          else seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null });
+          else seen[cat].push({ name: choice.itemName, category: cat, qty: i.qty, piment: choice.piment || null, ...noteEtAllergie(choice) });
         });
       } else {
-        const cat = CAT_MERGE[i.category] || i.category || "Autres";
-        if (CAT_EXCLUDE_KDS.includes(cat)) return;
+        // « poste » : section du ticket choisie dans l'admin pour la categorie
+        const cat = i.poste || CAT_MERGE[i.category] || i.category || "Autres";
+        if (!POSTE.garde(cat)) return;
         if (!seen[cat]) seen[cat] = [];
-        const existing = seen[cat].find(x => normName(x.name) === normName(i.name) && (x.piment || null) === (i.piment || null));
+        const existing = seen[cat].find(x => cleArticle(x.name, x) === cleArticle(i.name, i));
         if (existing) existing.qty += i.qty;
-        else seen[cat].push(i);
+        else seen[cat].push({ ...i });   // copie : le cumul ne touche pas la commande
       }
     });
     const sorted = [...CAT_ORDER.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER.includes(c))];
@@ -543,12 +445,10 @@
 
     // Grisé inline pour que ça marche même au chargement initial
     if (isDone) {
-      const itemsHtml = g.items.map(i =>
-        `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}</span></div>`
-      ).join("");
-      return `<div class="category-section done" id="cat-${orderId}-${catKey}" style="opacity:0.22;pointer-events:none;filter:grayscale(60%);">
+      const itemsHtml = g.items.map(ligneArticle).join("");
+      return `<div class="category-section done" id="cat-${orderId}-${catKey}">
         <div class="category-header">
-          <span class="category-label" style="color:var(--green)">${g.cat}</span>
+          <span class="category-label">${esc(CAT_LABELS[g.cat] || g.cat)}</span>
           <div style="display:flex;align-items:center;gap:6px;"><span class="done-badge">✓</span></div>
         </div>
         <div class="category-items">${itemsHtml}</div>
@@ -563,6 +463,10 @@
     } else if (isInProgress) {
       onclick = `onclick="markCatReady('${orderId}', ${idx})"`;
       statusLabel = `<span class="cat-action-hint in_progress">Appuyer pour valider</span>`;
+    } else if (POSTE.sansAppel) {
+      // au bar, on prépare dès que la commande arrive, sans attendre l'appel
+      onclick = `onclick="markCatInProgress('${orderId}', ${idx})"`;
+      statusLabel = `<span class="cat-action-hint">Appuyer pour préparer</span>`;
     }
 
     const showTimer = isCalled || isInProgress;
@@ -570,17 +474,17 @@
     return `<div class="category-section ${isCalled ? "called" : ""} ${isInProgress ? "in-progress-section" : ""}"
          id="cat-${orderId}-${catKey}"
          ${onclick}
-         style="${showTimer ? 'cursor:pointer;' : ''}">
+         style="${onclick ? 'cursor:pointer;' : ''}">
       <div class="category-header">
-        <span class="category-label">${g.cat}</span>
+        <span class="category-label">${esc(CAT_LABELS[g.cat] || g.cat)}</span>
         <div style="display:flex;align-items:center;gap:6px;">
           ${showTimer ? `<span class="cat-timer" id="cat-timer-${orderId}-${catKey}">0s</span>` : ""}
-          ${isCalled    ? '<span class="called-badge">SERVICE !</span>' : ""}
-          ${isInProgress ? '<span class="called-badge in-progress-badge">EN COURS</span>' : ""}
+          ${isCalled    ? '<span class="called-badge">Service !</span>' : ""}
+          ${isInProgress ? '<span class="called-badge in-progress-badge">En cours</span>' : ""}
         </div>
       </div>
       <div class="category-items">
-        ${g.items.map(i => `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}</span></div>`).join("")}
+        ${g.items.map(ligneArticle).join("")}
       </div>
       ${statusLabel}
     </div>`;
@@ -596,7 +500,11 @@
     if (!entry.order.catStatus) entry.order.catStatus = {};
     entry.order.catStatus[catName] = status;
 
-    if (status === "called" && !entry.catStartTimes[catName]) {
+    // le chrono part à l'appel du service, ou au début de la préparation
+    // (au bar on prépare sans appel)
+    if (status === "called") {
+      entry.catStartTimes[catName] = msg.calledAt ? Number(msg.calledAt) : Date.now();
+    } else if (status === "in_progress" && !entry.catStartTimes[catName]) {
       entry.catStartTimes[catName] = msg.calledAt ? Number(msg.calledAt) : Date.now();
     }
     if (status === "done") {
@@ -630,23 +538,25 @@
       }
     }
 
-    // Toutes catégories done → carte verte puis suppression
-    if (status === "done") {
+    trier();
+
+    // Toutes les sections prêtes (ou déjà livrées par le service) → carte verte puis fin
+    if (status === "done" || status === "delivered") {
       const catStatus = entry.order.catStatus || {};
-      const allDone = entry.groups.every(g => catStatus[g.cat] === "done");
-      if (allDone) {
-        const card = document.getElementById(`order-${orderId}`);
-        if (card) card.classList.add("all-done");
-        setTimeout(() => markReady(orderId), 3000);
+      const prete = (s) => s === "done" || s === "delivered";
+      const allDone = entry.groups.every(g => prete(catStatus[g.cat]));
+      if (allDone && !entry.card.classList.contains("all-done")) {
+        entry.card.classList.add("all-done");
+        setTimeout(() => terminer(orderId), 3000);
       }
     }
   }
 
   function markCatInProgress(orderId, catIdx) {
     const entry = orders.get(orderId);
-    if (!entry) return;
+    if (!entry || !appuiAccepte()) return;
     const group = entry.groups[catIdx];
-    ws.send(JSON.stringify({ type: "cat_in_progress", orderId, catName: group.cat }));
+    envoyer({ type: "cat_in_progress", orderId, catName: group.cat });
   }
 
   function markCatReady(orderId, catIdx) {
@@ -656,7 +566,17 @@
     const group = entry.groups[catIdx];
     const catKey = group.cat.replace(/\s/g, "_");
     const section = document.getElementById(`cat-${orderId}-${catKey}`);
-    if (!section || section.classList.contains("done")) return;
+    if (!section || section.classList.contains("done") || !appuiAccepte()) return;
+
+    // Hors connexion rien n'est grisé : la cuisine voit que l'appui n'est pas passé
+    if (!envoyer({
+      type: "cat_ready",
+      orderId,
+      tableNumber: entry.order.tableNumber,
+      orderNum: entry.order.orderNum,
+      catName: group.cat,
+      items: group.items,
+    })) return;
 
     // Grisé immédiat sans attendre le serveur
     section.classList.remove("in-progress-section", "called");
@@ -667,32 +587,25 @@
     if (hint) hint.remove();
     const badge = section.querySelector(".called-badge");
     if (badge) { badge.className = "done-badge"; badge.textContent = "✓"; }
-
-    ws.send(JSON.stringify({
-      type: "cat_ready",
-      orderId,
-      tableNumber: entry.order.tableNumber,
-      orderNum: entry.order.orderNum,
-      catName: group.cat,
-      items: group.items,
-    }));
   }
 
   function renderEmporterContent(orderId, items, catStatus) {
     const status = (catStatus || {})["A emporter"] || "waiting";
     const isDone = status === "done" || status === "delivered";
-    const itemsHtml = items.map(i =>
-      `<div class="item-row"><span class="item-qty">${i.qty}x</span><span class="item-name">${i.name}${i.piment > 1 ? " " + "🌶️".repeat(i.piment) : ""}</span></div>`
-    ).join("");
+    const itemsHtml = items.map(ligneArticle).join("");
     if (isDone) {
-      return `<div class="category-section done" id="cat-${orderId}-A_emporter" style="opacity:0.22;pointer-events:none;filter:grayscale(60%);">
-        <div class="category-header"><span class="category-label" style="color:var(--green)">TOUT PRÊT ✓</span></div>
+      return `<div class="category-section done" id="cat-${orderId}-A_emporter">
+        <div class="category-header"><span class="category-label">Tout prêt ✓</span></div>
         <div class="category-items">${itemsHtml}</div>
       </div>`;
     }
+    // Un écran de poste montre sa part ; c'est la cuisine qui valide la commande entière
+    const action = ECRAN_DE_POSTE
+      ? `<div class="emporter-info-poste">À préparer pour cette commande à emporter</div>`
+      : `<div class="emporter-pret-btn" onclick="markEmporterReady('${orderId}')">✓ Prêt à emporter</div>`;
     return `<div class="category-section" id="cat-${orderId}-A_emporter">
       <div class="category-items">${itemsHtml}</div>
-      <div class="emporter-pret-btn" onclick="markEmporterReady('${orderId}')">✓ PRÊT À EMPORTER</div>
+      ${action}
     </div>`;
   }
 
@@ -701,10 +614,8 @@
     if (!entry) return;
     const catKey = "A emporter";
     const section = document.getElementById(`cat-${orderId}-A_emporter`);
-    if (!section || section.classList.contains("done")) return;
-    section.classList.add("done");
-    section.onclick = null;
-    ws.send(JSON.stringify({
+    if (!section || section.classList.contains("done") || !appuiAccepte()) return;
+    if (!envoyer({
       type: "cat_ready",
       orderId,
       tableNumber: entry.order.tableNumber,
@@ -713,53 +624,81 @@
       items: entry.groups[0]?.items || [],
       orderType: entry.order.orderType,
       emporterNum: entry.order.emporterNum,
-    }));
+    })) return;
+    section.classList.add("done");
+    section.onclick = null;
   }
 
-  function addOrder(order) {
+  function addOrder(order, place = null, anime = true) {
     if (orders.has(order.id)) return; // déjà affiché, pas de doublon
     const isEmporter = order.orderType === "emporter";
     let groups;
-    if (isEmporter) {
-      // Aplatir tous les items pour l'affichage
+    if (isEmporter && order.groupes) {
+      // Sections calculees par le serveur : on les met bout a bout (un écran
+      // de poste ne garde que les siennes)
+      groups = [{ cat: "A emporter", items: order.groupes.filter((g) => !ECRAN_DE_POSTE || POSTE.garde(g.cat)).flatMap((g) => g.items) }];
+    } else if (isEmporter && ECRAN_DE_POSTE) {
+      groups = [{ cat: "A emporter", items: groupByCategory(order.items).flatMap((g) => g.items) }];
+    } else if (isEmporter) {
+      // Aplatir tous les items pour l'affichage. Un article avec note ou
+      // allergie se regroupe sur nom, piment, note et allergie ; sans note ni
+      // allergie, la clé reste le nom seul : une ancienne commande s'affiche
+      // exactement comme avant.
       const flat = {};
       for (const i of order.items) {
         if (i.formulaChoices && i.formulaChoices.length > 0) {
           for (const c of i.formulaChoices) {
-            const k = c.itemName;
+            const k = (c.note || c.allergie) ? cleArticle(c.itemName, c) : c.itemName;
             if (flat[k]) flat[k].qty += i.qty;
-            else flat[k] = { name: c.itemName, qty: i.qty, piment: c.piment || null };
+            else flat[k] = { name: c.itemName, qty: i.qty, piment: c.piment || null, ...noteEtAllergie(c) };
           }
         } else {
-          const k = i.name;
+          const k = (i.note || i.allergie) ? cleArticle(i.name, i) : i.name;
           if (flat[k]) flat[k].qty += i.qty;
-          else flat[k] = { name: i.name, qty: i.qty, piment: i.piment || null };
+          else flat[k] = { name: i.name, qty: i.qty, piment: i.piment || null, ...noteEtAllergie(i) };
         }
       }
       groups = [{ cat: "A emporter", items: Object.values(flat) }];
+    } else if (order.groupes) {
+      // Memes sections que celles que le serveur suit (catStatus) : une
+      // question de suite reste avec son plat au lieu de former une section
+      // que personne ne pouvait appeler ni valider.
+      groups = order.groupes.filter((g) => POSTE.garde(g.cat));
     } else {
       groups = groupByCategory(order.items);
     }
+    // rien pour cet écran (des boissons seules sur l'écran cuisine…) : pas de
+    // carte (elle viendra si une modification en ajoute)
+    if (!groups.some((g) => g.items.length)) return;
+    // déjà tout prêt pour cet écran (rechargement, reconnexion, modification
+    // d'un autre poste) : pas de carte, au lieu de la remontrer 3 s en vert
+    const etatsCharges = order.catStatus || {};
+    if (groups.every((g) => etatsCharges[g.cat] === "done" || etatsCharges[g.cat] === "delivered")) return;
     const card = document.createElement("div");
     card.className = `order-card fresh${isEmporter ? " emporter-card" : ""}`;
     card.id = `order-${order.id}`;
+    if (!anime) card.style.animation = "none";
     const headerInfo = isEmporter
       ? `<div class="table-info">
           <div class="emporter-label">À EMPORTER</div>
-          <div class="emporter-num">#${order.emporterNum || order.tableNumber}</div>
-          ${order.clientName ? `<div class="emporter-client">${order.clientName}</div>` : ""}
-          ${order.clientPhone ? `<div class="emporter-phone">${order.clientPhone}</div>` : ""}
-          ${order.clientPickupTime ? `<div class="emporter-phone" style="color:var(--orange);font-weight:700;">⏰ ${order.clientPickupTime}</div>` : ""}
+          <div class="emporter-num">#${esc(order.emporterNum || order.tableNumber)}</div>
+          ${order.clientName ? `<div class="emporter-client">${esc(order.clientName)}</div>` : ""}
+          ${order.clientPhone ? `<div class="emporter-phone">${esc(order.clientPhone)}</div>` : ""}
+          ${order.clientPickupTime ? `<div class="emporter-retrait">Retrait ${esc(order.clientPickupTime)}</div>` : ""}
         </div>`
       : `<div class="table-info">
           <div class="table-label">TABLE</div>
-          <div class="table-num">${order.tableNumber}</div>
+          <div class="table-num">${esc(order.tableNumber)}</div>
         </div>`;
+    // un plat montré sur CET écran porte une allergie (au bar, celle d'un plat
+    // de cuisine ne compte pas : les sections sont déjà filtrées)
+    const allergie = groups.some((g) => g.items.some((i) => i.allergie));
     card.innerHTML = `
       <div class="card-header${isEmporter ? " emporter-card-header" : ""}">
         ${headerInfo}
         <div class="order-meta">
-          <div class="order-num">#${order.orderNum}</div>
+          ${allergie ? BADGE_ALLERGIE : ""}
+          <div class="order-num">#${esc(order.orderNum)}</div>
           <div class="timer fresh" id="timer-${order.id}">0s</div>
         </div>
       </div>
@@ -770,16 +709,25 @@
       </div>
     `;
 
-    ordersEl.prepend(card);
+    // Une carte refaite garde sa place ; une nouvelle arrive en fin de grille,
+    // puis trier() la range (sans glisser une autre carte sous le doigt)
+    if (place) { card.style.order = place.style.order; place.replaceWith(card); }
+    else { card.style.order = "99999"; ordersEl.append(card); }
 
     const catStartTimes = {};
     // Restaurer les timers de catégorie depuis catCalledAt (persisté)
     if (order.catCalledAt) {
       for (const [cat, ts] of Object.entries(order.catCalledAt)) {
-        if (order.catStatus && order.catStatus[cat] !== "done") {
+        // seulement pour une section appelée ou en cours (une section remise
+        // « à faire » par une modification repartira de son prochain appel)
+        if (order.catStatus && (order.catStatus[cat] === "called" || order.catStatus[cat] === "in_progress")) {
           catStartTimes[cat] = Number(ts);
         }
       }
+    }
+    // en cours sans appel (bar) : le chrono part au chargement de l'écran
+    for (const [cat, st] of Object.entries(order.catStatus || {})) {
+      if (st === "in_progress" && !catStartTimes[cat]) catStartTimes[cat] = Date.now();
     }
     const orderStart = order.receivedAt ? Number(order.receivedAt) : Date.now();
 
@@ -797,20 +745,102 @@
 
     orders.set(order.id, { card, interval, groups, order, catStartTimes });
     updateCounter();
+    trier();
+  }
 
-    // Si toutes les catégories sont déjà "done" au chargement → supprimer après délai
-    const loadedCatStatus = order.catStatus || {};
-    const allDoneOnLoad = groups.length > 0 && groups.every(g =>
-      loadedCatStatus[g.cat] === "done" || loadedCatStatus[g.cat] === "delivered"
-    );
-    if (allDoneOnLoad) {
-      card.classList.add("all-done");
-      setTimeout(() => markReady(order.id), 3000);
+  // Commande renvoyée par le serveur (modification, ou envoi complet à la
+  // reconnexion) : la carte est refaite à la même place
+  function remplacerCommande(order, anime) {
+    const ancienne = orders.get(order.id);
+    if (!ancienne) { addOrder(order); return; }
+    clearInterval(ancienne.interval);
+    orders.delete(order.id);
+    const place = ancienne.card;
+    place.removeAttribute("id");
+    place.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+    addOrder(order, place, anime);
+    if (place.isConnected) effacerCarte(place);   // plus rien à faire ici pour cet écran
+    updateCounter();
+  }
+
+  // Ordre des cartes : d'abord ce que le service demande, puis ce qui est en
+  // cours, puis ce qui attend ; les cartes terminées à la fin. On joue sur la
+  // propriété CSS « order » : les cartes ne bougent pas dans la page, leur
+  // animation et leurs chronos ne repartent pas.
+  function rangCarte(entry) {
+    const st = entry.order.catStatus || {};
+    const etats = entry.groups.map((g) => st[g.cat] || "waiting");
+    if (etats.includes("called")) return 0;
+    if (etats.includes("in_progress")) return 1;
+    if (etats.length && etats.every((e) => e === "done" || e === "delivered")) return 3;
+    return 2;
+  }
+  // À rang égal, le plus ancien d'abord : l'appel le plus vieux (ou la
+  // préparation commencée la première), sinon la commande arrivée la première
+  function heureCle(entry, rang) {
+    const st = entry.order.catStatus || {};
+    const cible = rang === 0 ? "called" : rang === 1 ? "in_progress" : null;
+    if (cible) {
+      const t = entry.groups.filter((g) => st[g.cat] === cible)
+        .map((g) => Number(entry.catStartTimes[g.cat])).filter(Boolean);
+      if (t.length) return Math.min(...t);
     }
+    return Number(entry.order.receivedAt) || 0;
+  }
+
+  // Le tri attend que la cuisine ait fini d'appuyer : une carte qui change de
+  // place juste après un appui glissait une autre commande sous le doigt, et
+  // un deuxième appui validait la mauvaise table.
+  const GEL_TRI_MS = 2500;     // après chaque appui, les cartes restent en place
+  const GARDE_APPUI_MS = 600;  // un appui juste après un déplacement est ignoré
+  let triGeleJusqua = 0;
+  let triEnAttente = null;
+  let dernierMouvement = 0;
+  let ordreAffiche = [];
+
+  function appuiAccepte() {
+    if (Date.now() - dernierMouvement < GARDE_APPUI_MS) return false;
+    triGeleJusqua = Date.now() + GEL_TRI_MS;
+    return true;
+  }
+
+  function trier() {
+    const reste = triGeleJusqua - Date.now();
+    if (reste > 0) {
+      clearTimeout(triEnAttente);
+      triEnAttente = setTimeout(trier, reste + 50);
+      return;
+    }
+    const liste = [...orders.entries()].map(([id, entry]) => {
+      const rang = rangCarte(entry);
+      return { id, entry, rang, t: heureCle(entry, rang) };
+    });
+    liste.sort((a, b) => a.rang - b.rang || a.t - b.t);
+    liste.forEach(({ entry }, n) => { entry.card.style.order = String(n); });
+    // Les cartes déjà là ont-elles bougé ? (une nouvelle rangée en fin de grille, non)
+    const ordre = liste.map((x) => x.id);
+    const avant = new Set(ordreAffiche);
+    const maintenant = new Set(ordre);
+    const memeOrdre = ordre.filter((id) => avant.has(id)).join("\n")
+      === ordreAffiche.filter((id) => maintenant.has(id)).join("\n");
+    const premiereNouvelle = ordre.findIndex((id) => !avant.has(id));
+    const glisseeAvant = premiereNouvelle !== -1 && ordre.slice(premiereNouvelle).some((id) => avant.has(id));
+    if (!memeOrdre || glisseeAvant) dernierMouvement = Date.now();
+    ordreAffiche = ordre;
+  }
+
+  // Tout ce que montre cet écran est prêt : l'écran cuisine (/kds) termine la
+  // commande ; un écran de poste masque seulement sa carte
+  function terminer(orderId) {
+    // une modification arrivée entre-temps a remis des sections à faire : on ne termine pas
+    const e = orders.get(orderId);
+    if (!e || !e.card.classList.contains("all-done")) return;
+    if (POSTE.termine) markReady(orderId);
+    else removeOrder(orderId);
   }
 
   function markReady(orderId) {
-    ws.send(JSON.stringify({ type: "order_ready", orderId }));
+    envoyer({ type: "order_ready", orderId });
     removeOrder(orderId);
   }
 
@@ -818,15 +848,44 @@
     const entry = orders.get(orderId);
     if (!entry) return;
     clearInterval(entry.interval);
-    entry.card.classList.add("removing");
-    setTimeout(() => {
-      entry.card.remove();
-      orders.delete(orderId);
-      updateCounter();
-    }, 300);
+    // Retirée de la liste tout de suite : la carte qui part n'est plus visée
+    orders.delete(orderId);
+    updateCounter();
+    effacerCarte(entry.card);
   }
+
+  // Fondu puis retrait ; la carte lâche ses id tout de suite. Son départ décale
+  // les suivantes : un appui dans la foulée est ignoré (voir appuiAccepte)
+  function effacerCarte(card) {
+    card.removeAttribute("id");
+    card.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+    card.classList.add("removing");
+    setTimeout(() => { card.remove(); dernierMouvement = Date.now(); }, 300);
+  }
+
+  // ── Nouvelle mise à jour ──
+  // Le serveur d'impression donne sa version (GET /version). Si elle change
+  // pendant que l'écran est ouvert, le bandeau s'affiche ; seul un appui sur
+  // « Recharger » recharge la page, jamais l'écran tout seul.
+  let versionEcran = null;
+  async function verifierVersion() {
+    try {
+      const r = await fetch(`/version?t=${Date.now()}`, { cache: "no-store" });
+      if (!r.ok) return;
+      const { version } = await r.json();
+      if (!version) return;
+      if (versionEcran === null) versionEcran = version;
+      else if (version !== versionEcran) document.getElementById("maj-bandeau").hidden = false;
+    } catch { /* serveur injoignable : on réessaiera */ }
+  }
+  verifierVersion();
+  setInterval(verifierVersion, 20000);
 
   connect();
 </script>
+  <div id="maj-bandeau" class="maj-bandeau" role="status" aria-live="polite" hidden>
+    <span>Nouvelle mise à jour</span>
+    <button type="button" onclick="location.reload()">Recharger</button>
+  </div>
 </body>
 </html>

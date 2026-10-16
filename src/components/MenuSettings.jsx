@@ -1,29 +1,62 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useEffectEvent } from "react";
 import { getDefaultPasswords, savePasswords, lockApp } from "./PasswordGate";
+import FicheProduit from "./FicheProduit";
+import FicheCategorie from "./FicheCategorie";
+import { getSubcatColor } from "./couleurs";
+import { avecSection, famillesDe, phraseTicket, posteRegle, sectionDeCategorie } from "./postes";
+import useHauteurVisible from "./useHauteurVisible";
+import useAuBout from "./useAuBout";
+import { ArrowLeft, Settings, Search, X, Plus, Receipt, Pencil, Flame, Printer, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 
-const STEP_LABELS = ["Entrée", "Plat", "Dessert", "Naan", "Boisson", "Supplément"];
+// ─────────────────────────────────────────────────────────────────────────
+// Admin de la carte : la même chose que la caisse, mais toucher un bouton
+// ouvre sa fiche au lieu de l'ajouter à la commande.
+// ─────────────────────────────────────────────────────────────────────────
 
-export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }) {
-  const [activeTab, setActiveTab]           = useState("menu");
+// Repere identique a celui des boutons de la caisse
+function badgeFormule(item) {
+  const n = (item.formulaSteps || []).length;
+  if (!item.isFormula || !n) return null;
+  // Les mêmes mots que dans la fiche (« Questions posées au client »), et
+  // court : « Menu · 10 étapes » élargissait la tuile hors de l'écran du téléphone.
+  const questions = `${n} question${n > 1 ? "s" : ""}`;
+  if (item.category === "Menu") return { cls: "menu", txt: questions };
+  if (n === 1) return { cls: "choix", txt: `${(item.formulaSteps[0].articles || []).length} choix` };
+  return { cls: "choix", txt: questions };
+}
+
+function normal(s) {
+  return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+function prixTexte(p) {
+  const n = Number(p);
+  return Number.isFinite(n) ? `${n.toFixed(2)} €` : "Sans prix";
+}
+
+// Une couleur choisie pour une famille qui n'existe plus (produits déplacés ou
+// supprimés) est oubliée : une famille recréée plus tard repart en « Auto ».
+function sansCouleursOrphelines(sections) {
+  return sections.map((sec) => {
+    if (!sec.couleurs) return sec;
+    const vivantes = new Set(famillesDe(sec));
+    const gardees = Object.fromEntries(Object.entries(sec.couleurs).filter(([f]) => vivantes.has(f)));
+    if (Object.keys(gardees).length === Object.keys(sec.couleurs).length) return sec;
+    const { couleurs: _c, ...reste } = sec;
+    return Object.keys(gardees).length ? { ...reste, couleurs: gardees } : reste;
+  });
+}
+
+export default function MenuSettings({ menuData, onUpdate: publier, onClose, saveStatus }) {
+  const onUpdate = (sections) => publier(sansCouleursOrphelines(sections));
+  const [vue, setVue]                       = useState("carte");   // carte | reglages
   const [activeCategory, setActiveCategory] = useState(menuData[0]?.category || "");
-  const [searchQuery, setSearchQuery]       = useState("");
-  const [editingItem, setEditingItem]       = useState(null);
-  const [showAddSheet, setShowAddSheet]     = useState(false);
-  const [deleteTarget, setDeleteTarget]     = useState(null);
-  const [showAddCat, setShowAddCat]         = useState(false);
-  const [newCatName, setNewCatName]         = useState("");
-  const [showReorder, setShowReorder]       = useState(false);
-  const [reorderList, setReorderList]       = useState([]);
-  const [dragOverIdx, setDragOverIdx]       = useState(null);
-
-  // Form ajout
-  const [newName, setNewName]                   = useState("");
-  const [newPrice, setNewPrice]                 = useState("");
-  const [newSubcat, setNewSubcat]               = useState("");
-  const [newPiment, setNewPiment]               = useState(false);
-  const [newItemType, setNewItemType]           = useState("article");
-  const [newFormulaSteps, setNewFormulaSteps]   = useState([]);
-  const [newStepInputs, setNewStepInputs]       = useState({});
+  const [recherche, setRecherche]           = useState("");
+  const [fiche, setFiche]                   = useState(null);      // { produit, estNouveau }
+  const [ficheCat, setFicheCat]             = useState(null);      // { nom } ou { nom: null } pour une nouvelle
+  const [saisieFamille, setSaisieFamille]   = useState(null);      // nom en cours, null = fermé
+  const familleAMontrer = useRef(null);                             // famille créée, montrée une fois
+  const formFamilleRef = useRef(null);
 
   // Réglages
   const [printUrl, setPrintUrl]       = useState(() => localStorage.getItem("punjab_print_url") || "");
@@ -32,132 +65,195 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
   const [appPwd, setAppPwd]           = useState(pwds.app);
   const [settPwd, setSettPwd]         = useState(pwds.settings);
   const [pwdSaved, setPwdSaved]       = useState(false);
-  const [showAppPwd, setShowAppPwd]   = useState(false);
-  const [showSettPwd, setShowSettPwd] = useState(false);
+  const [voirMdp, setVoirMdp]         = useState(false);
 
-  const section = menuData.find(s => s.category === activeCategory);
+  useHauteurVisible();
+  const ongletsRef = useRef(null);
 
-  const subcategories = useMemo(() =>
-    [...new Set(section?.items.filter(i => i.subcategory).map(i => i.subcategory) || [])],
-    [section]
-  );
+  const section = menuData.find((s) => s.category === activeCategory) || menuData[0];
 
-  const filteredItems = useMemo(() => {
+  // Ce que la fiche produit doit savoir de chaque catégorie
+  const categories = useMemo(() => menuData.map((sec) => ({
+    nom: sec.category,
+    phrase: phraseTicket(sec),
+    section: sectionDeCategorie(sec),
+    poste: posteRegle(sec),
+    familles: famillesDe(sec),
+    couleurs: sec.couleurs || {},
+  })), [menuData]);
+
+  // Produits groupés par famille, dans l'ordre de la caisse (sans famille à la fin)
+  // couleurs choisies, par catégorie (un résultat de recherche garde la sienne)
+  const couleursDe = useMemo(() => Object.fromEntries(menuData.map((s) => [s.category, s.couleurs])), [menuData]);
+
+  // une famille créée vide apparaît aussi, avec sa tuile « Ajouter dans … »
+  const groupes = useMemo(() => {
     const items = section?.items || [];
-    if (!searchQuery.trim()) return items;
-    const q = searchQuery.toLowerCase();
-    return items.filter(i => i.name.toLowerCase().includes(q));
-  }, [section, searchQuery]);
+    const ordre = famillesDe(section);
+    const res = ordre.map((f) => ({ famille: f, items: items.filter((i) => i.subcategory === f) }));
+    const sans = items.filter((i) => !i.subcategory);
+    if (sans.length || !res.length) res.push({ famille: null, items: sans });
+    return res;
+  }, [section]);
 
-  const grouped = useMemo(() => {
-    const result = {};
-    for (const item of filteredItems) {
-      const key = item.subcategory || "__none__";
-      if (!result[key]) result[key] = [];
-      result[key].push(item);
-    }
-    return result;
-  }, [filteredItems]);
+  const trouves = useMemo(() => {
+    const q = normal(recherche.trim());
+    if (!q) return null;
+    return menuData.flatMap((sec) => sec.items.filter((i) => normal(i.name).includes(q)));
+  }, [menuData, recherche]);
 
-  /* ── Helpers ── */
-  function applyUpdate(updater) {
-    onUpdate(menuData.map(s => ({ ...s, items: s.items.map(updater) })));
+  // L'onglet choisi reste visible dans la barre (téléphone, tablette)
+  const enRecherche = trouves !== null;
+  // l'ordre des onglets compte aussi : une catégorie déplacée doit rester visible
+  const ordreOnglets = menuData.map((s) => s.category).join("|");
+  const [ongletsAuBout, ongletsAuDebut] = useAuBout(ongletsRef, [enRecherche, vue, ordreOnglets]);
+  useEffect(() => {
+    ongletsRef.current?.querySelector(".category-tab.active")
+      ?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
+  }, [activeCategory, enRecherche, vue, ordreOnglets]);
+
+  /* ── Produits ── */
+  function prochainId() {
+    const ids = menuData.flatMap((sec) => sec.items.map((i) => i.id).filter((x) => typeof x === "number"));
+    return Math.max(...ids, 0) + 1;
   }
 
-  function saveEditingItem() {
-    if (!editingItem) return;
-    const price = parseFloat(String(editingItem.price).replace(",", "."));
-    if (!editingItem.name?.trim() || isNaN(price)) return;
-    onUpdate(menuData.map(s => ({
-      ...s,
-      items: s.items.map(i => i.id === editingItem.id ? {
-        ...i,
-        name: editingItem.name.trim(),
-        price,
-        subcategory: editingItem.subcategory?.trim() || undefined,
-        piment: editingItem.piment || false,
-        isFormula: editingItem.isFormula || false,
-        formulaSteps: editingItem.formulaSteps || undefined,
-      } : i),
-    })));
-    setEditingItem(null);
+  function nouveauProduit(famille) {
+    const p = { id: prochainId(), name: "", price: "", category: section.category };
+    if (famille) p.subcategory = famille;
+    setFiche({ produit: p, estNouveau: true });
   }
 
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    if (deleteTarget.type === "category") {
-      const newMenu = menuData.filter(s => s.category !== deleteTarget.name);
-      onUpdate(newMenu);
-      setActiveCategory(newMenu[0]?.category || "");
+  // La categorie aiguille le ticket : changer d'onglet deplace le produit
+  function enregistrerFiche(p) {
+    onUpdate(menuData.map((sec) => {
+      const ici = sec.items.some((i) => i.id === p.id);
+      if (sec.category === p.category) {
+        return ici ? { ...sec, items: sec.items.map((i) => (i.id === p.id ? p : i)) }
+                   : { ...sec, items: [...sec.items, p] };
+      }
+      return ici ? { ...sec, items: sec.items.filter((i) => i.id !== p.id) } : sec;
+    }));
+    if (p.category !== activeCategory) setActiveCategory(p.category);
+    setFiche(null);
+  }
+
+  function supprimerProduit(p) {
+    onUpdate(menuData.map((sec) => ({ ...sec, items: sec.items.filter((i) => i.id !== p.id) })));
+    setFiche(null);
+  }
+
+  // On copie toujours la version ENREGISTREE : copier un brouillon en cours
+  // ecrivait dans la carte un prix encore en texte, et la caisse plantait
+  // (« toFixed is not a function »).
+  function dupliquerProduit(p) {
+    const enregistre = menuData.flatMap((sec) => sec.items).find((i) => i.id === p.id);
+    if (!enregistre) return;
+    const copie = JSON.parse(JSON.stringify(enregistre));
+    copie.id = prochainId();
+    copie.name = `${enregistre.name} (copie)`;
+    onUpdate(menuData.map((sec) => {
+      const k = sec.items.findIndex((i) => i.id === enregistre.id);
+      if (k === -1) return sec;
+      const items = [...sec.items];
+      items.splice(k + 1, 0, copie);
+      return { ...sec, items };
+    }));
+    setFiche({ produit: copie, estNouveau: false });
+  }
+
+  /* ── Familles ── */
+  // Créer une famille sans passer par un produit : elle est rangée dans la
+  // catégorie (champ « familles ») jusqu'à ce qu'on y ajoute des produits.
+  const nomFamille = (saisieFamille || "").trim();
+  const erreurFamille = !nomFamille ? null
+    : famillesDe(section).some((f) => f.toLowerCase() === nomFamille.toLowerCase())
+      ? `« ${nomFamille} » existe déjà dans ${section.category}.` : null;
+
+  function creerFamille() {
+    if (!nomFamille || erreurFamille) return;
+    onUpdate(menuData.map((sec) => (sec.category !== section.category ? sec
+      : { ...sec, familles: [...(sec.familles || []), nomFamille] })));
+    familleAMontrer.current = nomFamille;
+    setSaisieFamille(null);
+  }
+
+  // la famille créée (en bas de la liste) est ramenée dans la vue
+  useEffect(() => {
+    const f = familleAMontrer.current;
+    if (!f) return;
+    familleAMontrer.current = null;
+    document.querySelector(`.adm-groupe[data-famille="${CSS.escape(f)}"]`)
+      ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [menuData]);
+
+  // le formulaire (et son message de doublon) est ramené dans l'écran
+  const formOuvert = saisieFamille !== null;
+  useEffect(() => {
+    if (formOuvert) formFamilleRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [formOuvert, erreurFamille]);
+
+  // Échap ferme le formulaire « Nouvelle famille » où que soit le curseur
+  // (les fiches ouvertes gèrent Échap elles-mêmes)
+  const surEchap = useEffectEvent((ev) => {
+    if (ev.key !== "Escape" || ev.defaultPrevented || fiche || ficheCat) return;
+    if (saisieFamille !== null) setSaisieFamille(null);
+  });
+  useEffect(() => {
+    const t = (ev) => surEchap(ev);
+    window.addEventListener("keydown", t);
+    return () => window.removeEventListener("keydown", t);
+  }, []);
+
+  /* ── Catégories ── */
+  // ancienNom = null : création. Renommer l'onglet renomme aussi la catégorie
+  // portée par chacun de ses produits (c'est elle qui part à l'imprimante).
+  function enregistrerCategorie(ancienNom, { nom, poste, place, renommages, familles, couleurs }) {
+    let sections;
+    if (ancienNom === null) {
+      sections = [...menuData, avecSection({ category: nom, items: [] }, poste)];
     } else {
-      onUpdate(menuData.map(s => ({ ...s, items: s.items.filter(i => i.id !== deleteTarget.id) })));
-      setEditingItem(null);
+      sections = menuData.map((sec) => {
+        if (sec.category !== ancienNom) return sec;
+        const items = sec.items.map((i) => {
+          const it = { ...i, category: nom };
+          if (it.subcategory && renommages[it.subcategory]) it.subcategory = renommages[it.subcategory];
+          return it;
+        });
+        // familles créées vides : renommées ou retirées dans la fiche catégorie
+        const { familles: _avant, couleurs: _avantCouleurs, ...reste } = sec;
+        const base = {
+          ...reste, items,
+          ...(familles && familles.length ? { familles } : {}),
+          ...(couleurs && Object.keys(couleurs).length ? { couleurs } : {}),
+        };
+        return sec.category === "Menu" ? base : avecSection({ ...base, category: nom }, poste);
+      });
     }
-    setDeleteTarget(null);
+    const k = sections.findIndex((s) => s.category === nom);
+    const [deplacee] = sections.splice(k, 1);
+    sections.splice(Math.min(place, sections.length), 0, deplacee);
+    onUpdate(sections);
+    setActiveCategory(nom);
+    setFicheCat(null);
   }
 
-  function addItem() {
-    if (!newName.trim() || !newPrice) return;
-    const price = parseFloat(newPrice.replace(",", "."));
-    if (isNaN(price) || price < 0) return;
-    const allIds = menuData.flatMap(s => s.items.map(i => i.id));
-    const newId = Math.max(...allIds, 0) + 1;
-    const item = { id: newId, name: newName.trim(), price, category: activeCategory };
-    if (newSubcat.trim()) item.subcategory = newSubcat.trim();
-    if (newPiment) item.piment = true;
-    if (newItemType === "menu" && newFormulaSteps.length > 0) {
-      item.isFormula = true;
-      item.formulaSteps = newFormulaSteps;
-    }
-    onUpdate(menuData.map(s => s.category === activeCategory ? { ...s, items: [...s.items, item] } : s));
-    setNewName(""); setNewPrice(""); setNewSubcat(""); setNewPiment(false);
-    setNewItemType("article"); setNewFormulaSteps([]); setNewStepInputs({});
-    setShowAddSheet(false);
+  function supprimerCategorie(nom) {
+    const reste = menuData.filter((s) => s.category !== nom);
+    onUpdate(reste);
+    setActiveCategory(reste[0]?.category || "");
+    setFicheCat(null);
   }
 
-  function addCategory() {
-    const name = newCatName.trim();
-    if (!name || menuData.find(s => s.category === name)) return;
-    onUpdate([...menuData, { category: name, items: [] }]);
-    setActiveCategory(name);
-    setNewCatName(""); setShowAddCat(false);
-  }
-
-  function openReorder() {
-    setReorderList(menuData.map(s => s.category));
-    setShowReorder(true);
-  }
-
-  function moveCategory(idx, dir) {
-    const list = [...reorderList];
-    const target = idx + dir;
-    if (target < 0 || target >= list.length) return;
-    [list[idx], list[target]] = [list[target], list[idx]];
-    setReorderList(list);
-  }
-
-  function confirmReorder() {
-    const reordered = reorderList.map(cat => menuData.find(s => s.category === cat)).filter(Boolean);
-    onUpdate(reordered);
-    setShowReorder(false);
-  }
-
-  // Drag & drop handlers
-  function onDragStart(e, idx) { e.dataTransfer.setData("idx", idx); }
-  function onDragOver(e, idx)  { e.preventDefault(); setDragOverIdx(idx); }
-  function onDrop(e, idx) {
-    const from = parseInt(e.dataTransfer.getData("idx"));
-    if (from === idx) { setDragOverIdx(null); return; }
-    const list = [...reorderList];
-    const [moved] = list.splice(from, 1);
-    list.splice(idx, 0, moved);
-    setReorderList(list);
-    setDragOverIdx(null);
-  }
-
+  /* ── Réglages ── */
   async function savePrintUrl() {
     const val = printUrl.trim();
     localStorage.setItem("punjab_print_url", val);
+    // En local on ne pousse pas la configuration du restaurant
+    if (import.meta.env.DEV) {
+      setUrlStatus("ok"); setTimeout(() => setUrlStatus(null), 2500);
+      return;
+    }
     setUrlStatus("saving");
     try {
       const res = await fetch("https://punjab-restaurant.vercel.app/api/save-config", {
@@ -174,585 +270,235 @@ export default function MenuSettings({ menuData, onUpdate, onClose, saveStatus }
     setPwdSaved(true); setTimeout(() => setPwdSaved(false), 2000);
   }
 
-  /* ── Formula helpers (edition) ── */
-  function editStepLabel(i, val) {
-    const steps = (editingItem.formulaSteps || []).map((s, idx) => idx === i ? { ...s, label: val } : s);
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editAddArticle(i, name) {
-    const steps = (editingItem.formulaSteps || []).map((s, idx) =>
-      idx === i ? { ...s, articles: [...(s.articles || []), { name, piment: false }] } : s
+  /* ── Bouton produit, comme dans la caisse ── */
+  function boutonProduit(item, avecOnglet) {
+    const c = getSubcatColor(item.subcategory, couleursDe[item.category]);
+    const b = badgeFormule(item);
+    return (
+      <button key={item.id} className={`menu-btn adm-produit${c ? " caisse-produit--famille" : ""}`}
+        onClick={() => setFiche({ produit: item, estNouveau: false })}
+        style={c ? { "--famille": c.vif || c.border } : undefined}>
+        {/* le bloc porte la couleur de la famille ; en haut les repères, en bas le nom et le prix */}
+        <span className="adm-produit-haut">
+          {avecOnglet && <span className="adm-produit-onglet">{item.category}</span>}
+          <span className="adm-produit-reperes">
+            {item.piment && <span className="adm-piment" role="img" aria-label="Demande le piment" title="Demande le piment"><Flame size={14} strokeWidth={2} aria-hidden="true" /></span>}
+            {b && <span className={`menu-btn-tag ${b.cls}`}>{b.txt}</span>}
+          </span>
+        </span>
+        <span className="adm-produit-bas">
+          <span className="menu-btn-name">{item.name}</span>
+          <span className="menu-btn-price">{prixTexte(item.price)}</span>
+        </span>
+      </button>
     );
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editTogglePiment(i, ai) {
-    const steps = (editingItem.formulaSteps || []).map((s, si) =>
-      si === i ? { ...s, articles: (s.articles || []).map((a, aii) => aii === ai ? { ...a, piment: !a.piment } : a) } : s
-    );
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editRemoveArticle(i, ai) {
-    const steps = (editingItem.formulaSteps || []).map((s, si) =>
-      si === i ? { ...s, articles: (s.articles || []).filter((_, aii) => aii !== ai) } : s
-    );
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editArticlePrice(i, ai, val) {
-    const steps = (editingItem.formulaSteps || []).map((s, si) =>
-      si === i
-        ? { ...s, articles: s.articles.map((a, k) => {
-              if (k !== ai) return a;
-              const base = typeof a === "string" ? { name: a } : { ...a };
-              if (val === "") delete base.price;
-              else base.price = parseFloat(val);
-              return base;
-            }) }
-        : s
-    );
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editToggleRemplaceNom(i) {
-    const steps = (editingItem.formulaSteps || []).map((s, si) =>
-      si === i ? { ...s, remplaceNom: !s.remplaceNom } : s
-    );
-    setEditingItem({ ...editingItem, formulaSteps: steps });
-  }
-  function editRemoveStep(i) {
-    const steps = (editingItem.formulaSteps || []).filter((_, si) => si !== i);
-    setEditingItem({ ...editingItem, formulaSteps: steps.length ? steps : undefined, isFormula: steps.length > 0 });
   }
 
-  const [editStepInputs, setEditStepInputs] = useState({});
+  const enregistrement = saveStatus === "saving" ? { cls: "en-cours", txt: "Enregistrement…" }
+    : saveStatus === "ok" ? { cls: "ok", txt: "✓ Enregistré" }
+    : saveStatus === "error" ? { cls: "erreur", txt: "✗ Pas enregistré" }
+    : null;
 
   /* ═══════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════ */
   return (
-    <div className="ap-overlay">
-      <div className="ap-panel">
-
-        {/* ── Header ── */}
-        <div className="ap-header">
-          <div className="ap-header-left">
-            {saveStatus === "saving" && <span className="ap-save saving">Sauvegarde…</span>}
-            {saveStatus === "ok"      && <span className="ap-save ok">✓ Sauvegardé</span>}
-            {saveStatus === "error"   && <span className="ap-save error">✗ Erreur</span>}
-          </div>
-          <div className="ap-segmented">
-            <button className={`ap-seg ${activeTab === "menu" ? "active" : ""}`} onClick={() => setActiveTab("menu")}>Menu</button>
-            <button className={`ap-seg ${activeTab === "reglages" ? "active" : ""}`} onClick={() => setActiveTab("reglages")}>Réglages</button>
-          </div>
-          <button className="ap-close-btn" onClick={onClose}>✕</button>
-        </div>
-
-        {/* ══════════════════════════════
-            ONGLET MENU
-        ══════════════════════════════ */}
-        {activeTab === "menu" && (
-          <div className="ap-tab-content">
-
-            {/* Catégories */}
-            <div className="ap-cats-row">
-              {menuData.map(s => (
-                <button key={s.category}
-                  className={`ap-cat-pill ${activeCategory === s.category ? "active" : ""}`}
-                  onClick={() => { setActiveCategory(s.category); setSearchQuery(""); }}>
-                  {s.category}
-                  <span className="ap-cat-count">{s.items.length}</span>
-                </button>
-              ))}
-              <button className="ap-cat-pill ap-cat-new" onClick={() => setShowAddCat(v => !v)}>+ Cat.</button>
-              <button className="ap-cat-pill ap-cat-reorder" onClick={openReorder} title="Réorganiser">↕</button>
-            </div>
-
-            {showAddCat && (
-              <div className="ap-inline-row">
-                <input className="ap-inline-input" placeholder="Nom de la catégorie…"
-                  value={newCatName} onChange={e => setNewCatName(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && addCategory()} autoFocus />
-                <button className="ap-inline-btn" onClick={addCategory}>Ajouter</button>
-              </div>
+    <div className="adm">
+      <header className={`adm-barre${vue === "reglages" ? " adm-barre--reglages" : ""}`}>
+        {vue === "carte"
+          ? <button className="fp-retour" onClick={onClose}><ArrowLeft size={18} strokeWidth={1.8} aria-hidden="true" />Caisse</button>
+          : <button className="fp-retour" onClick={() => setVue("carte")}><ArrowLeft size={18} strokeWidth={1.8} aria-hidden="true" />Ma carte</button>}
+        <span className="adm-titre">
+          <span className="adm-titre-texte">{vue === "carte" ? "Ma carte" : "Réglages"}</span>
+          {import.meta.env.DEV && <span className="badge-essai">MODE ESSAI</span>}
+        </span>
+        {/* Sur ordinateur et téléphone en paysage, la recherche tient dans la
+            barre ; ailleurs elle passe sur sa propre ligne (CSS) */}
+        {vue === "carte" && (
+          <div className="adm-recherche">
+            <Search className="adm-recherche-icone" size={18} strokeWidth={1.8} aria-hidden="true" />
+            <input className="adm-recherche-saisie" type="search" placeholder="Chercher un produit"
+              enterKeyHint="search" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false}
+              value={recherche} onChange={(ev) => setRecherche(ev.target.value)}
+              onKeyDown={(ev) => { if (ev.key === "Enter") ev.currentTarget.blur(); }} />
+            {recherche && (
+              <button className="adm-recherche-effacer" aria-label="Effacer la recherche" onClick={() => setRecherche("")}><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>
             )}
-
-            {/* Search */}
-            <div className="ap-search-wrap">
-              <span className="ap-search-icon">🔍</span>
-              <input className="ap-search-input" placeholder="Rechercher un article…"
-                value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-              {searchQuery && (
-                <button className="ap-search-clear" onClick={() => setSearchQuery("")}>✕</button>
-              )}
-            </div>
-
-            {/* Liste articles */}
-            <div className="ap-list-area">
-              {Object.keys(grouped).length === 0 && (
-                <div className="ap-empty-state">
-                  {searchQuery ? "Aucun résultat pour « " + searchQuery + " »" : "Aucun article dans cette catégorie"}
-                </div>
-              )}
-
-              {Object.entries(grouped).map(([subcat, items]) => (
-                <div key={subcat} className="ap-group">
-                  {subcat !== "__none__" && (
-                    <div className="ap-group-label">{subcat.toUpperCase()}</div>
-                  )}
-                  <div className="ap-card">
-                    {items.map((item, idx) => (
-                      <div key={item.id}>
-                        <button className="ap-item-row" onClick={() => { setEditingItem({ ...item }); setEditStepInputs({}); }}>
-                          <div className="ap-item-left">
-                            {item.isFormula && <span className="ap-badge ap-badge--menu">Menu</span>}
-                            {item.piment    && <span className="ap-badge ap-badge--piment">🌶️</span>}
-                            <span className="ap-item-name">{item.name}</span>
-                          </div>
-                          <div className="ap-item-right">
-                            <span className="ap-item-price">{item.price.toFixed(2)} €</span>
-                            <span className="ap-chevron">›</span>
-                          </div>
-                        </button>
-                        {idx < items.length - 1 && <div className="ap-row-sep" />}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {!searchQuery && menuData.length > 1 && (
-                <button className="ap-delete-cat-btn"
-                  onClick={() => setDeleteTarget({ type: "category", name: activeCategory })}>
-                  Supprimer la catégorie « {activeCategory} »
-                </button>
-              )}
-            </div>
-
-            {/* FAB */}
-            <button className="ap-fab" onClick={() => setShowAddSheet(true)}>＋</button>
           </div>
         )}
-
-        {/* ══════════════════════════════
-            ONGLET RÉGLAGES
-        ══════════════════════════════ */}
-        {activeTab === "reglages" && (
-          <div className="ap-tab-content ap-settings-content">
-
-            <div className="ap-settings-group">
-              <div className="ap-settings-label">SERVEUR D'IMPRESSION</div>
-              <div className="ap-card">
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">🖨️ URL</span>
-                  <input className="ap-row-input" type="url" inputMode="url" autoCapitalize="none"
-                    placeholder={`Auto (local:3001)`} value={printUrl}
-                    onChange={e => setPrintUrl(e.target.value)} />
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row ap-settings-row--hint">
-                  <span className="ap-hint-text">Ex : http://192.168.1.62:3001</span>
-                  <button className="ap-pill-btn" onClick={savePrintUrl}>
-                    {urlStatus === "saving" ? "…" : urlStatus === "ok" ? "✓ OK" : urlStatus === "error" ? "✗ Erreur" : "Enregistrer"}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="ap-settings-group">
-              <div className="ap-settings-label">MOTS DE PASSE</div>
-              <div className="ap-card">
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Application</span>
-                  <div className="ap-pwd-row">
-                    <input className="ap-row-input" type={showAppPwd ? "text" : "password"}
-                      value={appPwd} onChange={e => setAppPwd(e.target.value)} placeholder="Mot de passe" />
-                    <button className="ap-eye-btn" onClick={() => setShowAppPwd(v => !v)}>
-                      {showAppPwd ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Paramètres</span>
-                  <div className="ap-pwd-row">
-                    <input className="ap-row-input" type={showSettPwd ? "text" : "password"}
-                      value={settPwd} onChange={e => setSettPwd(e.target.value)} placeholder="Mot de passe" />
-                    <button className="ap-eye-btn" onClick={() => setShowSettPwd(v => !v)}>
-                      {showSettPwd ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row ap-settings-row--center">
-                  <button className="ap-pill-btn" onClick={handleSavePasswords}>
-                    {pwdSaved ? "✓ Enregistré" : "Enregistrer"}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="ap-settings-group">
-              <div className="ap-card">
-                <button className="ap-settings-row ap-row-destructive"
-                  onClick={() => { lockApp(); window.location.reload(); }}>
-                  Verrouiller l'application
-                </button>
-              </div>
-            </div>
-          </div>
+        {vue === "carte" && (
+          <button className="adm-reglages" aria-label="Réglages" onClick={() => setVue("reglages")}>
+            <Settings size={20} strokeWidth={1.8} aria-hidden="true" /><span className="adm-reglages-mot">Réglages</span>
+          </button>
         )}
-      </div>
+      </header>
 
-      {/* ══════════════════════════════
-          BOTTOM SHEET — ÉDITION
-      ══════════════════════════════ */}
-      {editingItem && (
-        <div className="ap-backdrop" onClick={() => setEditingItem(null)}>
-          <div className="ap-sheet" onClick={e => e.stopPropagation()}>
-            <div className="ap-sheet-handle" />
-            <div className="ap-sheet-title">Modifier</div>
-
-            <div className="ap-sheet-scroll">
-              <div className="ap-card ap-sheet-card">
-                {/* Nom */}
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Nom</span>
-                  <input className="ap-row-input" type="text" value={editingItem.name}
-                    onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} />
-                </div>
-                <div className="ap-row-sep" />
-                {/* Prix */}
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Prix</span>
-                  <div className="ap-price-row">
-                    <input className="ap-row-input ap-row-input--price" type="number" step="0.5" min="0"
-                      value={editingItem.price}
-                      onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} />
-                    <span className="ap-price-unit">€</span>
-                  </div>
-                </div>
-                <div className="ap-row-sep" />
-                {/* Sous-catégorie */}
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Sous-cat.</span>
-                  <input className="ap-row-input" type="text" placeholder="Optionnel"
-                    value={editingItem.subcategory || ""}
-                    onChange={e => setEditingItem({ ...editingItem, subcategory: e.target.value })}
-                    list="edit-subcats" />
-                  <datalist id="edit-subcats">
-                    {subcategories.map(s => <option key={s} value={s} />)}
-                  </datalist>
-                </div>
-                <div className="ap-row-sep" />
-                {/* Piment toggle */}
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">🌶️ Piment</span>
-                  <button
-                    className={`ap-toggle ${editingItem.piment ? "on" : ""}`}
-                    onClick={() => setEditingItem({ ...editingItem, piment: !editingItem.piment })}>
-                    <span className="ap-toggle-thumb" />
+      {vue === "carte" && (
+        <>
+          {!trouves && (
+            <div className="adm-onglets-ligne">
+              <div ref={ongletsRef} className={`category-tabs adm-onglets${ongletsAuBout ? " au-bout" : ""}${ongletsAuDebut ? " au-debut" : ""}`}>
+                {menuData.map((sec) => (
+                  <button key={sec.category}
+                    className={`category-tab ${section?.category === sec.category ? "active" : ""}`}
+                    onClick={() => { setActiveCategory(sec.category); setSaisieFamille(null); }}>
+                    {sec.category}
                   </button>
-                </div>
-                <div className="ap-row-sep" />
-                {/* Formule toggle */}
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">🍽️ Menu / Formule</span>
-                  <button
-                    className={`ap-toggle ${editingItem.isFormula ? "on" : ""}`}
-                    onClick={() => setEditingItem({ ...editingItem, isFormula: !editingItem.isFormula, formulaSteps: editingItem.isFormula ? undefined : [] })}>
-                    <span className="ap-toggle-thumb" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Étapes de formule */}
-              {editingItem.isFormula && (
-                <div className="ap-formula-section">
-                  <div className="ap-settings-label">ÉTAPES DU MENU</div>
-                  {(editingItem.formulaSteps || []).map((step, i) => (
-                    <div key={i} className="ap-card ap-sheet-card ap-formula-block">
-                      <div className="ap-settings-row">
-                        <select className="ap-row-input" value={step.label} onChange={e => editStepLabel(i, e.target.value)}>
-                          {STEP_LABELS.map(l => <option key={l} value={l}>{l}</option>)}
-                        </select>
-                        <button className="ap-remove-btn" onClick={() => editRemoveStep(i)}>✕</button>
-                      </div>
-                      <div className="ap-settings-row">
-                        <span className="ap-row-label">Le choix remplace le nom</span>
-                        <button
-                          className={`ap-toggle ${step.remplaceNom ? "on" : ""}`}
-                          onClick={() => editToggleRemplaceNom(i)}>
-                          <span className="ap-toggle-thumb" />
-                        </button>
-                      </div>
-                      <div className="ap-row-sep" />
-                      <div className="ap-chips-wrap">
-                        {(step.articles || []).map((a, ai) => {
-                          const name = typeof a === "string" ? a : a.name;
-                          const hasPiment = typeof a !== "string" && a.piment;
-                          return (
-                            <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
-                              {name}
-                              <input
-                                className="formula-chip-price"
-                                type="number" step="0.5" min="0" placeholder="€"
-                                value={typeof a === "string" || a.price == null ? "" : a.price}
-                                onChange={e => editArticlePrice(i, ai, e.target.value)} />
-                              <button className={`formula-chip-piment ${hasPiment ? "active" : ""}`} onClick={() => editTogglePiment(i, ai)}>🌶️</button>
-                              <button onClick={() => editRemoveArticle(i, ai)}>✕</button>
-                            </span>
-                          );
-                        })}
-                        <div className="ap-chip-add-row">
-                          <input className="ap-row-input" type="text" placeholder="Ajouter un article…"
-                            value={editStepInputs[i] || ""}
-                            onChange={e => setEditStepInputs({ ...editStepInputs, [i]: e.target.value })}
-                            onKeyDown={e => {
-                              if (e.key === "Enter" && (editStepInputs[i] || "").trim()) {
-                                editAddArticle(i, editStepInputs[i].trim());
-                                setEditStepInputs({ ...editStepInputs, [i]: "" });
-                              }
-                            }} />
-                          <button className="ap-inline-btn" disabled={!(editStepInputs[i] || "").trim()}
-                            onClick={() => { editAddArticle(i, editStepInputs[i].trim()); setEditStepInputs({ ...editStepInputs, [i]: "" }); }}>
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="ap-ghost-btn"
-                    onClick={() => setEditingItem({ ...editingItem, formulaSteps: [...(editingItem.formulaSteps || []), { label: "Plat", articles: [] }] })}>
-                    + Ajouter une étape
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="ap-sheet-actions">
-              <button className="ap-action-primary" onClick={saveEditingItem}>Enregistrer</button>
-              <button className="ap-action-destructive" onClick={() => setDeleteTarget({ ...editingItem })}>Supprimer</button>
-              <button className="ap-action-cancel" onClick={() => setEditingItem(null)}>Annuler</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════
-          BOTTOM SHEET — AJOUT
-      ══════════════════════════════ */}
-      {showAddSheet && (
-        <div className="ap-backdrop" onClick={() => setShowAddSheet(false)}>
-          <div className="ap-sheet" onClick={e => e.stopPropagation()}>
-            <div className="ap-sheet-handle" />
-            <div className="ap-sheet-title">Nouvel article — {activeCategory}</div>
-
-            <div className="ap-sheet-scroll">
-              {/* Type toggle */}
-              <div className="ap-type-toggle">
-                <button className={`ap-type-btn ${newItemType === "article" ? "active" : ""}`} onClick={() => setNewItemType("article")}>Article</button>
-                <button className={`ap-type-btn ${newItemType === "menu" ? "active" : ""}`} onClick={() => setNewItemType("menu")}>🍽️ Menu</button>
-              </div>
-
-              <div className="ap-card ap-sheet-card">
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Nom</span>
-                  <input className="ap-row-input" type="text" placeholder="Nom de l'article"
-                    value={newName} onChange={e => setNewName(e.target.value)} autoFocus />
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Prix</span>
-                  <div className="ap-price-row">
-                    <input className="ap-row-input ap-row-input--price" type="number" step="0.5" min="0"
-                      placeholder="0.00" value={newPrice} onChange={e => setNewPrice(e.target.value)} />
-                    <span className="ap-price-unit">€</span>
-                  </div>
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">Sous-cat.</span>
-                  <input className="ap-row-input" type="text" placeholder="Optionnel"
-                    value={newSubcat} onChange={e => setNewSubcat(e.target.value)} list="add-subcats" />
-                  <datalist id="add-subcats">
-                    {subcategories.map(s => <option key={s} value={s} />)}
-                  </datalist>
-                </div>
-                <div className="ap-row-sep" />
-                <div className="ap-settings-row">
-                  <span className="ap-row-label">🌶️ Piment</span>
-                  <button className={`ap-toggle ${newPiment ? "on" : ""}`} onClick={() => setNewPiment(v => !v)}>
-                    <span className="ap-toggle-thumb" />
-                  </button>
-                </div>
-              </div>
-
-              {newItemType === "menu" && (
-                <div className="ap-formula-section">
-                  <div className="ap-settings-label">ÉTAPES DU MENU</div>
-                  {newFormulaSteps.map((step, i) => (
-                    <div key={i} className="ap-card ap-sheet-card ap-formula-block">
-                      <div className="ap-settings-row">
-                        <select className="ap-row-input" value={step.label}
-                          onChange={e => setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}>
-                          {STEP_LABELS.map(l => <option key={l} value={l}>{l}</option>)}
-                        </select>
-                        <button className="ap-remove-btn"
-                          onClick={() => setNewFormulaSteps(newFormulaSteps.filter((_, idx) => idx !== i))}>✕</button>
-                      </div>
-                      <div className="ap-settings-row">
-                        <span className="ap-row-label">Le choix remplace le nom</span>
-                        <button
-                          className={`ap-toggle ${step.remplaceNom ? "on" : ""}`}
-                          onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
-                            si === i ? { ...s, remplaceNom: !s.remplaceNom } : s
-                          ))}>
-                          <span className="ap-toggle-thumb" />
-                        </button>
-                      </div>
-                      <div className="ap-row-sep" />
-                      <div className="ap-chips-wrap">
-                        {(step.articles || []).map((a, ai) => {
-                          const name = typeof a === "string" ? a : a.name;
-                          const hasPiment = typeof a !== "string" && a.piment;
-                          return (
-                            <span key={ai} className={`formula-article-chip ${hasPiment ? "piment" : ""}`}>
-                              {name}
-                              <input
-                                className="formula-chip-price"
-                                type="number" step="0.5" min="0" placeholder="€"
-                                value={typeof a === "string" || a.price == null ? "" : a.price}
-                                onChange={e => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
-                                  si === i ? { ...s, articles: s.articles.map((x, xi) => {
-                                    if (xi !== ai) return x;
-                                    const base = typeof x === "string" ? { name: x } : { ...x };
-                                    if (e.target.value === "") delete base.price;
-                                    else base.price = parseFloat(e.target.value);
-                                    return base;
-                                  }) } : s
-                                ))} />
-                              <button className={`formula-chip-piment ${hasPiment ? "active" : ""}`}
-                                onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
-                                  si === i ? { ...s, articles: s.articles.map((x, xi) => xi === ai ? { ...x, piment: !x.piment } : x) } : s
-                                ))}>🌶️</button>
-                              <button onClick={() => setNewFormulaSteps(newFormulaSteps.map((s, si) =>
-                                si === i ? { ...s, articles: s.articles.filter((_, xi) => xi !== ai) } : s
-                              ))}>✕</button>
-                            </span>
-                          );
-                        })}
-                        <div className="ap-chip-add-row">
-                          <input className="ap-row-input" type="text" placeholder="Ajouter un article…"
-                            value={newStepInputs[i] || ""}
-                            onChange={e => setNewStepInputs({ ...newStepInputs, [i]: e.target.value })}
-                            onKeyDown={e => {
-                              if (e.key === "Enter" && (newStepInputs[i] || "").trim()) {
-                                setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i
-                                  ? { ...s, articles: [...(s.articles || []), { name: newStepInputs[i].trim(), piment: false }] } : s));
-                                setNewStepInputs({ ...newStepInputs, [i]: "" });
-                              }
-                            }} />
-                          <button className="ap-inline-btn" disabled={!(newStepInputs[i] || "").trim()}
-                            onClick={() => {
-                              setNewFormulaSteps(newFormulaSteps.map((s, idx) => idx === i
-                                ? { ...s, articles: [...(s.articles || []), { name: newStepInputs[i].trim(), piment: false }] } : s));
-                              setNewStepInputs({ ...newStepInputs, [i]: "" });
-                            }}>+</button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="ap-ghost-btn"
-                    onClick={() => setNewFormulaSteps([...newFormulaSteps, { label: "Plat", articles: [] }])}>
-                    + Ajouter une étape
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="ap-sheet-actions">
-              <button className="ap-action-primary" onClick={addItem} disabled={!newName.trim() || !newPrice}>
-                Ajouter au menu
-              </button>
-              <button className="ap-action-cancel" onClick={() => setShowAddSheet(false)}>Annuler</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════
-          BOTTOM SHEET — RÉORGANISATION
-      ══════════════════════════════ */}
-      {showReorder && (
-        <div className="ap-backdrop" onClick={() => setShowReorder(false)}>
-          <div className="ap-sheet" onClick={e => e.stopPropagation()}>
-            <div className="ap-sheet-handle" />
-            <div className="ap-sheet-title">Ordre des catégories</div>
-
-            <div className="ap-sheet-scroll">
-              <div className="ap-settings-label" style={{ padding: "0 4px 6px" }}>
-                Glissez ou utilisez ↑↓ pour réorganiser
-              </div>
-              <div className="ap-card ap-sheet-card">
-                {reorderList.map((cat, idx) => (
-                  <div key={cat}>
-                    <div
-                      className={`ap-reorder-row ${dragOverIdx === idx ? "drag-over" : ""}`}
-                      draggable
-                      onDragStart={e => onDragStart(e, idx)}
-                      onDragOver={e => onDragOver(e, idx)}
-                      onDrop={e => onDrop(e, idx)}
-                      onDragLeave={() => setDragOverIdx(null)}
-                    >
-                      <span className="ap-reorder-handle">☰</span>
-                      <span className="ap-reorder-name">{cat}</span>
-                      <div className="ap-reorder-arrows">
-                        <button
-                          className="ap-reorder-arrow"
-                          onClick={() => moveCategory(idx, -1)}
-                          disabled={idx === 0}
-                        >↑</button>
-                        <button
-                          className="ap-reorder-arrow"
-                          onClick={() => moveCategory(idx, 1)}
-                          disabled={idx === reorderList.length - 1}
-                        >↓</button>
-                      </div>
-                    </div>
-                    {idx < reorderList.length - 1 && <div className="ap-row-sep" />}
-                  </div>
                 ))}
               </div>
+              {/* hors de la zone qui défile : toujours visible, même sur téléphone */}
+              <button className="category-tab adm-onglet-plus" aria-label="Nouvelle catégorie" onClick={() => setFicheCat({ nom: null })}>
+                +<span className="adm-onglet-plus-mot"> Catégorie</span>
+              </button>
             </div>
+          )}
 
-            <div className="ap-sheet-actions">
-              <button className="ap-action-primary" onClick={confirmReorder}>Confirmer l'ordre</button>
-              <button className="ap-action-cancel" onClick={() => setShowReorder(false)}>Annuler</button>
+          {/* une zone par onglet : changer d'onglet repart du haut */}
+          <div className="menu-grid adm-grille" key={trouves ? "__recherche__" : section?.category}>
+            {trouves ? (
+              <>
+                <div className="adm-groupe-titre">
+                  {trouves.length === 0 ? `Rien ne s'appelle « ${recherche.trim()} »` : `${trouves.length} produit${trouves.length > 1 ? "s" : ""} trouvé${trouves.length > 1 ? "s" : ""}`}
+                </div>
+                <div className="menu-grid-items">{trouves.map((i) => boutonProduit(i, true))}</div>
+              </>
+            ) : section ? (
+              <>
+                <button className="adm-cat" onClick={() => setFicheCat({ nom: section.category })}>
+                  <span className="adm-cat-texte">
+                    <span className="adm-cat-nom">{section.category}</span>
+                    <span className="adm-cat-ticket"><Receipt size={16} strokeWidth={1.8} aria-hidden="true" />{phraseTicket(section)}</span>
+                  </span>
+                  <span className="adm-cat-changer"><Pencil size={16} strokeWidth={1.8} aria-hidden="true" />Modifier</span>
+                </button>
+
+                {groupes.map((g) => {
+                  const c = getSubcatColor(g.famille, section.couleurs);
+                  return (
+                    <div key={g.famille || "__sans__"} className="adm-groupe" data-famille={g.famille || ""}>
+                      {g.famille && (
+                        <div className="adm-groupe-titre adm-groupe-titre--famille">
+                          <span className="adm-pastille" style={c ? { background: c.vif || c.border } : undefined} />
+                          {g.famille}
+                        </div>
+                      )}
+                      {!g.famille && groupes.length > 1 && <div className="adm-groupe-titre">Sans famille</div>}
+                      <div className="menu-grid-items">
+                        <button className="menu-btn adm-ajouter" onClick={() => nouveauProduit(g.famille)}>
+                          <span className="adm-ajouter-plus"><Plus size={22} strokeWidth={1.8} aria-hidden="true" /></span>
+                          <span className="adm-ajouter-texte">
+                            {g.famille ? <>Ajouter dans<br />{g.famille}</> : "Ajouter un produit"}
+                          </span>
+                        </button>
+                        {g.items.map((i) => boutonProduit(i, false))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* créer une famille directement, sans passer par un produit */}
+                <div className="adm-nouvelle-famille">
+                  {saisieFamille === null ? (
+                    // même tuile que « + Ajouter dans … », à la même taille dans la grille
+                    <div className="menu-grid-items">
+                      <button className="menu-btn adm-ajouter" onClick={() => setSaisieFamille("")}>
+                        <span className="adm-ajouter-plus"><Plus size={22} strokeWidth={1.8} aria-hidden="true" /></span>
+                        <span className="adm-ajouter-texte">Nouvelle<br />famille</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="adm-famille-form" ref={formFamilleRef}>
+                      <span className="fp-etiquette">Nouvelle famille dans « {section.category} »</span>
+                      <div className="fp-ligne">
+                        <input className="fp-saisie" autoFocus placeholder="Ex. Poulet, Agneau…" value={saisieFamille}
+                          enterKeyHint="done" autoComplete="off"
+                          onChange={(ev) => setSaisieFamille(ev.target.value)}
+                          onKeyDown={(ev) => {
+                            if (ev.key === "Enter") creerFamille();
+                            if (ev.key === "Escape") setSaisieFamille(null);
+                          }} />
+                        <button className="fp-tuile on" aria-disabled={!nomFamille || !!erreurFamille} onClick={creerFamille}>Créer</button>
+                        <button className="fp-tuile" onClick={() => setSaisieFamille(null)}>Annuler</button>
+                      </div>
+                      {erreurFamille && <span className="adm-famille-erreur">{erreurFamille}</span>}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="adm-vide">
+                Aucune catégorie.
+                <button className="fp-tuile on" onClick={() => setFicheCat({ nom: null })}>+ Créer une catégorie</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {vue === "reglages" && (
+        <div className="fp-corps adm-reglages-corps">
+          <div className="fp-champ">
+            <span className="fp-etiquette fp-etiquette--icone"><Printer size={18} strokeWidth={1.8} aria-hidden="true" />Adresse de l'imprimante</span>
+            <input className="fp-saisie" type="url" inputMode="url" autoCapitalize="none"
+              placeholder="Automatique" value={printUrl} onChange={(ev) => setPrintUrl(ev.target.value)} />
+            <span className="fc-aide">Laisse vide pour l'adresse automatique. Ex. : http://192.168.1.62:3001</span>
+            <button className="fp-tuile on adm-valider" onClick={savePrintUrl}>
+              {urlStatus === "saving" ? "…" : urlStatus === "ok" ? "✓ Enregistré" : urlStatus === "error" ? "✗ Erreur" : "Enregistrer l'adresse"}
+            </button>
+          </div>
+
+          <div className="fp-champ">
+            <span className="fp-etiquette fp-etiquette--icone"><KeyRound size={18} strokeWidth={1.8} aria-hidden="true" />Mots de passe</span>
+            <label className="fp-champ">
+              <span className="fc-aide">Pour ouvrir la caisse</span>
+              <input className="fp-saisie" type={voirMdp ? "text" : "password"} value={appPwd}
+                onChange={(ev) => setAppPwd(ev.target.value)} />
+            </label>
+            <label className="fp-champ">
+              <span className="fc-aide">Pour ouvrir cet écran (Ma carte)</span>
+              <input className="fp-saisie" type={voirMdp ? "text" : "password"} value={settPwd}
+                onChange={(ev) => setSettPwd(ev.target.value)} />
+            </label>
+            <div className="fp-ouinon">
+              <button className="fp-tuile" onClick={() => setVoirMdp((v) => !v)}>{voirMdp ? <><EyeOff size={18} strokeWidth={1.8} aria-hidden="true" />Cacher</> : <><Eye size={18} strokeWidth={1.8} aria-hidden="true" />Voir</>}</button>
+              <button className="fp-tuile on adm-valider" onClick={handleSavePasswords}>
+                {pwdSaved ? "✓ Enregistré" : "Enregistrer les mots de passe"}
+              </button>
             </div>
           </div>
+
+          <button className="fp-action fp-action--rouge" onClick={() => { lockApp(); window.location.reload(); }}>
+            <Lock size={18} strokeWidth={1.8} aria-hidden="true" />Verrouiller la caisse
+          </button>
         </div>
       )}
 
-      {/* ══════════════════════════════
-          ACTION SHEET — SUPPRESSION
-      ══════════════════════════════ */}
-      {deleteTarget && (
-        <div className="ap-backdrop ap-backdrop--dark" onClick={() => setDeleteTarget(null)}>
-          <div className="ap-action-sheet" onClick={e => e.stopPropagation()}>
-            <div className="ap-action-sheet-body">
-              <div className="ap-action-sheet-title">
-                {deleteTarget.type === "category"
-                  ? `Supprimer la catégorie « ${deleteTarget.name} » ?`
-                  : `Supprimer « ${deleteTarget.name} » ?`}
-              </div>
-              <div className="ap-action-sheet-sub">Cette action est irréversible.</div>
-            </div>
-            <button className="ap-action-sheet-btn ap-action-sheet-btn--destructive" onClick={confirmDelete}>
-              Supprimer
-            </button>
-            <button className="ap-action-sheet-btn" onClick={() => setDeleteTarget(null)}>
-              Annuler
-            </button>
-          </div>
-        </div>
+      {/* Fiche produit plein ecran : creation et modification */}
+      {fiche && (
+        <FicheProduit
+          key={`${fiche.produit.id}-${fiche.estNouveau}`}
+          produit={fiche.produit}
+          estNouveau={fiche.estNouveau}
+          categories={categories}
+          onEnregistrer={enregistrerFiche}
+          onSupprimer={supprimerProduit}
+          onDupliquer={dupliquerProduit}
+          onFermer={() => setFiche(null)} />
+      )}
+
+      {/* L'état d'enregistrement flotte en bas : la barre ne saute plus */}
+      {enregistrement && (
+        <div role="status" className={`adm-etat adm-etat--${enregistrement.cls}`}>{enregistrement.txt}</div>
+      )}
+
+      {ficheCat && (
+        <FicheCategorie
+          key={ficheCat.nom ?? "__nouvelle__"}
+          section={ficheCat.nom === null ? null : menuData.find((s) => s.category === ficheCat.nom)}
+          sections={menuData}
+          onEnregistrer={enregistrerCategorie}
+          onSupprimer={supprimerCategorie}
+          onFermer={() => setFicheCat(null)} />
       )}
     </div>
   );

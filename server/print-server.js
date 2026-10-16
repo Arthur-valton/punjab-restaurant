@@ -3,6 +3,7 @@ import cors from "cors";
 import net from "net";
 import http from "http";
 import fs from "fs";
+import crypto from "crypto";
 import { execSync, exec } from "child_process";
 import { WebSocketServer } from "ws";
 import path from "path";
@@ -40,6 +41,19 @@ const PRINTER_PORT = 9100;
 
 // Catégories considérées comme "bar" (pas envoyées à la cuisine ni au KDS)
 const BAR_CATEGORIES = new Set(["Boissons", "Vins", "Vin", "Rosé", "Rose", "Apéritifs", "Aperitifs", "Bières", "Bieres", "Bar"]);
+
+// Section du ticket choisie dans l'admin pour la categorie d'un article
+// (champ « poste » pose par la caisse). Absent ou inconnu : on garde les
+// regles ci-dessus, inchangees. Une categorie creee dans l'admin (« Crapaud »)
+// peut ainsi sortir avec les entrees ou au bar sans toucher a ce fichier.
+const POSTES_ADMIN = new Set(["Naans", "Entrees", "Plats", "Desserts", "Boissons"]);
+function posteAdmin(item) {
+  return item && POSTES_ADMIN.has(item.poste) ? item.poste : null;
+}
+function estBarArticle(item) {
+  const p = posteAdmin(item);
+  return p ? p === "Boissons" : BAR_CATEGORIES.has(item.category);
+}
 
 // IP imprimante selon le réseau WiFi ou la plage IP locale
 const PRINTER_IPS = {
@@ -143,7 +157,9 @@ const WIDTH = 48;
 const WIDTH_DOUBLE = 24;
 
 app.use(cors());
-app.use(express.json());
+// 1 Mo : une modification envoie la commande ET sa version d'avant ; avec les
+// questions des menus, une grande table depassait les 100 Ko par defaut (erreur 413)
+app.use(express.json({ limit: "1mb" }));
 app.use(express.static(__dirname));
 
 // Route /kds → kds.html
@@ -153,10 +169,88 @@ app.get("/kds", (req, res) => {
 });
 
 // Route /service → service.html
+// L'ecran service ouvre la caisse d'essai (et pas celle de production)
+// quand ce serveur tourne en essai
+// « notes: true » : la caisse ne propose la note sur un article qu'a un serveur
+// qui sait l'imprimer — un serveur pas a jour ne perd ainsi jamais de note
+app.get("/mode", (req, res) => {
+  res.json({ essai: DRY_RUN, notes: true });
+});
+
+// Version des ecrans (cuisine, bar, salle) : empreinte des pages et du serveur,
+// calculee au demarrage. Un ecran reste ouvert sur l'ancienne version la voit
+// changer apres une mise a jour et affiche « Nouvelle mise a jour » ; il ne se
+// recharge jamais seul. En essai, le fichier .version.local (a la racine du
+// projet, ignore par git) simule une mise a jour sans redemarrer.
+const VERSION_ECRANS = crypto.createHash("sha1")
+  .update(["kds.html", "service.html", "print-server.js"].map((f) => fs.readFileSync(path.join(__dirname, f), "utf8")).join("\n"))
+  .digest("hex").slice(0, 12);
+app.get("/version", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  let essai = "";
+  if (DRY_RUN) {
+    try { essai = fs.readFileSync(path.join(__dirname, "..", ".version.local"), "utf8").trim(); } catch { /* pas de demonstration */ }
+  }
+  res.json({ version: essai ? `${VERSION_ECRANS}-${essai}` : VERSION_ECRANS });
+});
+
+// Ecrans de poste : la meme page que l'ecran cuisine, filtree d'apres l'adresse
+for (const poste of ["/cuisine", "/desserts", "/bar"]) {
+  app.get(poste, (req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.sendFile(path.join(__dirname, "kds.html"));
+  });
+}
+
 app.get("/service", (req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.sendFile(path.join(__dirname, "service.html"));
 });
+
+// ----- Ecran client (vue client de la caisse) -----
+// Un ecran tourne vers le client : des videos quand personne ne l'utilise,
+// l'addition de la table des que la caisse l'ouvre, et en addition separee
+// seulement ce que la personne est en train de payer. La caisse envoie l'etat
+// (POST /ecran-client), le serveur le garde et le diffuse a l'ecran (WebSocket).
+const DOSSIER_VIDEOS = path.join(__dirname, "videos");
+let etatEcranClient = { etat: "repos" };
+
+app.get("/client", (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.sendFile(path.join(__dirname, "client.html"));
+});
+app.get("/ecran-client", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json(etatEcranClient);
+});
+app.post("/ecran-client", (req, res) => {
+  const b = req.body || {};
+  etatEcranClient = b.etat === "addition" ? { ...b, depuis: Date.now() } : { etat: "repos", depuis: Date.now() };
+  broadcast({ type: "ecran_client", ...etatEcranClient });
+  res.json({ success: true });
+});
+// Videos diffusees au repos : tous les .mp4 / .webm / .mov du dossier
+// server/videos (ordre alphabetique), puis les liens YouTube du fichier
+// server/videos/youtube.txt (un lien par ligne, # pour un commentaire),
+// lus par le lecteur officiel de YouTube : rien n'est telecharge.
+function idYoutube(lien) {
+  const m = String(lien).match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([A-Za-z0-9_-]{11})/) || String(lien).match(/^([A-Za-z0-9_-]{11})$/);
+  return m ? m[1] : null;
+}
+app.get("/videos-client", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  let fichiers = [];
+  let youtube = [];
+  try {
+    fichiers = fs.readdirSync(DOSSIER_VIDEOS).filter((f) => /\.(mp4|webm|mov|m4v)$/i.test(f)).sort();
+  } catch { /* pas encore de dossier : l'ecran affiche l'accueil */ }
+  try {
+    youtube = fs.readFileSync(path.join(DOSSIER_VIDEOS, "youtube.txt"), "utf8").split("\n")
+      .map((l) => l.trim()).filter((l) => l && !l.startsWith("#")).map(idYoutube).filter(Boolean);
+  } catch { /* pas de liens YouTube */ }
+  res.json({ videos: fichiers.map((f) => `/videos/${encodeURIComponent(f)}`), youtube });
+});
+app.use("/videos", express.static(DOSSIER_VIDEOS, { maxAge: "1h" }));
 
 // Route GET /orders → liste les commandes actives
 app.get("/orders", (req, res) => {
@@ -164,60 +258,194 @@ app.get("/orders", (req, res) => {
 });
 
 // Route PUT /order/:id → modifie et réimprime une commande
+// Ordre neutre des articles : on compare le CONTENU d'un poste, pas l'ordre du
+// panier (un article retire puis remis, un menu avant une boisson...)
+function cleArticle(i) {
+  const cle = [i.category, i.poste, i.name, i.qty, i.piment, i.formulaChoices];
+  // Note et allergie seulement si presentes : un article sans note garde sa cle
+  if (i.note || i.allergie) cle.push(i.note || "", i.allergie || "");
+  return JSON.stringify(cle);
+}
+function ordreNeutre(items) {
+  return [...(items || [])].sort((a, b) => (cleArticle(a) < cleArticle(b) ? -1 : cleArticle(a) > cleArticle(b) ? 1 : 0));
+}
+// Signature d'une section de l'ecran cuisine, pour savoir si elle a change
+// (une note ou une allergie ajoutee, changee ou retiree la remet « a faire »)
+function signatureGroupe(g) {
+  return JSON.stringify((g.items || []).map((i) => {
+    const sig = [normName(i.name), i.qty, i.piment || null, i.detail || ""];
+    if (i.note || i.allergie) sig.push(normName(i.note), normName(i.allergie));
+    return JSON.stringify(sig);
+  }).sort());
+}
+
 app.put("/order/:id", async (req, res) => {
   try {
     const orderId = decodeURIComponent(req.params.id);
-    const { order, tableNumber, orderNum, date } = req.body;
-    const existing = activeOrders.get(orderId);
+    const b = req.body || {};
+    const { order, tableNumber, date } = b;
+    let existing = activeOrders.get(orderId);
+    // La cuisine a tout marque pret : le serveur a oublie la commande. La caisse
+    // envoie alors la version d'avant (« avant ») et on compare quand meme :
+    // sans cela les trois tickets ressortaient comme une nouvelle commande.
+    const reconstituee = !existing && Array.isArray(b.avant?.items);
+    if (reconstituee) {
+      const av = b.avant;
+      existing = {
+        id: orderId, items: av.items, orderNum: av.orderNum ?? b.orderNum,
+        tableNumber: av.tableNumber ?? tableNumber, date: av.dateOrigine || date, dateOrigine: av.dateOrigine || date,
+        receivedAt: Date.now(), orderType: b.orderType, emporterNum: b.emporterNum,
+        clientName: av.clientName, clientPhone: av.clientPhone, clientPickupTime: av.clientPickupTime,
+        catStatus: {},
+      };
+    }
     if (!existing) return res.status(404).json({ error: "Commande introuvable" });
+    if (!Array.isArray(order)) return res.status(400).json({ error: "Donnees manquantes" });
 
-    const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
-    const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
-    const cuisineAll = [...cuisine, ...boissons];
+    // Le numero de commande reste celui du premier envoi : tous les papiers
+    // d'une table portent le meme
+    const orderNum = existing.orderNum ?? b.orderNum;
     const common = { tableNumber, orderNum, date };
-
-    const emporterInfo = existing.orderType === "emporter" ? {
-      orderType: "emporter",
-      emporterNum: existing.emporterNum,
-      clientName: existing.clientName,
-      clientPhone: existing.clientPhone,
-      clientPickupTime: existing.clientPickupTime,
-    } : {};
+    const emporter = existing.orderType === "emporter";
+    // A emporter : l'heure de retrait, le nom et le telephone peuvent changer
+    // pendant la modification ; ils sortent a jour (et l'ancien papier, compare
+    // avec l'ancien en-tete, ressort si seule l'heure a change)
+    const enTete = (c) => (emporter ? {
+      orderType: "emporter", emporterNum: existing.emporterNum,
+      clientName: c.clientName, clientPhone: c.clientPhone, clientPickupTime: c.clientPickupTime,
+    } : {});
+    const ancien = enTete(existing);
+    const nouveau = enTete({
+      clientName: b.clientName ?? existing.clientName,
+      clientPhone: b.clientPhone ?? existing.clientPhone,
+      clientPickupTime: b.clientPickupTime ?? existing.clientPickupTime,
+    });
 
     // Le restaurant echange le papier en cuisine : on reimprime le ticket
-    // complet, mais seulement pour les postes dont le contenu a change.
-    // On compare a date identique, seuls les articles different donc.
-    const info = { ...common, ...emporterInfo };
-    const emporter = existing.orderType === "emporter";
-    const avant = ticketsDeCommande(existing.items || [], info, emporter);
-    const apres = ticketsDeCommande(order, info, emporter);
+    // complet, mais seulement pour les postes dont le contenu a change
+    // (articles, table ou en-tete a emporter). Comparaison a date identique et
+    // dans un ordre neutre ; le ticket imprime garde l'ordre du panier.
+    const info = { ...common, ...nouveau };
+    const avant = ticketsDeCommande(ordreNeutre(existing.items), { ...common, tableNumber: existing.tableNumber, ...ancien }, emporter);
+    const compare = ticketsDeCommande(ordreNeutre(order), info, emporter);
+    // « (MODIF) » dans le titre : le papier remplace le precedent, la cuisine ne
+    // prepare pas une deuxieme fois (comme les anciens tickets « CUISINE (MODIF) »)
+    // La version d'avant marque « ^ NOUVEAU » les notes et allergies ajoutees
+    const apres = ticketsDeCommande(order, info, emporter, " (MODIF)", existing.items);
     const POSTES = emporter ? ["COMMANDE"] : ["CUISINE", "DESSERTS", "BAR"];
     // Seuls les postes reellement touches ressortent : modifier un dessert ne
     // doit pas renvoyer la cuisine et le bar refaire un ticket identique.
     // Celui qui sort est complet pour son poste — on echange l'ancien.
     const tickets = apres.map((t, k) => {
-      if (t && t !== avant[k]) return t;                       // contenu change
-      if (!t && avant[k]) return ticketAnnulation(POSTES[k], info);  // poste vide
-      return "";                                               // inchange
+      if (t && compare[k] !== avant[k]) return t;                    // contenu change
+      if (!t && avant[k]) return ticketAnnulation(`${POSTES[k]} (MODIF)`, info);  // poste vide
+      return "";                                                     // inchange
     });
     // Pas de ticket SERVICE ici : l'addition s'imprime manuellement en fin de service
 
     const printable = tickets.filter(Boolean);
     if (printable.length > 0) await sendToPrinter(printable.join(""));
 
-    const groups = buildGroups(cuisineAll);
+    // Ecran cuisine : une section dont le contenu change repart « a faire »,
+    // les autres gardent leur etat (pretes si la cuisine avait tout termine)
+    const groups = buildGroups(order);
+    const groupesAvant = buildGroups(existing.items || []);
+    const avantParCat = new Map(groupesAvant.map((g) => [g.cat, signatureGroupe(g)]));
     const catStatus = {};
-    groups.forEach((g) => { catStatus[g.cat] = existing.catStatus?.[g.cat] || "waiting"; });
+    if (emporter) {
+      // A emporter : une seule section ; elle repart « a faire » si le contenu
+      // ou l'en-tete (heure, nom) a change
+      const inchange = JSON.stringify(groupesAvant.map(signatureGroupe)) === JSON.stringify(groups.map(signatureGroupe))
+        && JSON.stringify(ancien) === JSON.stringify(nouveau);
+      catStatus["A emporter"] = inchange ? (existing.catStatus?.["A emporter"] || (reconstituee ? "delivered" : "waiting")) : "waiting";
+    } else {
+      groups.forEach((g) => {
+        const inchange = avantParCat.get(g.cat) === signatureGroupe(g);
+        catStatus[g.cat] = inchange ? (existing.catStatus?.[g.cat] || (reconstituee ? "delivered" : "waiting")) : "waiting";
+      });
+    }
 
-    const updatedOrder = { ...existing, items: cuisineAll, tableNumber, date, catStatus };
-    activeOrders.set(orderId, updatedOrder);
-    saveOrders(activeOrders);
-    broadcast({ type: "update_order", order: updatedOrder });
+    // Les chronos d'une section remise « a faire » repartiront de son prochain
+    // appel (au bar, de la prochaine preparation) ; ceux d'une section retiree partent
+    const catCalledAt = { ...(existing.catCalledAt || {}) };
+    const catReadyAt = { ...(existing.catReadyAt || {}) };
+    for (const t of [catCalledAt, catReadyAt]) {
+      for (const cat of Object.keys(t)) if (!catStatus[cat] || catStatus[cat] === "waiting") delete t[cat];
+    }
 
-    console.log(`Modification Table ${tableNumber} #${orderNum}`);
-    res.json({ success: true });
+    const updatedOrder = { ...existing, ...nouveau, items: order, tableNumber, orderNum, date,
+                           dateOrigine: existing.dateOrigine || existing.date, catStatus, groupes: groups,
+                           catCalledAt, catReadyAt };
+    // Tout ce qui reste a deja ete servi (la modification a retire le reste) :
+    // la commande est terminee, comme apres la derniere livraison
+    const statuts = Object.values(catStatus);
+    if (statuts.length > 0 && statuts.every((st) => st === "delivered")) {
+      activeOrders.delete(orderId);
+      saveOrders(activeOrders);
+      broadcast({ type: "order_ready", orderId });
+      console.log(`Commande servie et terminee — Table ${tableNumber} #${orderNum} (apres modification)`);
+    } else {
+      activeOrders.set(orderId, updatedOrder);
+      saveOrders(activeOrders);
+      broadcast({ type: "update_order", order: updatedOrder });
+    }
+
+    console.log(`Modification Table ${tableNumber} #${orderNum}${reconstituee ? " (commande reconstituee)" : ""} : ${printable.length} ticket(s)`);
+    // la caisse dit au serveur de salle combien de tickets sont sortis (0 = rien de change)
+    res.json({ success: true, tickets: printable.length });
   } catch (err) {
     console.error("Erreur modification:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route POST /order/:id/reprint-tickets → ressort les tickets de production
+// (CUISINE / DESSERTS / BAR, ou COMMANDE a emporter) d'une commande deja
+// envoyee, quand un papier a ete jete ou perdu. Complets et a jour (les
+// modifications comprises), marques DUPLICATA. « postes » choisit lesquels ;
+// « apercu » renvoie seulement les postes qui ont quelque chose a imprimer.
+app.post("/order/:id/reprint-tickets", async (req, res) => {
+  try {
+    const orderId = decodeURIComponent(req.params.id);
+    const b = req.body || {};
+    const connue = activeOrders.get(orderId);
+    // Comme pour l'addition, la caisse envoie sa copie : le serveur oublie la
+    // commande des que la cuisine a tout marque pret.
+    const cmd = b.order ? {
+      items: b.order,
+      tableNumber: b.tableNumber,
+      orderNum: connue?.orderNum ?? b.orderNum,
+      date: connue?.dateOrigine || b.dateOrigine || connue?.date || b.date,
+      orderType: b.orderType,
+      emporterNum: b.emporterNum,
+      clientName: b.clientName,
+      clientPhone: b.clientPhone,
+      clientPickupTime: b.clientPickupTime,
+    } : connue && { ...connue, date: connue.dateOrigine || connue.date };
+    if (!cmd || !Array.isArray(cmd.items) || !cmd.items.length) {
+      return res.status(404).json({ error: "Commande introuvable" });
+    }
+    const emporter = cmd.orderType === "emporter";
+    const info = {
+      tableNumber: cmd.tableNumber, orderNum: cmd.orderNum, date: cmd.date,
+      ...(emporter ? { orderType: "emporter", emporterNum: cmd.emporterNum, clientName: cmd.clientName,
+                       clientPhone: cmd.clientPhone, clientPickupTime: cmd.clientPickupTime } : {}),
+      // un ticket qui n'etait jamais sorti n'est pas un duplicata
+      duplicata: b.duplicata !== false,
+    };
+    const NOMS = emporter ? ["COMMANDE"] : ["CUISINE", "DESSERTS", "BAR"];
+    const tickets = ticketsDeCommande(cmd.items, info, emporter);
+    const disponibles = NOMS.filter((n, k) => tickets[k]);
+    if (b.apercu) return res.json({ success: true, postes: disponibles, connue: Boolean(connue) });
+    const voulus = Array.isArray(b.postes) && b.postes.length ? b.postes : disponibles;
+    const choisis = NOMS.map((n, k) => (voulus.includes(n) && tickets[k] ? tickets[k] : "")).filter(Boolean);
+    if (!choisis.length) return res.status(400).json({ error: "Rien a imprimer pour ce poste", postes: disponibles });
+    await sendToPrinter(choisis.join(""));
+    const imprimes = NOMS.filter((n, k) => voulus.includes(n) && tickets[k]);
+    console.log(`Tickets ressortis (${imprimes.join(", ")}) — ${emporter ? `Emporter #${cmd.emporterNum}` : `Table ${cmd.tableNumber}`} #${cmd.orderNum}`);
+    res.json({ success: true, tickets: choisis.length, postes: imprimes });
+  } catch (err) {
+    console.error("Erreur reimpression tickets:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -257,6 +485,7 @@ app.post("/order/:id/reprint-bill", async (req, res) => {
       remise: b.remise,
       sansDetail: b.sansDetail === true,
       nbRepas: b.nbRepas,
+      duplicata: b.duplicata === true,
     });
     await sendToPrinter(ticket);
     console.log(`Réimpression addition — Table ${order.tableNumber} #${order.orderNum}`
@@ -315,7 +544,17 @@ function sanitize(str) {
     .replace(/[ùûü]/g, "u").replace(/[ÙÛÜ]/g, "U")
     .replace(/[îï]/g, "i").replace(/[ÎÏ]/g, "I")
     .replace(/[ôö]/g, "o").replace(/[ÔÖ]/g, "O")
-    .replace(/[çÇ]/g, "c");
+    .replace(/[çÇ]/g, "c")
+    // L'imprimante n'est pas en latin1 : guillemets « », apostrophe ’ de
+    // l'iPad et tirets sortaient en caracteres parasites (½ ╗) sur l'addition.
+    .replace(/[«»“”„]/g, '"')
+    .replace(/[‘’‚′`]/g, "'")
+    .replace(/[–—]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/€/g, "EUR")
+    .replace(/[\u00a0\u202f]/g, " ")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7e\n]/g, "?");
 }
 
 // Niveaux de piment : 1 = sans (rien affiche), 2 = +, 3 = ++, 4 = +++
@@ -329,6 +568,160 @@ function itemLine(label, mark) {
   return mark ? `${label} ${mark}\n` : `${label}\n`;
 }
 
+// ----- Notes et allergies d'un article -----
+// La caisse pose « note » (« Sans oignon, Sauce a part ») et « allergie »
+// (« Arachide, Lait ») sur une ligne simple, ou sur le choix concerne d'un
+// menu. Absentes d'une commande sans note : tickets et ecrans ne bougent pas.
+function texteLibre(v) {
+  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
+}
+// « Sans oignon, Sauce a part » → ["Sans oignon", "Sauce a part"]
+function segmentsDe(texte) {
+  return texteLibre(texte).split(/\s*,\s*/).filter(Boolean);
+}
+// Ajoute des segments sans doublon (compares sans casse ni accent)
+function ajouterSegments(liste, segments) {
+  for (const s of segments) if (!liste.some((x) => normName(x) === normName(s))) liste.push(s);
+  return liste;
+}
+// Note d'un article de production : la sienne, puis celles de ses choix
+// (formule gardee entiere, precisions rattachees). Plusieurs choix sur la
+// ligne (« Vanille / Mangue ») : la note dit lequel elle vise.
+function noteDe(article) {
+  const segs = ajouterSegments([], segmentsDe(article?.note));
+  const choix = article?.formulaChoices || [];
+  if (choix.length) {
+    const montres = choixImprimables(article);
+    const nommer = montres.length > 1;
+    for (const c of choix) {
+      const prefixe = nommer && montres.includes(c) ? `${texteLibre(c.itemName)} : ` : "";
+      ajouterSegments(segs, segmentsDe(c.note).map((s) => prefixe + s));
+    }
+  }
+  return segs.join(", ");
+}
+// Allergie d'un article : la sienne et celles de ses choix, sans doublon
+function allergieDe(article) {
+  const segs = ajouterSegments([], segmentsDe(article?.allergie));
+  for (const c of article?.formulaChoices || []) ajouterSegments(segs, segmentsDe(c.allergie));
+  return segs.join(", ");
+}
+// Cle de regroupement : deux memes plats aux notes differentes restent deux
+// lignes (vide sans note : les regroupements d'aujourd'hui ne changent pas)
+function cleNotes(article) {
+  const n = noteDe(article), a = allergieDe(article);
+  return n || a ? normName(n) + "|" + normName(a) : "";
+}
+
+// Decoupe un texte entre deux mots pour tenir dans « largeur » colonnes ;
+// un mot plus long que la ligne est coupe net
+function couperMots(texte, largeur) {
+  const lignes = [];
+  let courante = "";
+  for (let mot of texte.split(" ").filter(Boolean)) {
+    while (mot.length > largeur) {
+      if (courante) { lignes.push(courante); courante = ""; }
+      lignes.push(mot.slice(0, largeur));
+      mot = mot.slice(largeur);
+    }
+    if (!mot) continue;
+    if (!courante) courante = mot;
+    else if (courante.length + 1 + mot.length <= largeur) courante += " " + mot;
+    else { lignes.push(courante); courante = mot; }
+  }
+  if (courante) lignes.push(courante);
+  return lignes;
+}
+// « > SANS OIGNON » en majuscules ; la suite d'une note longue est decalee
+// sous le texte, jamais sous le chevron
+function lignesNote(segment, largeur) {
+  return couperMots(sanitize(segment).toUpperCase(), largeur - 4).map((l, k) => (k ? "    " : "  > ") + l);
+}
+// « !! ALLERGIE ARACHIDE » sur une ligne ; trop long : « !! ALLERGIE : » puis
+// un allergene par ligne, decale. Chaque bloc sait quels allergenes il porte
+// (pour le repere « ^ NOUVEAU »).
+function blocsAllergie(allergenes, largeur) {
+  const maj = allergenes.map((s) => sanitize(s).toUpperCase());
+  const enLigne = "!! ALLERGIE " + maj.join(", ");
+  if (enLigne.length <= largeur) return [{ lignes: [enLigne], allergenes }];
+  return [{ lignes: ["!! ALLERGIE :"], allergenes: [] },
+    ...maj.map((s, k) => ({ lignes: couperMots(s, largeur - 4).map((l) => "    " + l), allergenes: [allergenes[k]] }))];
+}
+function repereNouveau() {
+  return CMD.BOLD_ON + "    ^ NOUVEAU\n" + CMD.BOLD_OFF;
+}
+// Sous la ligne d'un article, sur les tickets de production : la note a la
+// taille de l'article, l'allergie en blanc sur noir sur toute la largeur.
+// « estNouveau(type, segment) » repere ce qui n'etait pas sur le ticket d'avant.
+function lignesNoteAllergie(article, estNouveau) {
+  let b = "";
+  for (const seg of segmentsDe(noteDe(article))) {
+    b += CMD.DOUBLE_ON + CMD.BOLD_ON;
+    b += lignesNote(seg, WIDTH_DOUBLE).map((l) => l + "\n").join("");
+    b += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+    if (estNouveau && estNouveau("note", seg)) b += repereNouveau();
+  }
+  const allergenes = segmentsDe(allergieDe(article));
+  for (const bloc of allergenes.length ? blocsAllergie(allergenes, WIDTH_DOUBLE) : []) {
+    b += CMD.REVERSE_ON + CMD.DOUBLE_ON + CMD.BOLD_ON;
+    b += bloc.lignes.map((l) => l.padEnd(WIDTH_DOUBLE) + "\n").join("");
+    b += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
+    if (estNouveau && bloc.allergenes.some((s) => estNouveau("allergie", s))) b += repereNouveau();
+  }
+  return b;
+}
+
+// Garde-fou : chaque allergie recue doit sortir sous un article d'un ticket
+// de production. Allergenes recus : ceux des lignes et de leurs choix, sans
+// doublon (compares sans casse ni accent).
+function allergenesRecus(order) {
+  const segs = [];
+  for (const ligne of order || []) {
+    for (const src of [ligne, ...(ligne?.formulaChoices || [])]) ajouterSegments(segs, segmentsDe(allergieDe(src)));
+  }
+  return segs;
+}
+// En tete du ticket : bande « ALLERGIE A VERIFIER » puis les allergenes qui
+// ne sont sortis sous aucun article, un par ligne, en double taille
+function blocAllergieAVerifier(allergenes) {
+  let b = bandeNoire("Allergie a verifier");
+  b += CMD.DOUBLE_ON + CMD.BOLD_ON;
+  for (const s of allergenes) b += couperMots(sanitize(s).toUpperCase(), WIDTH_DOUBLE).map((l) => l + "\n").join("");
+  b += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+  return b + line("-");
+}
+
+// Repere « ^ NOUVEAU » d'un ticket (MODIF). Un meme article (poste, nom,
+// piment, choix) : une note ou un allergene qui concerne plus d'assiettes
+// qu'avant est nouveau sur la ligne qui a gagne des assiettes — note ajoutee
+// apres l'envoi, ou plat ajoute avec sa note. Retiree ou inchangee : rien.
+function identiteArticle(a) {
+  return [posteAdmin(a) || CAT_MERGE_SHARED[a.category] || a.category || "Autres",
+          normName(nomAffiche(a)), pimentMark(pimentLigne(a)), formulaSig(a)].join("\n");
+}
+function inventaireNotes(items) {
+  const lignes = new Map(), segments = new Map();
+  const compter = (m, k, q) => m.set(k, (m.get(k) || 0) + (Number(q) || 0));
+  for (const a of articlesDeProduction(items || [])) {
+    const id = identiteArticle(a);
+    compter(lignes, id + "\n" + cleNotes(a), a.qty);
+    for (const s of segmentsDe(noteDe(a))) compter(segments, `${id}\nnote\n${normName(s)}`, a.qty);
+    for (const s of segmentsDe(allergieDe(a))) compter(segments, `${id}\nallergie\n${normName(s)}`, a.qty);
+  }
+  return { lignes, segments };
+}
+function comparerNotes(itemsAvant, itemsApres) {
+  const avant = inventaireNotes(itemsAvant), apres = inventaireNotes(itemsApres);
+  return (article) => {
+    const id = identiteArticle(article), ligne = id + "\n" + cleNotes(article);
+    const gagne = (apres.lignes.get(ligne) || 0) > (avant.lignes.get(ligne) || 0);
+    return (type, seg) => {
+      const cle = `${id}\n${type}\n${normName(seg)}`;
+      return gagne && (apres.segments.get(cle) || 0) > (avant.segments.get(cle) || 0);
+    };
+  };
+}
+
 // Deux natures de formule :
 //  - formule-MENU (Menu Midi = entree + plat + dessert) : chaque choix part
 //    vers un poste different, le nom du menu n'interesse pas la cuisine ;
@@ -336,11 +729,26 @@ function itemLine(label, mark) {
 //    produit c'est l'article lui-meme, le choix n'est qu'une declinaison.
 // On n'eclate que la premiere : sinon le bar recoit "1x Mangue" sans savoir
 // qu'il s'agit d'un lassi.
+// Une question de suite part au poste de la question qui l'a declenchee : on
+// remonte jusqu'a l'etape d'origine. Son libelle peut alors etre en mots
+// simples (« Quel parfum ? ») sans qu'il faille l'ajouter a la table — c'est
+// ce qui avait oblige a creer « parfum kir » et « parfum kulfi ».
+function posteDuChoix(choice, choices) {
+  let c = choice;
+  for (let garde = 0; garde < 10 && (c.remplaceParent || c.sousChoixDe); garde++) {
+    const parentLabel = c.remplaceParent || c.sousChoixDe;
+    const parent = (choices || []).find((x) => x.label === parentLabel);
+    if (!parent) return mapFormulaLabelShared(parentLabel);
+    c = parent;
+  }
+  return mapFormulaLabelShared(c.label);
+}
+
 function isMenuFormula(item) {
   const choices = item.formulaChoices || [];
   if (choices.length === 0) return false;
-  const own = CAT_MERGE_SHARED[item.category] || item.category;
-  const cats = choices.map((c) => mapFormulaLabelShared(c.label));
+  const own = posteAdmin(item) || CAT_MERGE_SHARED[item.category] || item.category;
+  const cats = choices.map((c) => posteDuChoix(c, choices));
   const toutesConnues = cats.every((c) => Object.values(FORMULA_LABEL_MAP_SHARED).includes(c));
   return toutesConnues && cats.some((c) => c !== own);
 }
@@ -354,16 +762,92 @@ function formulaSig(item) {
 // Un choix peut remplacer le nom du produit : le bouton s'appelle
 // "Sirop a l'eau", le choix "Sirop a la menthe", et la ligne du ticket
 // affiche directement "Sirop a la menthe".
+// Si ce choix a lui-meme ete remplace par un detail (« Jus de fruits » cede
+// a « Jus orange »), c'est le detail qui donne son nom a la ligne.
+function choixTitre(choices) {
+  let c = (choices || []).find((x) => x.remplaceNom);
+  for (let garde = 0; c && garde < 10; garde++) {
+    const detail = choices.find((x) => x.remplaceParent === c.label);
+    if (!detail) break;
+    c = detail;
+  }
+  return c || null;
+}
 function nomAffiche(item) {
-  const c = (item.formulaChoices || []).find((x) => x.remplaceNom);
+  const c = choixTitre(item.formulaChoices);
   return c ? c.itemName : item.name;
+}
+// Le piment demande sur le choix qui donne le nom n'est imprime nulle part
+// ailleurs : la ligne principale le reprend.
+function pimentLigne(item) {
+  if (pimentMark(item.piment)) return item.piment;
+  return choixTitre(item.formulaChoices)?.piment || null;
 }
 
 // Choix a imprimer : on ecarte ceux qui ont remplace le nom ou leur parent
 function choixImprimables(item) {
   const choices = item.formulaChoices || [];
   const remplaces = new Set(choices.map((x) => x.remplaceParent).filter(Boolean));
-  return choices.filter((x) => !x.remplaceNom && !remplaces.has(x.label));
+  const titre = choixTitre(choices);
+  return choices.filter((x) => !x.remplaceNom && !remplaces.has(x.label) && x !== titre);
+}
+
+// Choix generiques qu'un choix remplace, en remontant (« Jus de fruits »)
+function choixRemplaces(choice, choices) {
+  const res = [];
+  let c = choice;
+  for (let garde = 0; garde < 10 && c.remplaceParent; garde++) {
+    const parent = (choices || []).find((x) => x.label === c.remplaceParent);
+    if (!parent) break;
+    res.push(parent);
+    c = parent;
+  }
+  return res;
+}
+
+// Articles tels que les postes les preparent : les formules-MENU eclatees
+// poste par poste, les formules-VARIANTE gardees entieres. Sert aux tickets
+// de production ET aux ecrans cuisine/service : les sections affichees sont
+// ainsi exactement celles que le serveur suit (catStatus).
+function articlesDeProduction(order) {
+  const res = [];
+  for (const item of order) {
+    if (item.formulaChoices && item.formulaChoices.length > 0) {
+      if (isMenuFormula(item)) {
+        // Un choix generique remplace par un sous-choix ne part pas en
+        // production : le bar recevrait « Jus de fruits » ET « Jus mangue ».
+        const remplaces = new Set(item.formulaChoices.map((c) => c.remplaceParent).filter(Boolean));
+        for (const choice of item.formulaChoices) {
+          if (remplaces.has(choice.label)) continue;
+          if (choice.sousChoixDe) continue;   // sort sous son parent, pas seul
+          const article = { name: choice.itemName, category: posteDuChoix(choice, item.formulaChoices), qty: item.qty, piment: choice.piment || null };
+          // La note et l'allergie du choix partent avec lui vers son poste ;
+          // celles d'un choix generique remplace (« Jus de fruits » cede a
+          // « Jus orange ») aussi, et par prudence celles de la ligne du menu.
+          const sources = [item, ...choixRemplaces(choice, item.formulaChoices), choice];
+          const note = ajouterSegments([], sources.flatMap((s) => segmentsDe(s.note))).join(", ");
+          const allergie = ajouterSegments([], sources.flatMap((s) => segmentsDe(s.allergie))).join(", ");
+          if (note) article.note = note;
+          if (allergie) article.allergie = allergie;
+          // Les precisions rattachees (boules d'une coupe) suivent leur
+          // article : imprimees a part, on ne saurait plus a quelle coupe
+          // elles appartiennent quand il y en a plusieurs.
+          const rattaches = item.formulaChoices.filter((c) => c.sousChoixDe === choice.label);
+          if (rattaches.length > 0) article.formulaChoices = rattaches;
+          res.push(article);
+        }
+      } else {
+        res.push({ ...item });
+      }
+    } else if (item.isFormula && item.formulaSteps?.length > 0) {
+      // Formule sans choix : afficher le nom + les étapes attendues
+      const stepLabels = item.formulaSteps.map(s => s.label).join(" / ");
+      res.push({ ...item, name: `${item.name}  [? ${stepLabels}]` });
+    } else {
+      res.push({ ...item });
+    }
+  }
+  return res;
 }
 
 // Ticket de production : les precisions tiennent sur une seule ligne, a la
@@ -384,7 +868,9 @@ function formulaLines(item, indent = "   ") {
   let b = "";
   for (const c of choixImprimables(item)) {
     const cm = pimentMark(c.piment);
-    b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}\n`;
+    // supplement paye avec ce choix (inclus dans le prix de la ligne)
+    const sup = Number(c.supplement) > 0 ? `  +${Number(c.supplement).toFixed(2)}` : "";
+    b += `${indent}> ${sanitize(c.label)}: ${sanitize(c.itemName)}${cm ? "  " + cm : ""}${sup}\n`;
   }
   return b;
 }
@@ -490,7 +976,8 @@ function orderHeader({ orderType, tableNumber, emporterNum, clientName, clientPh
   return b + CMD.LEFT;
 }
 
-function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter, remise , sansDetail = false, nbRepas}) {
+function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, orderType, emporterNum, clientName, clientPhone, clientPickupTime, catFilter, remise , sansDetail = false, nbRepas, duplicata = false, estNouveau = null,
+                      allergenesImprimes = null, allergiesAVerifier = null}) {
   let buf = "";
   buf += CMD.INIT;
   buf += CMD.CENTER;
@@ -506,6 +993,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += "\n";
     buf += CMD.BOLD_ON;
     buf += `*** ${title} ***\n`;
+    if (duplicata) buf += "DUPLICATA\n";
     buf += CMD.BOLD_OFF;
   } else {
     // Ticket production : titre + numero en gros.
@@ -514,6 +1002,9 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     const ticketNum = orderType === "emporter" ? emporterNum : orderNum;
     buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
     buf += `${title} #${ticketNum}\n`;
+    // Ticket ressorti (papier perdu) : la cuisine sait que ce n'est pas une
+    // nouvelle commande a preparer une deuxieme fois
+    if (duplicata) buf += "DUPLICATA\n";
     buf += CMD.DOUBLE_OFF + CMD.BOLD_OFF;
   }
   buf += CMD.LEFT;
@@ -527,51 +1018,21 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
 
   // Pour ticket cuisine : eclater les formules-MENU en articles par poste.
   // Les formules-VARIANTE gardent leur article, le choix passe en sous-ligne.
-  let itemsToGroup = [];
-  if (!showTotal) {
-    for (const item of order) {
-      if (item.formulaChoices && item.formulaChoices.length > 0) {
-        if (isMenuFormula(item)) {
-          // Un choix generique remplace par un sous-choix ne part pas en
-          // production : le bar recevrait « Jus de fruits » ET « Jus mangue ».
-          const remplaces = new Set(item.formulaChoices.map((c) => c.remplaceParent).filter(Boolean));
-          for (const choice of item.formulaChoices) {
-            if (remplaces.has(choice.label)) continue;
-            if (choice.sousChoixDe) continue;   // sort sous son parent, pas seul
-            const article = { name: choice.itemName, category: mapFormulaLabelShared(choice.label), qty: item.qty, piment: choice.piment || null };
-            // Les precisions rattachees (boules d'une coupe) suivent leur
-            // article : imprimees a part, on ne saurait plus a quelle coupe
-            // elles appartiennent quand il y en a plusieurs.
-            const rattaches = item.formulaChoices.filter((c) => c.sousChoixDe === choice.label);
-            if (rattaches.length > 0) article.formulaChoices = rattaches;
-            itemsToGroup.push(article);
-          }
-        } else {
-          itemsToGroup.push({ ...item });
-        }
-      } else if (item.isFormula && item.formulaSteps?.length > 0) {
-        // Formule sans choix : afficher le nom + les étapes attendues
-        const stepLabels = item.formulaSteps.map(s => s.label).join(" / ");
-        itemsToGroup.push({ ...item, name: `${item.name}  [? ${stepLabels}]` });
-      } else {
-        itemsToGroup.push({...item});
-      }
-    }
-  } else {
-    itemsToGroup.push(...order.map(i => ({...i})));
-  }
+  let itemsToGroup = showTotal ? order.map((i) => ({ ...i })) : articlesDeProduction(order);
 
   // Ordre de production en cuisine : naans, entrees, plats, desserts
   // (Biryani fusionné dans Plats). Les boissons ferment le ticket.
   const CAT_ORDER = ["Naans", "Entrees", "Plats", "Desserts", "Menu Midi",
                      "Boissons", "Apéritifs", "Aperitifs", "Vins", "Vin", "Rosé", "Rose", "Bières", "Bieres", "Bar"];
   const CAT_MERGE = { "Biryani": "Plats", "Entrées": "Entrees", "Entrees": "Entrees" };
-  const mergedCat = (item) => CAT_MERGE[item.category] || item.category || "Autres";
+  const mergedCat = (item) => posteAdmin(item) || CAT_MERGE[item.category] || item.category || "Autres";
 
   // Filtre de catégorie appliqué APRES eclatement des formules
   // (permet de sortir le dessert d'un menu sur le ticket desserts)
   if (catFilter) itemsToGroup = itemsToGroup.filter((i) => catFilter(mergedCat(i)));
-  if (itemsToGroup.length === 0) return "";
+  // Sans article, pas de ticket ; sauf s'il doit porter le garde-fou allergie
+  // (aucun poste n'a rien recu : la cuisine doit quand meme le savoir)
+  if (itemsToGroup.length === 0 && !(allergiesAVerifier && allergiesAVerifier.length)) return "";
 
   const nbArticles = itemsToGroup.reduce((s, i) => s + i.qty, 0);
 
@@ -585,9 +1046,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     // (deux « Supplement » hors carte) ne doivent pas fusionner : les lignes
     // ne sommeraient plus au total imprime juste en dessous.
     const existing = seenCats[cat].find(x => normName(nomAffiche(x)) === normName(nomAffiche(item))
-      && pimentMark(x.piment) === pimentMark(item.piment)
+      && pimentMark(pimentLigne(x)) === pimentMark(pimentLigne(item))
       && formulaSig(x) === formulaSig(item)
-      && (!showTotal || x.price === item.price));
+      && (!showTotal || x.price === item.price)
+      // En production, une note ou une allergie fait une ligne a part ;
+      // l'addition, elle, ne change pas
+      && (showTotal || cleNotes(x) === cleNotes(item)));
     if (existing) existing.qty += item.qty;
     else seenCats[cat].push(item);
   }
@@ -607,6 +1071,13 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     buf += "\n";
   }
 
+  // Une allergie recue n'est sortie sur aucun ticket : signalee en tout premier
+  if (!showTotal && allergiesAVerifier && allergiesAVerifier.length) buf += blocAllergieAVerifier(allergiesAVerifier);
+
+  // Un article de CE ticket porte une allergie : grande bande en tete, avant
+  // la premiere categorie, vue avant meme de lire le detail
+  if (!showTotal && itemsToGroup.some((i) => allergieDe(i))) buf += bandeNoire("! ALLERGIE !", "quad");
+
   for (const group of groupesAffiches) {
     // Bande noire de categorie — tickets de production (cuisine / desserts / bar)
     if (!showTotal) buf += bandeNoire(group.cat);
@@ -614,7 +1085,7 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
     for (const item of group.items) {
       if (showTotal) {
         const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
-        const mark = pimentMark(item.piment);
+        const mark = pimentMark(pimentLigne(item));
         buf += CMD.BOLD_ON;
         buf += pad(`${item.qty}x ${sanitize(nomAffiche(item))}${mark ? " " + mark : ""}`, totalStr, WIDTH);
         buf += CMD.BOLD_OFF;
@@ -623,9 +1094,12 @@ function formatTicket({ title, order, tableNumber, orderNum, date, showTotal, or
         buf += ESC + "J\x06";
       } else {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(pimentLigne(item)));
         buf += formulaLineCompacte(item);
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+        buf += lignesNoteAllergie(item, estNouveau && estNouveau(item));
+        // Allergenes reellement imprimes, pour le garde-fou de ticketsDeCommande
+        if (allergenesImprimes) for (const a of segmentsDe(allergieDe(item))) allergenesImprimes.add(normName(a));
         buf += ESC + "J\x0C";
       }
     }
@@ -677,8 +1151,12 @@ function montantRemise(total, remise) {
   if (!remise || !remise.valeur) return 0;
   const v = Number(remise.valeur);
   if (!Number.isFinite(v) || v <= 0) return 0;
-  const brut = remise.type === "euro" ? v : total * v / 100;
-  return Math.min(Math.max(brut, 0), total);   // jamais negatif, jamais superieur au total
+  // Calcul en centimes entiers (le demi-centime s'arrondit toujours vers le
+  // haut : 15 % de 8,50 € = 1,28 €), jamais negatif ni superieur au total.
+  // ⚠ Meme formule dans la caisse (src/App.jsx, fenetre Addition).
+  const cents = Math.round(total * 100);
+  const r = remise.type === "euro" ? Math.round(v * 100) : Math.round(cents * v / 100);
+  return Math.min(Math.max(r, 0), cents) / 100;
 }
 function libelleRemise(remise) {
   if (!remise) return "";
@@ -761,7 +1239,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += bandeNoire("Ajouts");
       for (const item of added) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(pimentLigne(item)));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         buf += CMD.BOLD_ON + formulaLines(item) + CMD.BOLD_OFF;
       }
@@ -771,7 +1249,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
       buf += bandeNoire("Annules");
       for (const item of removed) {
         buf += CMD.DOUBLE_ON + CMD.BOLD_ON;
-        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(item.piment));
+        buf += itemLine(`${item.qty}x ${sanitize(nomAffiche(item))}`, pimentMark(pimentLigne(item)));
         buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
         buf += formulaLines(item);
       }
@@ -783,7 +1261,7 @@ function formatModifTicket({ title, oldItems, newItems, tableNumber, orderNum, d
   buf += bandeNoire("Commande complete");
 
   for (const item of newItems) {
-    const mark = pimentMark(item.piment);
+    const mark = pimentMark(pimentLigne(item));
     if (showTotal) {
       const totalStr = `${(item.price * item.qty).toFixed(2)} EUR`;
       buf += CMD.BOLD_ON;
@@ -858,10 +1336,11 @@ function loadOrders() {
     const active = arr.filter((o) => {
       // Supprimer si trop vieux
       if (o.receivedAt && now - o.receivedAt > maxAge) return false;
-      // Supprimer si toutes catégories terminées
+      // Supprimer si tout a ete servi (une table prete mais pas encore servie
+      // reste a l'ecran service, jusqu'a « Confirmer livraison »)
       if (o.catStatus) {
         const statuses = Object.values(o.catStatus);
-        if (statuses.length > 0 && statuses.every(s => s === "done" || s === "delivered")) return false;
+        if (statuses.length > 0 && statuses.every(s => s === "delivered")) return false;
       }
       return true;
     });
@@ -885,6 +1364,21 @@ function saveOrders(map) {
 const activeOrders = loadOrders();
 console.log(`${activeOrders.size} commande(s) en cours chargée(s)`);
 
+
+// Ticket PRET : la note en clair, l'allergie en blanc sur noir, pour que la
+// salle porte la bonne assiette a la bonne personne. Les articles viennent de
+// l'ecran cuisine (sections du serveur), note et allergie deja reunies.
+function lignesNotePret(item) {
+  let b = "";
+  for (const seg of segmentsDe(item.note)) b += lignesNote(seg, WIDTH).map((l) => l + "\n").join("");
+  const allergenes = segmentsDe(item.allergie);
+  if (allergenes.length) {
+    b += CMD.REVERSE_ON + CMD.DOUBLE_H + CMD.BOLD_ON;
+    for (const bloc of blocsAllergie(allergenes, WIDTH)) b += bloc.lignes.map((l) => l.padEnd(WIDTH) + "\n").join("");
+    b += CMD.BOLD_OFF + CMD.DOUBLE_OFF + CMD.REVERSE_OFF;
+  }
+  return b;
+}
 
 // ----- Ticket partiel "SECTION PRÊTE" -----
 function formatPartialReadyTicket({ tableNumber, orderNum, catName, items, orderType, emporterNum }) {
@@ -917,6 +1411,7 @@ function formatPartialReadyTicket({ tableNumber, orderNum, catName, items, order
     buf += `${item.qty}x ${sanitize(item.name)}
 `;
     buf += CMD.BOLD_OFF + CMD.DOUBLE_OFF;
+    buf += lignesNotePret(item);
     buf += ESC + "J\x0C";
   }
   buf += line("=");
@@ -963,28 +1458,33 @@ function mapFormulaLabelShared(label) {
 
 function buildGroups(items) {
   const seen = {};
-  for (const item of items) {
-    // Meme distinction que sur les tickets : seules les formules-MENU sont
-    // eclatees. Sinon le KDS afficherait une categorie "Parfum" pour un sirop.
-    if (item.formulaChoices && item.formulaChoices.length > 0 && isMenuFormula(item)) {
-      for (const choice of item.formulaChoices) {
-        const cat = mapFormulaLabelShared(choice.label);
-        const merged = CAT_MERGE_SHARED[cat] || cat;
-        if (!seen[merged]) seen[merged] = [];
-        const existing = seen[merged].find(x => normName(x.name) === normName(choice.itemName) && (x.piment || null) === (choice.piment || null));
-        if (existing) existing.qty += item.qty;
-        else seen[merged].push({ name: choice.itemName, category: merged, qty: item.qty, piment: choice.piment || null });
-      }
-    } else {
-      const cat = CAT_MERGE_SHARED[item.category] || item.category || "Autres";
-      if (!seen[cat]) seen[cat] = [];
-      const nom = nomAffiche(item);
-      const existing = seen[cat].find(x => normName(nomAffiche(x)) === normName(nom)
-        && (x.piment || null) === (item.piment || null)
-        && formulaSig(x) === formulaSig(item));
-      if (existing) existing.qty += item.qty;
-      else seen[cat].push({ ...item, name: nom });
-    }
+  const cles = new Map();   // ligne affichee → cle de sa note et de son allergie
+  // Memes articles que sur les tickets de production : les questions de
+  // suite restent avec leur plat au lieu de former des sections fantomes
+  // que personne ne pouvait appeler ni valider sur le KDS.
+  for (const article of articlesDeProduction(items)) {
+    const cat = posteAdmin(article) || CAT_MERGE_SHARED[article.category] || article.category || "Autres";
+    if (!seen[cat]) seen[cat] = [];
+    const nom = nomAffiche(article);
+    const piment = pimentLigne(article) || null;
+    // Deux memes plats aux notes differentes restent deux lignes a l'ecran
+    const cle = cleNotes(article);
+    const existing = seen[cat].find(x => normName(x.name) === normName(nom)
+      && (x.piment || null) === piment
+      && formulaSig(x) === formulaSig(article)
+      && cles.get(x) === cle);
+    if (existing) { existing.qty += article.qty; continue; }
+    // Precision lisible telle qu'imprimee : « Vanille / Mangue », « Riz »
+    const detail = choixImprimables(article)
+      .map((c) => c.itemName + (pimentMark(c.piment) ? " " + pimentMark(c.piment) : "")).join(" / ");
+    const ligne = { ...article, name: nom, piment, ...(detail ? { detail } : {}) };
+    // Note et allergie reunies (celles des choix comprises), absentes si vides
+    const note = noteDe(article), allergie = allergieDe(article);
+    delete ligne.note; delete ligne.allergie;
+    if (note) ligne.note = note;
+    if (allergie) ligne.allergie = allergie;
+    cles.set(ligne, cle);
+    seen[cat].push(ligne);
   }
   const sorted = [...CAT_ORDER_SHARED.filter(c => seen[c]), ...Object.keys(seen).filter(c => !CAT_ORDER_SHARED.includes(c))];
   return sorted.map(cat => ({ cat, items: seen[cat] }));
@@ -1010,11 +1510,12 @@ setInterval(() => {
 wss.on("connection", (ws) => {
   console.log("Client connecté (KDS/Service)");
   // Envoyer toutes les commandes actives au nouveau client
-  if (activeOrders.size > 0) {
-    activeOrders.forEach((order) => {
-      ws.send(JSON.stringify({ type: "new_order", order }));
-    });
-  }
+  activeOrders.forEach((order) => {
+    ws.send(JSON.stringify({ type: "new_order", order }));
+  });
+  // Fin de l'envoi complet : un ecran qui se reconnecte retire ce qui a ete
+  // termine ou supprime pendant la coupure
+  ws.send(JSON.stringify({ type: "etat_complet", ids: [...activeOrders.keys()] }));
 
   ws.on("message", async (raw) => {
     try {
@@ -1038,8 +1539,12 @@ wss.on("connection", (ws) => {
         const order = activeOrders.get(msg.orderId);
         if (order && order.catStatus) {
           order.catStatus[msg.catName] = "in_progress";
+          // prepare sans appel du service (bar) : l'heure de depart est gardee,
+          // les chronos des ecrans ne repartent pas de zero a chaque rechargement
+          if (!order.catCalledAt) order.catCalledAt = {};
+          if (!order.catCalledAt[msg.catName]) order.catCalledAt[msg.catName] = Date.now();
           saveOrders(activeOrders);
-          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "in_progress" });
+          broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "in_progress", calledAt: order.catCalledAt[msg.catName] });
           console.log(`Cuisine en cours ${msg.catName} — Table ${order.tableNumber}`);
         }
       }
@@ -1047,14 +1552,18 @@ wss.on("connection", (ws) => {
       // Cuisine → prêt → imprime ticket
       if (msg.type === "cat_ready") {
         const order = activeOrders.get(msg.orderId);
-        if (order && order.catStatus) {
+        // Deja prete ou servie (deux ecrans montrent la meme section, double
+        // appui) : pas de second ticket PRET
+        const deja = ["done", "delivered"].includes(order?.catStatus?.[msg.catName]);
+        if (order && order.catStatus && !deja) {
           order.catStatus[msg.catName] = "done";
           if (!order.catReadyAt) order.catReadyAt = {};
           order.catReadyAt[msg.catName] = Date.now();
           saveOrders(activeOrders);
           broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "done", readyAt: order.catReadyAt[msg.catName] });
         }
-        try {
+        // Le ticket PRET ne sort que pour une commande connue, avec ses articles
+        if (order && !deja && Array.isArray(msg.items)) try {
           await sendToPrinter(formatPartialReadyTicket({
             ...msg,
             orderType: order?.orderType,
@@ -1074,13 +1583,40 @@ wss.on("connection", (ws) => {
           saveOrders(activeOrders);
           broadcast({ type: "cat_status", orderId: msg.orderId, catName: msg.catName, status: "delivered" });
           console.log(`Service livré ${msg.catName} — Table ${order.tableNumber}`);
+          // Tout est servi : la commande est terminee et quitte les ecrans. Avant,
+          // l'ecran cuisine la terminait 3 s apres le dernier plat pret, et la
+          // table disparaissait de l'ecran service avant « Confirmer livraison ».
+          if (Object.values(order.catStatus).every((st) => st === "delivered")) {
+            activeOrders.delete(msg.orderId);
+            saveOrders(activeOrders);
+            broadcast({ type: "order_ready", orderId: msg.orderId });
+            console.log(`Commande servie et terminee — Table ${order.tableNumber} #${order.orderNum}`);
+          }
         }
       }
 
       // Toutes catégories prêtes → supprimer la commande du serveur
       if (msg.type === "order_ready") {
-        broadcast({ type: "order_ready", orderId: msg.orderId });
         const order = activeOrders.get(msg.orderId);
+        // Un ecran reste sur une ancienne version, ou une modification arrivee
+        // pendant les 3 s de la carte verte : la commande a encore a faire en
+        // cuisine, on ne la termine pas et on la renvoie aux ecrans.
+        const resteAFaire = order && Object.entries(order.catStatus || {})
+          .some(([cat, st]) => !BAR_CATEGORIES.has(cat) && st !== "done" && st !== "delivered");
+        if (resteAFaire) {
+          console.log(`Fin refusee — Table ${order.tableNumber} #${order.orderNum} : il reste a faire en cuisine`);
+          ws.send(JSON.stringify({ type: "update_order", order }));
+          return;
+        }
+        // Les ecrans ne terminent plus une commande : elle reste a l'ecran
+        // service jusqu'a ce que chaque livraison soit confirmee (voir
+        // cat_delivered) ou jusqu'a la cloture. Un ecran reste sur une ancienne
+        // version qui le demande encore est ignore (sans renvoi : pas de boucle).
+        if (order && Object.values(order.catStatus || {}).some((st) => st !== "delivered")) {
+          console.log(`Fin ignoree — Table ${order.tableNumber} #${order.orderNum} : livraison a confirmer par le service`);
+          return;
+        }
+        broadcast({ type: "order_ready", orderId: msg.orderId });
         if (order) {
           activeOrders.delete(msg.orderId);
           saveOrders(activeOrders);
@@ -1114,25 +1650,34 @@ function ticketAnnulation(titre, common) {
 // Tickets de production d'une commande. Sert aussi bien a la prise de
 // commande qu'a la modification : le restaurant veut alors le ticket complet
 // remis a jour, pas un differentiel.
-function ticketsDeCommande(order, common, isEmporter, suffixe = "") {
-  if (isEmporter) {
-    // A emporter : cuisine, desserts et bar sur un SEUL ticket,
-    // separes par les bandes noires de categorie.
-    return [formatTicket({ title: "COMMANDE" + suffixe, order, showTotal: false, ...common })];
-  }
-  // La commande entiere est passee aux trois tickets : c'est le filtre,
-  // applique APRES eclatement des formules, qui aiguille chaque article.
-  // Trier sur la categorie de l'article laisserait l'aperitif d'un menu
-  // (categorie « Menu ») partir en cuisine au lieu du bar.
+// « precedent » (modification) : la version d'avant, pour le repere « ^ NOUVEAU ».
+function ticketsDeCommande(order, common, isEmporter, suffixe = "", precedent = null) {
+  const estNouveau = precedent ? comparerNotes(precedent, order) : null;
+  // A emporter : cuisine, desserts et bar sur un SEUL ticket,
+  // separes par les bandes noires de categorie.
+  // Sur place, la commande entiere est passee aux trois tickets : c'est le
+  // filtre, applique APRES eclatement des formules, qui aiguille chaque
+  // article. Trier sur la categorie de l'article laisserait l'aperitif d'un
+  // menu (categorie « Menu ») partir en cuisine au lieu du bar.
   const estBar = (c) => BAR_CATEGORIES.has(c);
-  return [
-    formatTicket({ title: "CUISINE" + suffixe, order, showTotal: false,
-      catFilter: (c) => !estBar(c) && c !== "Desserts", ...common }),
-    formatTicket({ title: "DESSERTS" + suffixe, order, showTotal: false,
-      catFilter: (c) => c === "Desserts", ...common }),
-    formatTicket({ title: "BAR" + suffixe, order, showTotal: false,
-      catFilter: estBar, ...common }),
+  const postes = isEmporter ? [{ title: "COMMANDE" }] : [
+    { title: "CUISINE", catFilter: (c) => !estBar(c) && c !== "Desserts" },
+    { title: "DESSERTS", catFilter: (c) => c === "Desserts" },
+    { title: "BAR", catFilter: estBar },
   ];
+  const imprimes = new Set();
+  const ticket = (p, allergiesAVerifier = null) => formatTicket({ title: p.title + suffixe, order, showTotal: false, estNouveau,
+    catFilter: p.catFilter, allergenesImprimes: imprimes, allergiesAVerifier, ...common });
+  const tickets = postes.map((p) => ticket(p));
+  // Garde-fou allergie : un allergene recu qui n'est sorti sous aucun article
+  // part en tete du ticket CUISINE (COMMANDE a emporter) ; CUISINE vide : sur
+  // le premier ticket non vide. Tout est sorti : les tickets ne changent pas.
+  const manquants = allergenesRecus(order).filter((a) => !imprimes.has(normName(a)));
+  if (manquants.length) {
+    const k = tickets[0] ? 0 : Math.max(0, tickets.findIndex(Boolean));
+    tickets[k] = ticket(postes[k], manquants);
+  }
+  return tickets;
 }
 
 app.post("/print-all", async (req, res) => {
@@ -1155,8 +1700,8 @@ app.post("/print-all", async (req, res) => {
       });
     }
 
-    const boissons = order.filter((i) => BAR_CATEGORIES.has(i.category));
-    const cuisine = order.filter((i) => !BAR_CATEGORIES.has(i.category));
+    const boissons = order.filter((i) => estBarArticle(i));
+    const cuisine = order.filter((i) => !estBarArticle(i));
     const common = { tableNumber: effectiveTable, orderNum, date, orderType, emporterNum, clientName, clientPhone, clientPickupTime };
     const tickets = [];
 
@@ -1173,16 +1718,20 @@ app.post("/print-all", async (req, res) => {
     const orderId = clientOrderId || `${orderNum}-${Date.now()}`;
     const cuisineAll = [...cuisine, ...boissons];
     let catStatus;
+    // Sections calculees ici une fois pour toutes : le KDS et l'ecran service
+    // les affichent telles quelles (memes noms que catStatus).
+    const groupes = buildGroups(cuisineAll);
     if (isEmporter) {
       catStatus = { "A emporter": "waiting" };
     } else {
-      const groups = buildGroups(cuisineAll);
       catStatus = {};
-      groups.forEach(g => { catStatus[g.cat] = "waiting"; });
+      groupes.forEach(g => { catStatus[g.cat] = "waiting"; });
     }
+    // Les articles gardent l'ordre du panier : c'est la reference des
+    // modifications et des tickets ressortis
     const orderData = {
-      id: orderId, orderNum, tableNumber: effectiveTable, date,
-      items: cuisineAll, receivedAt: Date.now(), catStatus,
+      id: orderId, orderNum, tableNumber: effectiveTable, date, dateOrigine: date,
+      items: order, receivedAt: Date.now(), catStatus, groupes,
       orderType, emporterNum, clientName, clientPhone, clientPickupTime,
     };
     activeOrders.set(orderId, orderData);
