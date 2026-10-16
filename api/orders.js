@@ -1,8 +1,8 @@
 const OWNER = "Arthur-valton";
 const REPO = "punjab-restaurant";
 // Les commandes (noms, téléphones, allergies) ne sont plus dans public/ :
-// le site ne les sert plus à qui connaît l'adresse. L'ancien fichier n'est
-// relu que tant que le nouveau n'existe pas encore (passage sans perte).
+// le site ne les sert plus à qui connaît l'adresse. L'ancien fichier (retiré
+// le 16/10/2026) n'est relu que si le nouveau venait à manquer.
 const PATH = "data/active-orders-live.json";
 const ANCIEN_PATH = "public/active-orders-live.json";
 
