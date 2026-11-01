@@ -3778,6 +3778,13 @@
         "price": 6,
         "category": "Vins",
         "subcategory": "Rosé"
+      },
+      {
+        "id": 278,
+        "name": "50 cl rose",
+        "price": 12,
+        "category": "Vins",
+        "subcategory": "Rosé"
       }
     ]
   }
