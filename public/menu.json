@@ -1103,12 +1103,11 @@
       },
       {
         "id": 47,
-        "name": "Poisson Massala",
+        "name": "Fish Massala",
         "price": 18,
         "category": "Plats",
         "subcategory": "Poisson",
-        "piment": true,
-        "isFormula": false
+        "piment": true
       },
       {
         "id": 48,
