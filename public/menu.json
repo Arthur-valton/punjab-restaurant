@@ -3764,6 +3764,13 @@
         "price": 6,
         "category": "Vins",
         "subcategory": "Blanc"
+      },
+      {
+        "id": 276,
+        "name": "50 cl blanc",
+        "price": 12,
+        "category": "Vins",
+        "subcategory": "Blanc"
       }
     ]
   }
