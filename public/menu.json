@@ -3750,6 +3750,13 @@
         "price": 12,
         "category": "Vins",
         "subcategory": "Rouge"
+      },
+      {
+        "id": 274,
+        "name": "25 cl rouge",
+        "price": 6,
+        "category": "Vins",
+        "subcategory": "Rouge"
       }
     ]
   }
