@@ -2731,7 +2731,6 @@
         "name": "Menu Punjab Dégustation (2 pers)",
         "price": 75,
         "category": "Menu",
-        "piment": false,
         "isFormula": true,
         "formulaSteps": [
           {
@@ -2971,7 +2970,7 @@
             "label": "Entrée",
             "articles": [
               {
-                "name": "Plateau mix Punjab grillades + beignets",
+                "name": "Mix punjab (2)",
                 "piment": false
               }
             ]
