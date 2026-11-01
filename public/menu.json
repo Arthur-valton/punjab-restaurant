@@ -567,6 +567,13 @@
         "name": "Sorbet",
         "price": 5,
         "category": "Boissons"
+      },
+      {
+        "id": 279,
+        "name": "Kir Indien",
+        "price": 7,
+        "category": "Boissons",
+        "subcategory": "Apéritifs"
       }
     ]
   },
