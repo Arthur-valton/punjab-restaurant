@@ -3771,6 +3771,13 @@
         "price": 12,
         "category": "Vins",
         "subcategory": "Blanc"
+      },
+      {
+        "id": 277,
+        "name": "25 cl rose",
+        "price": 6,
+        "category": "Vins",
+        "subcategory": "Rosé"
       }
     ]
   }
