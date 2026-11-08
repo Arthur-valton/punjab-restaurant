@@ -2430,7 +2430,6 @@
         "name": "Menu Taj Mahal",
         "price": 29.9,
         "category": "Menu",
-        "piment": false,
         "isFormula": true,
         "formulaSteps": [
           {
@@ -2574,6 +2573,10 @@
               },
               {
                 "name": "Coupe de glace",
+                "piment": false
+              },
+              {
+                "name": "X",
                 "piment": false
               }
             ]
