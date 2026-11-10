@@ -1957,11 +1957,14 @@
               {
                 "name": "Pêche",
                 "piment": false
+              },
+              {
+                "name": "X",
+                "piment": false
               }
             ]
           }
-        ],
-        "piment": false
+        ]
       },
       {
         "id": 211,
