@@ -2228,6 +2228,10 @@
               {
                 "name": "Raita",
                 "piment": false
+              },
+              {
+                "name": "Samosa",
+                "piment": false
               }
             ]
           },
@@ -2250,6 +2254,10 @@
                 "name": "Autre",
                 "piment": true,
                 "libre": true
+              },
+              {
+                "name": "Butter chicken",
+                "piment": true
               }
             ]
           },
