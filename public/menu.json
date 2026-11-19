@@ -1770,15 +1770,19 @@
             "label": "Entrée",
             "articles": [
               {
-                "name": "Mix Pakora",
-                "piment": false
-              },
-              {
-                "name": "Poulet Tikka",
+                "name": "Poulet Tandoori",
                 "piment": false
               },
               {
                 "name": "Raita",
+                "piment": false
+              },
+              {
+                "name": "Aloo pakora",
+                "piment": false
+              },
+              {
+                "name": "Mix pakora",
                 "piment": false
               }
             ]
@@ -1799,7 +1803,7 @@
                 "piment": true
               },
               {
-                "name": "Crevette Curry",
+                "name": "Dal",
                 "piment": true
               },
               {
