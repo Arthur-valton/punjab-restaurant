@@ -1975,7 +1975,6 @@
         "name": "Menu Entrée + Plat",
         "price": 16.9,
         "category": "Menu",
-        "piment": false,
         "isFormula": true,
         "formulaSteps": [
           {
@@ -1992,6 +1991,10 @@
               {
                 "name": "Raita",
                 "piment": false
+              },
+              {
+                "name": "Mix pakora",
+                "piment": false
               }
             ]
           },
@@ -1999,7 +2002,7 @@
             "label": "Plat",
             "articles": [
               {
-                "name": "Crevette Korma",
+                "name": "Dal",
                 "piment": true
               },
               {
@@ -2011,7 +2014,7 @@
                 "piment": true
               },
               {
-                "name": "Autre",
+                "name": "Bœuf curry",
                 "piment": true,
                 "libre": true
               }
