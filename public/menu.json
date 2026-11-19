@@ -2027,14 +2027,13 @@
         "name": "Menu Plat + Dessert",
         "price": 16.9,
         "category": "Menu",
-        "piment": false,
         "isFormula": true,
         "formulaSteps": [
           {
             "label": "Plat",
             "articles": [
               {
-                "name": "Crevette Korma",
+                "name": "Bœuf curry",
                 "piment": true
               },
               {
@@ -2046,9 +2045,12 @@
                 "piment": true
               },
               {
-                "name": "Autre",
-                "piment": true,
-                "libre": true
+                "name": "Poulet shahi korma",
+                "piment": true
+              },
+              {
+                "name": "Dal",
+                "piment": true
               }
             ]
           },
@@ -2061,6 +2063,10 @@
               },
               {
                 "name": "Coupe de glace",
+                "piment": false
+              },
+              {
+                "name": "Kheer",
                 "piment": false
               }
             ]
